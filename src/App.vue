@@ -6,12 +6,12 @@ const websocketUrl = ref('');
 const gcodeCommand = ref('');
 
 function connectSocketServer() {
-  if (!websocketUrl.value) {
-    console.error('Websocket URL is required');
-    return;
-  }
+  // if (!websocketUrl.value) {
+  //   console.error('Websocket URL is required');
+  //   return;
+  // }
 
-  socket = new WebSocket(websocketUrl.value);
+  socket = new WebSocket(websocketUrl.value || 'ws://127.0.0.1:9002');
 
   socket.onopen = () => {
     console.log('WebSocket connected');
@@ -26,13 +26,18 @@ function connectSocketServer() {
   };
 }
 
-function sendCommand(command: string) {
+function sendCommand(type: string, command: string) {
   if (!socket || socket.readyState !== WebSocket.OPEN) {
     console.error('WebSocket is not connected');
     return;
   }
 
-  socket.send(command);
+  const message = {
+    message_type: type,
+    message: command
+  }
+
+  socket.send(JSON.stringify(message));
 }
 </script>
 
@@ -45,17 +50,20 @@ function sendCommand(command: string) {
     <button @click="socket?.close()">Abort connection</button>
 
     <input type="text" placeholder="Gcode command" v-model="gcodeCommand" />
-    <button @click="sendCommand(gcodeCommand)">Send Command</button>
+    <button @click="sendCommand('Information', gcodeCommand)">Send Command</button>
+    <button @click="sendCommand('Information', 'M115')">Get information</button>
 
     <div id="remove-controller">
-      <input type="radio" id="one-v" name="move-length" /><label for="one">1</label>
+      <!-- <input type="radio" id="one-v" name="move-length" /><label for="one">1</label>
       <input type="radio" id="ten-v" name="move-length" /><label for="ten">10</label>
-      <input type="radio" id="hundred-v" name="move-length" /><label for="hundred">100</label>
+      <input type="radio" id="hundred-v" name="move-length" /><label for="hundred">100</label> -->
 
-      <button @click="sendCommand('up')">Up</button>
-      <button @click="sendCommand('left')">Left</button>
-      <button @click="sendCommand('right')">Right</button>
-      <button @click="sendCommand('down')">Down</button>
+      <button @click="sendCommand('Movement', 'G1 X10')">Forward</button>
+      <button @click="sendCommand('Movement', 'G1 X-10')">Left</button>
+      <button @click="sendCommand('Movement', 'G1 Y10')">Right</button>
+      <button @click="sendCommand('Movement', 'G1 Y-10')">Backwards</button>
+      <button @click="sendCommand('Movement', 'G1 Z10')">Up</button>
+      <button @click="sendCommand('Movement', 'G1 Z-10')">Down</button>
     </div>
   </div>
 </template>
