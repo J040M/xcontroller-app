@@ -7,6 +7,11 @@ export const i18n = createI18n({
   // Import from external files
   messages: {
     en: {
+      app: {
+        connector: 'Connector',
+        files: 'Files',
+        status: 'Status',
+      },
       files: {
         filename: 'Filename:',
         file_modified_date: 'Modified:',
@@ -46,43 +51,48 @@ export const i18n = createI18n({
       }
     },
     fr: {
-        files: {
-            filename: 'Fichier:',
-            file_modified_date: 'Modifié',
-            filesize: 'Taille:',
-          },
-          status: {
-            state: 'État:',
-            file: 'Fichier:',
-            elapsed_time: 'Temps écoulé:',
-            estimated_time: 'Temps estimé:'
-          },
-          connector: {
-            status: 'État de la connection:',
-            connect: 'Connecter',
-            disconnect: 'Déconnecter'
-          },
-          main: {
-            control: 'Control',
-            temperature: 'Temperature',
-            terminal: 'Terminal',
-            printerconfig: 'Printer Config',
-            gcodeviewer: 'Gcode viewer',
-          },
-          control: {
-            movement_value: 'Movement value (X,Y,Z)',
-            extruder_value: 'Buse value (E)',
-            btn_extrude: 'Extrude',
-            btn_retract: 'Retract'
-          },
-          printerconfig: {
-            btn_save: 'Enregistrer',
-            btn_M115: 'Retrouver infos (M115)'
-          },
-          temperature: {
-            grad_extruder: 'Buse',
-            grad_bed: 'Plateau'
-          }
+      app: {
+        connector: 'Connecteur',
+        files: 'Fichiers',
+        status: 'État',
+      },
+      files: {
+        filename: 'Fichier:',
+        file_modified_date: 'Modifié',
+        filesize: 'Taille:',
+      },
+      status: {
+        state: 'État:',
+        file: 'Fichier:',
+        elapsed_time: 'Temps écoulé:',
+        estimated_time: 'Temps estimé:'
+      },
+      connector: {
+        status: 'État de la connection:',
+        connect: 'Connecter',
+        disconnect: 'Déconnecter'
+      },
+      main: {
+        control: 'Control',
+        temperature: 'Temperature',
+        terminal: 'Terminal',
+        printerconfig: 'Printer Config',
+        gcodeviewer: 'Gcode viewer',
+      },
+      control: {
+        movement_value: 'Movement value (X,Y,Z)',
+        extruder_value: 'Buse value (E)',
+        btn_extrude: 'Extrude',
+        btn_retract: 'Retract'
+      },
+      printerconfig: {
+        btn_save: 'Enregistrer',
+        btn_M115: 'Retrouver infos (M115)'
+      },
+      temperature: {
+        grad_extruder: 'Buse',
+        grad_bed: 'Plateau'
+      }
     }
   }
 })

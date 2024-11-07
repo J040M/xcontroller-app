@@ -33,11 +33,11 @@ export default defineComponent({
         <Tabs value="0">
             <div class="tab-list">
                 <TabList>
-                    <Tab value="0">{{ $t('main.control')}}</Tab>
-                    <Tab value="1">{{ $t('main.temperature')}}</Tab>
-                    <Tab value="2">{{ $t('main.terminal')}}</Tab>
-                    <Tab value="3">{{ $t('main.printerconfig')}}</Tab>
-                    <Tab value="4">{{ $t('main.gcodeviewer')}}</Tab>
+                    <Tab value="0">{{ $t('main.control') }}</Tab>
+                    <Tab value="1">{{ $t('main.temperature') }}</Tab>
+                    <Tab value="2">{{ $t('main.terminal') }}</Tab>
+                    <Tab value="3">{{ $t('main.printerconfig') }}</Tab>
+                    <Tab value="4">{{ $t('main.gcodeviewer') }}</Tab>
                 </TabList>
             </div>
             <TabPanels>
@@ -71,5 +71,4 @@ export default defineComponent({
     </div>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

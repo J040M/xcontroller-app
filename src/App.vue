@@ -4,6 +4,7 @@ import Connector from './components/connector.vue';
 import Status from './components/status.vue';
 import Main from './components/main/main.vue';
 import Files from './components/files.vue';
+import { useI18n } from 'vue-i18n';
 
 export default defineComponent({
   name: 'Root',
@@ -13,9 +14,10 @@ export default defineComponent({
     Main,
     Files
   },
-  data: () => ({
-
-  }),
+  setup() {
+    const { t } = useI18n() // use as global scope
+    return { t }
+  },
 })
 </script>
 
@@ -24,7 +26,7 @@ export default defineComponent({
     <div class="left-container">
       <Accordion multiple>
         <AccordionPanel value="0">
-          <AccordionHeader> Connector </AccordionHeader>
+          <AccordionHeader> {{ $t('app.connector') }} </AccordionHeader>
           <AccordionContent>
             <div class="left-container-1">
               <Connector />
@@ -33,7 +35,7 @@ export default defineComponent({
         </AccordionPanel>
 
         <AccordionPanel value="1">
-          <AccordionHeader> Status </AccordionHeader>
+          <AccordionHeader> {{ $t('app.status') }} </AccordionHeader>
           <AccordionContent>
             <div class="left-container-2">
               <Status />
@@ -41,7 +43,7 @@ export default defineComponent({
           </AccordionContent>
         </AccordionPanel>
         <AccordionPanel value="2">
-          <AccordionHeader> Files </AccordionHeader>
+          <AccordionHeader> {{ $t('app.files') }} </AccordionHeader>
           <AccordionContent>
             <div class="left-container-3">
               <Files />
@@ -72,12 +74,5 @@ export default defineComponent({
   flex: 2;
   /* Adjust as necessary */
   /* Additional styles for right container */
-}
-
-.left-container-1,
-.left-container-2,
-.left-container-3 {
-  /* margin-bottom: 16px; */
-  /* Spacing between sections */
 }
 </style>

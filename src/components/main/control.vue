@@ -196,8 +196,8 @@ export default defineComponent({
                 <div class="button-container">
                     <label>{{ $t('control.extruder_value') }}</label>
                     <InputNumber type="number" v-model="extruderValue" />
-                    <Button label="Extrude" @click="sendCommand('extrude')">Extrude</Button>
-                    <Button label="Retract" @click="sendCommand('retract')">Retract</Button>
+                    <Button label="Extrude" @click="sendCommand('extrude')">{{ $t('control.btn_extrude') }}</Button>
+                    <Button label="Retract" @click="sendCommand('retract')">{{ $t('control.btn_retract') }}</Button>
                 </div>
             </Panel>
         </div>

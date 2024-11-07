@@ -14,7 +14,6 @@ export default defineComponent({
     methods: {
         sendPrinterCommand(type: string, movement: string) {
             console.log('sendPrinterCOmmand ', type, movement)
-
         }
     },
     setup() {

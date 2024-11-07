@@ -4,13 +4,11 @@ export default class wsConnector {
 
     private wsClient: WebSocket | null = null
     private _wsURL: string = 'ws://127.0.0.1:9002'
-    
+
     _connectionStatus: boolean = false
 
     messageHistory: MessageEvent<any>[] = []
     commandHistory: Message[] = []
-
-    // constructor() { }
 
     set wsURL(value: string | undefined) {
         if (value) this._wsURL = value
@@ -43,7 +41,7 @@ export default class wsConnector {
         };
 
         this.wsClient.onmessage = (message) => {
-            console.log(message)
+            console.log('OnMessage: ', message)
             this.messageHistory.push(message)
         }
     }
@@ -59,7 +57,6 @@ export default class wsConnector {
         }
 
         this.commandHistory.push(command)
-
         this.wsClient.send(JSON.stringify(command))
     }
 }

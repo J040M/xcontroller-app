@@ -13,7 +13,6 @@ export default defineComponent({
     mounted() {
         console.log('Temp component mounted')
 
-
         const labels = ['-1', '-30sec', 'now']
 
         const data = {
@@ -32,7 +31,7 @@ export default defineComponent({
                 borderColor: 'rgb(255, 255, 0)',
                 tension: 0.1
             }
-        ]
+            ]
         };
         const ctx = document.getElementById('temp-graph');
         const lineChart = new Chart(ctx, {
@@ -57,10 +56,10 @@ export default defineComponent({
         </div>
         <!-- TODO: Loop this for multiple extruders -->
         <label>
-            {{ $t('temperature.grad_extruder')}}
+            {{ $t('temperature.grad_extruder') }}
         </label>
         <label>
-            {{ $t('temperature.grad_bed')}}
+            {{ $t('temperature.grad_bed') }}
         </label>
 
     </div>
