@@ -1,6 +1,7 @@
 <script lang="ts">
 import Chart from 'chart.js/auto';
 import { defineComponent } from 'vue'
+import { useI18n } from 'vue-i18n';
 
 export default defineComponent({
     name: 'temperatureComponent',
@@ -40,13 +41,15 @@ export default defineComponent({
             options: {},
         });
     },
+    setup() {
+        const { t } = useI18n() // use as global scope
+        return { t }
+    }
 })
 </script>
 
 <template>
     <div class="temp-status-container">
-        <h2>Temperatures</h2>
-
         <div class="temperature-graph-container">
             <canvas id="temp-graph">
 
@@ -54,10 +57,10 @@ export default defineComponent({
         </div>
         <!-- TODO: Loop this for multiple extruders -->
         <label>
-            Extruder:
+            {{ $t('temperature.grad_extruder')}}
         </label>
         <label>
-            Bed:
+            {{ $t('temperature.grad_bed')}}
         </label>
 
     </div>

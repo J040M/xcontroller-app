@@ -5,6 +5,7 @@ import Temperature from './temperature.vue';
 import Terminal from './terminal.vue';
 import PrinterConfiguration from './printer-configuration.vue';
 import GcodeViewer from './gcodeViewer.vue';
+import { useI18n } from 'vue-i18n';
 
 export default defineComponent({
     name: 'mainContentComponent',
@@ -20,6 +21,10 @@ export default defineComponent({
     }),
     methods: {
     },
+    setup() {
+        const { t } = useI18n() // use as global scope
+        return { t }
+    }
 })
 </script>
 
@@ -28,11 +33,11 @@ export default defineComponent({
         <Tabs value="0">
             <div class="tab-list">
                 <TabList>
-                    <Tab value="0">Controls</Tab>
-                    <Tab value="1">Temperature</Tab>
-                    <Tab value="2">Terminal</Tab>
-                    <Tab value="3">Printer Configurations</Tab>
-                    <Tab value="4">GCode Viewer</Tab>
+                    <Tab value="0">{{ $t('main.control')}}</Tab>
+                    <Tab value="1">{{ $t('main.temperature')}}</Tab>
+                    <Tab value="2">{{ $t('main.terminal')}}</Tab>
+                    <Tab value="3">{{ $t('main.printerconfig')}}</Tab>
+                    <Tab value="4">{{ $t('main.gcodeviewer')}}</Tab>
                 </TabList>
             </div>
             <TabPanels>

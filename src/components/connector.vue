@@ -1,6 +1,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { wsClient } from '../utils/init';
+import { useI18n } from 'vue-i18n';
 
 export default defineComponent({
     name: 'connectorComponent',
@@ -25,18 +26,22 @@ export default defineComponent({
             wsClient.wsURL = this.websocketURL
         }
     },
+    setup() {
+        const { t } = useI18n() // use as global scope
+        return { t }
+    }
 })
 
 </script>
 
 <template>
-    <label>Connection status: {{ connectionStatus }}</label><br>
+    <label>{{ $t('connector.status')}} {{ connectionStatus }}</label><br>
     <InputText type="text" placeholder="ws://websocket-server-url:port" 
         @focusout="updatewsURL"
         v-model="websocketURL" 
         style="width: 100%;"/><br>
-    <Button @click="connectSocketServer">Connect</Button>
-    <Button @click="disconnectSocketServer">Abort connection</Button>
+    <Button @click="connectSocketServer">{{ $t('connector.connect')}}</Button>
+    <Button @click="disconnectSocketServer">{{ $t('connector.disconnect')}}</Button>
 </template>
 
 <style scoped></style>

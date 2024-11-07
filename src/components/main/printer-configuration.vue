@@ -3,30 +3,33 @@
 // import Button from 'primevue/button';
 // import InputText from 'primevue/inputtext';
 import { defineComponent } from 'vue'
+import { useI18n } from 'vue-i18n';
 
 export default defineComponent({
     name: 'printerConfigurationComponent',
     data: () => ({
         gcodeCommand: '',
     }),
-    
+
     methods: {
         sendPrinterCommand(type: string, movement: string) {
             console.log('sendPrinterCOmmand ', type, movement)
+
         }
     },
+    setup() {
+        const { t } = useI18n() // use as global scope
+        return { t }
+    }
 })
 </script>
 
 <template>
-
-
-
-    <Button @click="">Save config</Button>
-    
     <!--  -->
     <InputText type="text" placeholder="Gcode command" v-model="gcodeCommand" />
-    <Button @click="sendPrinterCommand('GCommand', 'M115')">Get printer information (M115)</Button>
+    <Button @click="">{{ $t('printerconfig.btn_save') }}</Button>
+
+    <Button @click="sendPrinterCommand('GCommand', 'M115')">{{ $t('printerconfig.btn_M115') }}</Button>
 
 </template>
 

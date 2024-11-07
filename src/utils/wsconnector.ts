@@ -52,7 +52,7 @@ export default class wsConnector {
         this.wsClient?.close()
     }
 
-    sendCOmmand(command: Message) {
+    sendCommand(command: Message) {
         if (!this.wsClient || this.wsClient.readyState !== WebSocket.OPEN) {
             console.error('WebSocket is not connected')
             return;

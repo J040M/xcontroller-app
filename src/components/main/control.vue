@@ -1,13 +1,16 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import * as THREE from 'three'
+import { useI18n } from 'vue-i18n';
+import { Message } from '../../types/messages';
+import { wsClient } from '../../utils/init';
 
 export default defineComponent({
     name: 'controlComponent',
     data: () => ({
         gcodeCommand: '',
         movementValue: 10 as number,
-        extruderMovementValue: 5 as number,
+        extruderValue: 1 as number,
         input: {
             x: 0,
             y: 0,
@@ -15,6 +18,10 @@ export default defineComponent({
         },
         redSphere: undefined as THREE.Mesh | undefined,
     }),
+    setup() {
+        const { t } = useI18n() // use as global scope
+        return { t }
+    },
     mounted() {
         // Scene, camera, and renderer setup
         const canvasID = document.getElementById('3dprinter-animation') as HTMLCanvasElement;
@@ -89,8 +96,48 @@ export default defineComponent({
                 );
             }
         },
-        sendMovement(axi: 'x' | 'y' | 'z') {
+        sendMovement(axi: 'X' | 'Y' | 'Z' | 'X-' | 'Y-' | 'Z-') {
+
+            // Add some safeguards for abnormal movements (mistakes)
+
             console.log(`Movement ${axi}${this.movementValue}`)
+
+            const movement: string = axi + this.movementValue
+
+            const message: Message = {
+                message_type: 'Movement',
+                command: movement
+            }
+
+            wsClient.sendCommand(message)
+
+        },
+        sendCommand(commandType: string) {
+            let message: Message = {
+                message_type: 'Movement',
+                command: '',
+            }
+
+            switch (commandType) {
+                case 'extrude':
+                    message.command = `E${this.extruderValue}`
+                    break;
+                case 'retract':
+                    message.command = `E-${this.extruderValue}`
+                    break;
+                case 'lockmotor':
+                    message.command = ``
+                    break;
+                case 'unlockmotor':
+                    message.command = ``
+                    break;
+            }
+
+            // Check for value before sending
+            // Add some notifications for these casess
+            if(message.command !== '') return
+
+            wsClient.sendCommand(message)
         }
     },
 
@@ -111,24 +158,20 @@ export default defineComponent({
             <Panel>
                 <div class="button-container">
 
-                    <label>Movement value</label>
+                    <label>{{ $t('control.movement_value') }}</label>
                     <InputNumber type="number" v-model="movementValue" />
                     <div class="button-row">
                         <div class="directional-buttons">
-                            <Button icon="pi pi-arrow-up" raised rounded @click="sendMovement('Movement', 'G1 X10')" />
+                            <Button icon="pi pi-arrow-up" raised rounded @click="sendMovement('X')" />
                             <div class="row">
-                                <Button icon="pi pi-arrow-left" raised rounded
-                                    @click="sendMovement('Movement', 'G1 X-10')" />
-                                <Button icon="pi pi-arrow-right" raised rounded
-                                    @click="sendMovement('Movement', 'G1 Y10')" />
+                                <Button icon="pi pi-arrow-left" raised rounded @click="sendMovement('X-')" />
+                                <Button icon="pi pi-arrow-right" raised rounded @click="sendMovement('Y')" />
                             </div>
-                            <Button icon="pi pi-arrow-down" raised rounded
-                                @click="sendMovement('Movement', 'G1 Y-10')" />
+                            <Button icon="pi pi-arrow-down" raised rounded @click="sendMovement('Y-')" />
                         </div>
                         <div class="button-container">
-                            <Button icon="pi pi-arrow-up" raised rounded @click="sendMovement('Movement', 'G1 Z10')" />
-                            <Button icon="pi pi-arrow-down" raised rounded
-                                @click="sendMovement('Movement', 'G1 Z-10')" />
+                            <Button icon="pi pi-arrow-up" raised rounded @click="sendMovement('Z')" />
+                            <Button icon="pi pi-arrow-down" raised rounded @click="sendMovement('Z-')" />
                         </div>
                     </div>
                 </div>
@@ -137,24 +180,24 @@ export default defineComponent({
             <Panel>
                 <div class="button-container">
                     <!-- Make this on/off switch -->
-                    <Button label="Fan On" raised rounded @click="sendMovement('Movement', 'G1 Z10')" />
-                    <Button label="Fan Off" raised rounded @click="sendMovement('Movement', 'G1 Z10')" />
+                    <Button label="Fan On" raised rounded @click="sendMovement('Z')" />
+                    <Button label="Fan Off" raised rounded @click="sendMovement('Z-')" />
                 </div>
             </Panel>
 
             <Panel>
                 <div class="button-container">
-                    <Button label="Unlock motors" raised rounded @click="sendMovement('Movement', 'G1 Z10')" />
-                    <Button label="Home motor" raised rounded @click="sendMovement('Movement', 'G1 Z10')" />
+                    <Button label="Unlock motors" raised rounded @click="sendCommand('lockmotor')" />
+                    <Button label="Home motor" raised rounded @click="sendCommand('unlockmotor')" />
                 </div>
             </Panel>
 
             <Panel>
                 <div class="button-container">
-                    <label>Extruder Movement value</label>
-                    <InputNumber type="number" v-model="extruderMovementValue" />
-                    <Button label="Extrude" @click="sendMovement('Movement', 'G1 Z10')">Extrude</Button>
-                    <Button label="Retract" @click="sendMovement('Movement', 'G1 Z-10')">Retract</Button>
+                    <label>{{ $t('control.extruder_value') }}</label>
+                    <InputNumber type="number" v-model="extruderValue" />
+                    <Button label="Extrude" @click="sendCommand('extrude')">Extrude</Button>
+                    <Button label="Retract" @click="sendCommand('retract')">Retract</Button>
                 </div>
             </Panel>
         </div>
