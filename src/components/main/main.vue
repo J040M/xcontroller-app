@@ -20,10 +20,6 @@ export default defineComponent({
         gcodeCommand: '',
     }),
     methods: {
-    },
-    setup() {
-        const { t } = useI18n() // use as global scope
-        return { t }
     }
 })
 </script>

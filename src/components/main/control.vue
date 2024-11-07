@@ -1,9 +1,8 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import * as THREE from 'three'
-import { useI18n } from 'vue-i18n';
 import { Message } from '../../types/messages';
-import { wsClient } from '../../utils/init';
+import { wsClient } from '../../init/client';
 
 export default defineComponent({
     name: 'controlComponent',
@@ -18,10 +17,6 @@ export default defineComponent({
         },
         redSphere: undefined as THREE.Mesh | undefined,
     }),
-    setup() {
-        const { t } = useI18n() // use as global scope
-        return { t }
-    },
     mounted() {
         // Scene, camera, and renderer setup
         const canvasID = document.getElementById('3dprinter-animation') as HTMLCanvasElement;

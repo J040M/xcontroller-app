@@ -1,15 +1,8 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { useI18n } from 'vue-i18n';
 
 export default defineComponent({
     name: 'filesComponent',
-    methods: {
-    },
-    setup() {
-        const { t } = useI18n() // use as global scope
-        return { t }
-    }
 })
 </script>
 
@@ -33,4 +26,8 @@ export default defineComponent({
     </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+button {
+    margin: 5px 5px 5px 0px;
+}
+</style>

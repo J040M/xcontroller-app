@@ -1,9 +1,5 @@
 <script lang="ts">
-
-// import Button from 'primevue/button';
-// import InputText from 'primevue/inputtext';
 import { defineComponent } from 'vue'
-import { useI18n } from 'vue-i18n';
 
 export default defineComponent({
     name: 'printerConfigurationComponent',
@@ -15,10 +11,6 @@ export default defineComponent({
         sendPrinterCommand(type: string, movement: string) {
             console.log('sendPrinterCOmmand ', type, movement)
         }
-    },
-    setup() {
-        const { t } = useI18n() // use as global scope
-        return { t }
     }
 })
 </script>

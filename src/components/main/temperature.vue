@@ -1,7 +1,6 @@
 <script lang="ts">
 import Chart from 'chart.js/auto';
 import { defineComponent } from 'vue'
-import { useI18n } from 'vue-i18n';
 
 export default defineComponent({
     name: 'temperatureComponent',
@@ -39,10 +38,6 @@ export default defineComponent({
             data: data,
             options: {},
         });
-    },
-    setup() {
-        const { t } = useI18n() // use as global scope
-        return { t }
     }
 })
 </script>
