@@ -5,20 +5,19 @@ import { wsClient } from '../init/client';
 export default defineComponent({
     name: 'connectorComponent',
     data: () => ({
-        gcodeCommand: '',
         websocketURL: null as string | null,
-        connectionStatus: false as boolean
+        connectionStatus: false as boolean,
     }),
     mounted() {
         this.websocketURL = localStorage.getItem('wsURL')
-        this.connectionStatus = wsClient.connectionStatus
     },
     methods: {
-        connectSocketServer() {
-            wsClient.openConnection()
+        async connectToPrinter() {
+            await wsClient.openConnection()
+            this.connectionStatus = wsClient.connectionStatus
         },
-        disconnectSocketServer() {
-            wsClient.closeConnection()
+        async disconnectFromPrinter() {
+            await wsClient.closeConnection()
         },
         updatewsURL() {
             if (!this.websocketURL) return
@@ -30,13 +29,17 @@ export default defineComponent({
 </script>
 
 <template>
-    <label>{{ $t('connector.status')}} {{ connectionStatus }}</label><br>
-    <InputText type="text" placeholder="ws://websocket-server-url:port" 
-        @focusout="updatewsURL"
-        v-model="websocketURL" 
-        style="width: 100%;"/><br>
-    <Button @click="connectSocketServer">{{ $t('connector.connect')}}</Button>
-    <Button @click="disconnectSocketServer">{{ $t('connector.disconnect')}}</Button>
+    <label><b>{{ $t('connector.status') }}</b> {{ connectionStatus }}</label><br><br>
+    <InputText type="text" placeholder="ws://websocket-server-url:port" @focusout="updatewsURL" v-model="websocketURL"
+        style="width: 100%;" /><br>
+    <Button v-if="!connectionStatus" icon="pi pi-power-off" style="color: red" @click="connectToPrinter"></Button>
+    <Button v-else icon="pi pi-power-off" style="color: green" @click="disconnectFromPrinter"></Button>
+    <!-- <Button icon="pi-power-off" @click="connectToPrinter">{{ $t('connector.connect') }}</Button> -->
+    <!-- <Button @click="disconnectFromPrinter">{{ $t('connector.disconnect') }}</Button> -->
 </template>
 
-<style scoped></style>
+<style scoped>
+button {
+    margin: 5px 5px 5px 0px;
+}
+</style>

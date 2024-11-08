@@ -5,7 +5,6 @@ import Temperature from './temperature.vue';
 import Terminal from './terminal.vue';
 import PrinterConfiguration from './printer-configuration.vue';
 import GcodeViewer from './gcodeViewer.vue';
-import { useI18n } from 'vue-i18n';
 
 export default defineComponent({
     name: 'mainContentComponent',

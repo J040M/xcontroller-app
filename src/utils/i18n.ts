@@ -5,7 +5,6 @@ import { fr } from '../locale/fr.json'
 export const i18n = createI18n({
   fallbackLocale: 'en',
   allowComposition: true,
-  // Import from external files
   messages: {
     en, fr
   }

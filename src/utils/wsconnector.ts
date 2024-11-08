@@ -4,11 +4,10 @@ export default class wsConnector {
 
     private wsClient: WebSocket | null = null
     private _wsURL: string = 'ws://127.0.0.1:9002'
+    private _connectionStatus: boolean = false
 
-    _connectionStatus: boolean = false
-
-    messageHistory: MessageEvent<any>[] = []
-    commandHistory: Message[] = []
+    private _messageHistory: MessageEvent<any>[] = []
+    private _commandHistory: Message[] = []
 
     set wsURL(value: string | undefined) {
         if (value) this._wsURL = value
@@ -17,6 +16,14 @@ export default class wsConnector {
 
     get connectionStatus() {
         return this._connectionStatus
+    }
+
+    get messageHistory() {
+        return this._messageHistory
+    }
+
+    get commandHistory() {
+        return this._commandHistory
     }
 
     openConnection(protocols?: string | string[]) {
