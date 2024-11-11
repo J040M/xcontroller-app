@@ -3,7 +3,6 @@ import { defineComponent } from 'vue'
 import Control from './control.vue';
 import Temperature from './temperature.vue';
 import Terminal from './terminal.vue';
-import PrinterConfiguration from './printer-configuration.vue';
 import GcodeViewer from './gcodeViewer.vue';
 
 export default defineComponent({
@@ -12,7 +11,6 @@ export default defineComponent({
         Control,
         Temperature,
         Terminal,
-        PrinterConfiguration,
         GcodeViewer
     },
     data: () => ({
@@ -31,8 +29,7 @@ export default defineComponent({
                     <Tab value="0">{{ $t('main.control') }}</Tab>
                     <Tab value="1">{{ $t('main.temperature') }}</Tab>
                     <Tab value="2">{{ $t('main.terminal') }}</Tab>
-                    <Tab value="3">{{ $t('main.printerconfig') }}</Tab>
-                    <Tab value="4">{{ $t('main.gcodeviewer') }}</Tab>
+                    <Tab value="3">{{ $t('main.gcodeviewer') }}</Tab>
                 </TabList>
             </div>
             <TabPanels>
@@ -52,11 +49,6 @@ export default defineComponent({
                     </div>
                 </TabPanel>
                 <TabPanel value="3">
-                    <div class="printer-configs-container">
-                        <PrinterConfiguration />
-                    </div>
-                </TabPanel>
-                <TabPanel value="4">
                     <div class="printer-configs-container">
                         <GcodeViewer />
                     </div>

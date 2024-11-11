@@ -4,6 +4,8 @@ import * as THREE from 'three'
 import { Message } from '../../types/messages';
 import { wsClient } from '../../init/client';
 
+type Axi = 'X' | 'Y' | 'Z' | 'X-' | 'Y-' | 'Z-'
+
 export default defineComponent({
     name: 'controlComponent',
     data: () => ({
@@ -79,7 +81,8 @@ export default defineComponent({
         animate();
     },
     methods: {
-        updateRedSpherePosition() {
+        // TODO: The values from the commands must be scaled for the sphere
+        updateRedSpherePosition(): void {
             if (this.redSphere) {
                 // Update red sphere's position using the slider values
                 // Limit the red sphere's position to stay within the cube
@@ -91,51 +94,43 @@ export default defineComponent({
                 );
             }
         },
-        sendMovement(axi: 'X' | 'Y' | 'Z' | 'X-' | 'Y-' | 'Z-') {
-
-            // Add some safeguards for abnormal movements (mistakes)
-
-            console.log(`Movement ${axi}${this.movementValue}`)
-
-            const movement: string = axi + this.movementValue
-
+        sendCommand(command: Axi | string): void {
             const message: Message = {
                 message_type: 'Movement',
-                command: movement
+                message: ''
             }
 
-            wsClient.sendCommand(message)
-
-        },
-        sendCommand(commandType: string) {
-            let message: Message = {
-                message_type: 'Movement',
-                command: '',
-            }
-
-            switch (commandType) {
+            switch (command) {
                 case 'extrude':
-                    message.command = `E${this.extruderValue}`
+                    message.message = `E${this.extruderValue}`
                     break;
                 case 'retract':
-                    message.command = `E-${this.extruderValue}`
+                    message.message = `E-${this.extruderValue}`
                     break;
                 case 'lockmotor':
-                    message.command = ``
+                    message.message = `M17`
                     break;
                 case 'unlockmotor':
-                    message.command = ``
+                    message.message = `M18`
                     break;
+                case 'X':
+                case 'Y':
+                case 'Z':
+                case 'X-':
+                case 'Y-':
+                case 'Z-':
+                    console.log(`Movement ${command}${this.movementValue}`)
+                    message.message = command + this.movementValue
+                    break;
+                default:
+                    console.error('No command found. Returning...')
+                    return
             }
 
-            // Check for value before sending
-            // Add some notifications for these casess
-            if(message.command !== '') return
-
+            if (message.message !== '') return
             wsClient.sendCommand(message)
         }
     },
-
 });
 
 </script>
@@ -148,25 +143,23 @@ export default defineComponent({
 
     <div id="remote-controller">
         <div class="button-row">
-
             <!-- Directional buttons -->
             <Panel>
                 <div class="button-container">
-
                     <label>{{ $t('control.movement_value') }}</label>
                     <InputNumber type="number" v-model="movementValue" />
                     <div class="button-row">
                         <div class="directional-buttons">
-                            <Button icon="pi pi-arrow-up" raised rounded @click="sendMovement('X')" />
+                            <Button icon="pi pi-arrow-up" raised rounded @click="sendCommand('X')" />
                             <div class="row">
-                                <Button icon="pi pi-arrow-left" raised rounded @click="sendMovement('X-')" />
-                                <Button icon="pi pi-arrow-right" raised rounded @click="sendMovement('Y')" />
+                                <Button icon="pi pi-arrow-left" raised rounded @click="sendCommand('X-')" />
+                                <Button icon="pi pi-arrow-right" raised rounded @click="sendCommand('Y')" />
                             </div>
-                            <Button icon="pi pi-arrow-down" raised rounded @click="sendMovement('Y-')" />
+                            <Button icon="pi pi-arrow-down" raised rounded @click="sendCommand('Y-')" />
                         </div>
                         <div class="button-container">
-                            <Button icon="pi pi-arrow-up" raised rounded @click="sendMovement('Z')" />
-                            <Button icon="pi pi-arrow-down" raised rounded @click="sendMovement('Z-')" />
+                            <Button icon="pi pi-arrow-up" raised rounded @click="sendCommand('Z')" />
+                            <Button icon="pi pi-arrow-down" raised rounded @click="sendCommand('Z-')" />
                         </div>
                     </div>
                 </div>
@@ -175,8 +168,8 @@ export default defineComponent({
             <Panel>
                 <div class="button-container">
                     <!-- Make this on/off switch -->
-                    <Button label="Fan On" raised rounded @click="sendMovement('Z')" />
-                    <Button label="Fan Off" raised rounded @click="sendMovement('Z-')" />
+                    <Button label="Fan On" raised rounded @click="sendCommand('Z')" />
+                    <Button label="Fan Off" raised rounded @click="sendCommand('Z-')" />
                 </div>
             </Panel>
 

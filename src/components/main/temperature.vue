@@ -1,17 +1,13 @@
 <script lang="ts">
-import Chart from 'chart.js/auto';
+import Chart, { ChartItem } from 'chart.js/auto';
 import { defineComponent } from 'vue'
 
 export default defineComponent({
     name: 'temperatureComponent',
-    data: () => ({
-        gcodeCommand: '',
-    }),
+    // data: () => ({}),
     methods: {
     },
     mounted() {
-        console.log('Temp component mounted')
-
         const labels = ['-1', '-30sec', 'now']
 
         const data = {
@@ -32,8 +28,9 @@ export default defineComponent({
             }
             ]
         };
-        const ctx = document.getElementById('temp-graph');
-        const lineChart = new Chart(ctx, {
+
+        const ctx = document.getElementById('temp-graph') as ChartItem;
+        new Chart(ctx, {
             type: 'line',
             data: data,
             options: {},

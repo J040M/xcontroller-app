@@ -3,57 +3,31 @@
 import { defineComponent } from 'vue'
 
 import TerminalService from 'primevue/terminalservice'
+import { wsClient } from '../../init/client';
 
 export default defineComponent({
     name: 'terminalComponent',
     data: () => ({
-        gcodeCommand: '',
-        lastCommand: '' as string,
         commandHistory: [] as string[]
     }),
     mounted() {
-        console.log('Terminal component mounted')
-
+        // Listen to commands from terminal 
         TerminalService.on("command", this.commandHandler)
+
+        // Listen to messages from WS
+        wsClient.on('message', (message: string) => TerminalService.emit('response', message))
     },
     beforeUnmount() {
         TerminalService.off("command", this.commandHandler)
     },
     methods: {
-        sendCommand(message: string) {
-            console.log('sendign command: ', message)
+        commandHandler(command: string): void {
+            this.commandHistory.push(command)
 
-            // Do some filtering
-            const finalMessage = ''
-            // send clean output to printer
-            this.sendPrinterCommand(finalMessage)
-        },
-        sendPrinterCommand(message: string) {
-            // send message to pritner and recover response
-            const response = message
-
-            TerminalService.emit('response', response);
-            TerminalService.on("command", this.commandHandler(message))
-            // send message to terminal
-            TerminalService.emit("response", ["response"])
-        },
-        commandHandler(message: string) {
-            this.commandHistory.push(message)
-
-            let response
-            
-            response = 'Test response'
-
-            // switch (command) {
-            //     case 'validcommand':
-            //         response = 'Valid command';
-            //         break;
-
-            //     default:
-            //         response = 'Unknown command: ' + command;
-            // }
-
-            TerminalService.emit('response', response);
+            wsClient.sendCommand({
+                message_type: 'Terminal',
+                message: command
+            })
         }
     },
 })

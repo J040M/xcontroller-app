@@ -13,9 +13,7 @@ import * as THREE from 'three'
 
 export default defineComponent({
     name: 'GcodeViewerComponent',
-    data: () => ({
-
-    }),
+    // data: () => ({}),
     mounted() {
         this.initCanvas()
     },
@@ -36,8 +34,8 @@ export default defineComponent({
             controls.update()
 
             // Store parsed G-code commands
-            let originalCommands = []
-            let currentLine, currentTravelLine
+            // let originalCommands = []
+            // let currentLine, currentTravelLine
 
             // Add ambient light for subtle scene lighting
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.6)
