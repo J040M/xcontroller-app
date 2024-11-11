@@ -1,69 +1,58 @@
+import { EventEmitter } from '../utils/eventemitter';
 import { Message } from "../types/messages"
 
-export default class wsConnector {
+export default class wsConnector extends EventEmitter {
 
     private wsClient: WebSocket | null = null
-    private _wsURL: string = 'ws://127.0.0.1:9002'
+    private _wsURL: string = ''
     private _connectionStatus: boolean = false
 
-    private _messageHistory: MessageEvent<any>[] = []
+    private _messageHistory: MessageEvent<string>[] = []
     private _commandHistory: Message[] = []
 
     set wsURL(value: string | undefined) {
         if (value) this._wsURL = value
-        else this._wsURL = 'ws://127.0.0.1:9002'
     }
 
-    get connectionStatus() {
+    get connectionStatus(): boolean {
         return this._connectionStatus
     }
 
-    get messageHistory() {
+    get messageHistory(): MessageEvent<string>[]  {
         return this._messageHistory
     }
 
-    get commandHistory() {
+    get commandHistory(): Message[] {
         return this._commandHistory
     }
 
-    openConnection(protocols?: string | string[]) {
+    connect(protocols?: string | string[]): void {
         // Initialize wsClient with the WebSocket instance
         this.wsClient = new WebSocket(this._wsURL, protocols);
 
-        // Handle WebSocket events
-        this.wsClient.onopen = () => {
-            console.log('WebSocket connection established');
-            this._connectionStatus = true
-        };
-
-        this.wsClient.onerror = (error) => {
-            console.error('WebSocket error:', error);
-            this._connectionStatus = false
-        };
-
-        this.wsClient.onclose = () => {
-            console.log('WebSocket connection closed');
-            this.wsClient = null;
-            this._connectionStatus = false
-        };
-
-        this.wsClient.onmessage = (message) => {
-            console.log('OnMessage: ', message)
-            this.messageHistory.push(message)
-        }
+        // Attach events
+        this.attachEventListeners()
     }
 
-    closeConnection() {
+    disconnect(): void {
         this.wsClient?.close()
     }
 
-    sendCommand(command: Message) {
+    sendCommand(command: Message): void {
         if (!this.wsClient || this.wsClient.readyState !== WebSocket.OPEN) {
             console.error('WebSocket is not connected')
-            return;
+            return
         }
 
-        this.commandHistory.push(command)
         this.wsClient.send(JSON.stringify(command))
+    }
+
+    private attachEventListeners(): void {
+        if (!this.wsClient) return;
+
+        this.wsClient.onopen = () => this.emit('connected', 'WS connected');
+        this.wsClient.onclose = () => this.emit('disconnected', 'WS disconnected');
+        this.wsClient.onerror = (error) => this.emit('error', error);
+        this.wsClient.onmessage = (message) => this.emit('message', message);
     }
 }
