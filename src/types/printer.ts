@@ -1,7 +1,3 @@
-interface Printer {
-
-}
-
 interface PrinterStatus {
     state: string,
     file: string,
@@ -9,7 +5,7 @@ interface PrinterStatus {
     est_time: string,
 }
 
-interface Files {
+export interface File {
     file_name: string,
     file_size: string,
     file_modified_date: string,

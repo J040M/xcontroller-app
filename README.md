@@ -1,16 +1,32 @@
-# Tauri + Vue 3 + TypeScript
+# Xcontroller-App
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+Desktop application for controlling/managing 3D printers using XController [XController](https://github.com/J040M/xcontroller)
 
-## Recommended IDE Setup
+## Features
 
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+- **Printer Status**: Get live updates on the printer's status, including print progress, temperatures, and more.
+- **Movement Control**: Precisely control the movement of your printer's axes directly from the interface.
+- **Temperature Graphs**: Monitor and analyze temperature changes of the printer's components in real-time.
+- **Terminal**: Send commands to the printer and view live responses via a dedicated terminal.
+- **File Listing**: Browse and manage files stored on your 3D printer.
+- **Upload files to SD**: Upload files to SD card.
+- **Run print jobs**: Run 3D printing job from SD card.
+- **GCode Viewer**: Visualize your 3D printing jobs with an integrated GCode viewer.
 
-## Type Support For `.vue` Imports in TS
+## Development
 
-Since TypeScript cannot handle type information for `.vue` imports, they are shimmed to be a generic Vue component type by default. In most cases this is fine if you don't really care about component prop types outside of templates. However, if you wish to get actual prop types in `.vue` imports (for example to get props validation when using manual `h(...)` calls), you can enable Volar's Take Over mode by following these steps:
+To run start by installing NodeJS and Rust. 
 
-1. Run `Extensions: Show Built-in Extensions` from VS Code's command palette, look for `TypeScript and JavaScript Language Features`, then right click and select `Disable (Workspace)`. By default, Take Over mode will enable itself if the default TypeScript extension is disabled.
-2. Reload the VS Code window by running `Developer: Reload Window` from the command palette.
+Run the app locally on browser
+``` npm install && npm run dev```
 
-You can learn more about Take Over mode [here](https://github.com/johnsoncodehk/volar/discussions/471).
+## Build from source
+
+Build Vue app
+
+``` npm run build```
+
+Build Tauri app
+``` npm run tauri build```
+
+For more information regarding build check [Tauri](https://v2.tauri.app/distribute/)

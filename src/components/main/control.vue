@@ -144,9 +144,8 @@ export default defineComponent({
     <div id="remote-controller">
         <div class="button-row">
             <!-- Directional buttons -->
-            <Panel>
-                <div class="button-container">
-                    <label>{{ $t('control.movement_value') }}</label>
+            <Panel :header="$t('control.header_cartesian')">
+                <div class="button-container remote-container">
                     <InputNumber type="number" v-model="movementValue" />
                     <div class="button-row">
                         <div class="directional-buttons">
@@ -165,27 +164,28 @@ export default defineComponent({
                 </div>
             </Panel>
             <!--  -->
-            <Panel>
-                <div class="button-container">
+            <Panel :header="$t('control.header_fan')" class="vertical-container">
+                <div class="button-container fan-container vertical-btn-container">
                     <!-- Make this on/off switch -->
-                    <Button label="Fan On" raised rounded @click="sendCommand('Z')" />
-                    <Button label="Fan Off" raised rounded @click="sendCommand('Z-')" />
+                    <Button :label="$t('control.btn_fan_on')" raised rounded @click="sendCommand('Z')" />
+                    <Button :label="$t('control.btn_fan_off')" raised rounded @click="sendCommand('Z-')" />
                 </div>
             </Panel>
 
-            <Panel>
-                <div class="button-container">
+            <Panel :header="$t('control.header_motor')">
+                <div class="button-container motor-container">
                     <Button label="Unlock motors" raised rounded @click="sendCommand('lockmotor')" />
                     <Button label="Home motor" raised rounded @click="sendCommand('unlockmotor')" />
                 </div>
             </Panel>
 
-            <Panel>
-                <div class="button-container">
-                    <label>{{ $t('control.extruder_value') }}</label>
+            <Panel :header="$t('control.header_extruder')">
+                <div class="button-container extruder-container">
                     <InputNumber type="number" v-model="extruderValue" />
-                    <Button label="Extrude" @click="sendCommand('extrude')">{{ $t('control.btn_extrude') }}</Button>
-                    <Button label="Retract" @click="sendCommand('retract')">{{ $t('control.btn_retract') }}</Button>
+                    <Button label="Extrude" raised rounded @click="sendCommand('extrude')">{{ $t('control.btn_extrude')
+                        }}</Button>
+                    <Button label="Retract" raised rounded @click="sendCommand('retract')">{{ $t('control.btn_retract')
+                        }}</Button>
                 </div>
             </Panel>
         </div>
@@ -203,6 +203,37 @@ canvas {
     /* Reset padding */
     border: none;
     /* Remove borders */
+}
+
+.vertical-container {
+    display: table-cell;
+    text-align: center;
+}
+
+.vertical-btn-container {
+    /* position: absolute; */
+    top: 50%;
+    left: 50%;
+}
+
+.remote-container {}
+
+.extruder-container {
+    button {
+        margin: 0 0 10px 0;
+    }
+}
+
+.fan-container {
+    button {
+        margin: 0 0 10px 0;
+    }
+}
+
+.motor-container {
+    button {
+        margin: 0 0 10px 0;
+    }
 }
 
 /* Container styling */

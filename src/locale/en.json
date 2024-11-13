@@ -29,10 +29,17 @@
             "gcodeviewer": "Gcode viewer"
         },
         "control": {
-            "movement_value": "Movement value (X,Y,Z)",
             "extruder_value": "Extruder value (E)",
+            "header_cartesian": "Move X, Y, Z",
+            "header_extruder": "Extruder",
+            "header_motor": "Motor",
+            "header_fan": "Fan",
             "btn_extrude": "Extrude",
-            "btn_retract": "Retract"
+            "btn_retract": "Retract",
+            "btn_fan_on": "Fan on",
+            "btn_fan_off": "Fan off",
+            "btn_unlockmotor": "Unlock motor",
+            "btn_lockmoter": "Lock motor"
         },
         "printerconfig": {
             "btn_save": "Save",

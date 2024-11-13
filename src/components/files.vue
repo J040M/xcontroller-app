@@ -1,5 +1,6 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { File } from '../types/printer'
 
 export default defineComponent({
     name: 'filesComponent',
@@ -20,7 +21,7 @@ export default defineComponent({
                 file_modified_date: '12.2.2024',
                 file_size: '91223',
             },
-        ],
+        ] as File[], 
     }),
 })
 </script>
@@ -40,7 +41,6 @@ export default defineComponent({
         <div class="button-action-group">
             <Button icon="pi pi-arrow-circle-up" />
             <Button icon="pi pi-file" />
-            <Button icon="pi pi-download" />
             <Button icon="pi pi-trash" />
         </div>
     </div>

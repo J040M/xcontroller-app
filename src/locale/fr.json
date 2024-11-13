@@ -32,7 +32,11 @@
             "movement_value": "Movement value (X,Y,Z)",
             "extruder_value": "Buse value (E)",
             "btn_extrude": "Extrude",
-            "btn_retract": "Retract"
+            "btn_retract": "Retract",
+            "btn_fan_on": "Fan on",
+            "btn_fan_off": "Fan off",
+            "btn_unlockmotor": "Unlock motor",
+            "btn_lockmoter": "Lock motor"
         },
         "printerconfig": {
             "btn_save": "Enregistrer",

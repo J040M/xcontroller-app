@@ -25,7 +25,7 @@ export default defineComponent({
             this.commandHistory.push(command)
 
             wsClient.sendCommand({
-                message_type: 'Terminal',
+                message_type: 'Unsafe',
                 message: command
             })
         }
@@ -34,9 +34,7 @@ export default defineComponent({
 </script>
 
 <template>
-
     <Terminal prompt="xcontroller $ " />
-
 </template>
 
 <style scoped></style>

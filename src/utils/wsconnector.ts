@@ -1,7 +1,7 @@
 import { EventEmitter } from '../utils/eventemitter';
 import { Message } from "../types/messages"
 
-export default class wsConnector extends EventEmitter {
+export default class WebSocketConnector extends EventEmitter {
 
     private wsClient: WebSocket | null = null
     private _wsURL: string = ''
@@ -18,7 +18,7 @@ export default class wsConnector extends EventEmitter {
         return this._connectionStatus
     }
 
-    get messageHistory(): MessageEvent<string>[]  {
+    get messageHistory(): MessageEvent<string>[] {
         return this._messageHistory
     }
 
@@ -50,8 +50,8 @@ export default class wsConnector extends EventEmitter {
     private attachEventListeners(): void {
         if (!this.wsClient) return;
 
-        this.wsClient.onopen = () => this.emit('connected', 'WS connected');
-        this.wsClient.onclose = () => this.emit('disconnected', 'WS disconnected');
+        this.wsClient.onopen = () => this.emit('connected', 'connected');
+        this.wsClient.onclose = () => this.emit('disconnected', 'disconnected');
         this.wsClient.onerror = (error) => this.emit('error', error);
         this.wsClient.onmessage = (message) => this.emit('message', message);
     }

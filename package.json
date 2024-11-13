@@ -1,13 +1,14 @@
 {
   "name": "xcontroller-app",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "tauricon": "tauricon"
   },
   "dependencies": {
     "@primevue/themes": "^4.1.0",
@@ -22,6 +23,7 @@
   },
   "devDependencies": {
     "@tauri-apps/cli": "^1",
+    "@tauri-apps/tauricon": "github:tauri-apps/tauricon",
     "@types/three": "^0.169.0",
     "@vitejs/plugin-vue": "^5.0.4",
     "typescript": "^5.0.2",
