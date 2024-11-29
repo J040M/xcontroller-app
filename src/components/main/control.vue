@@ -180,8 +180,8 @@ export default defineComponent({
             </Panel>
 
             <Panel :header="$t('control.header_extruder')">
+                <InputNumber type="number" v-model="extruderValue" />
                 <div class="button-container extruder-container">
-                    <InputNumber type="number" v-model="extruderValue" />
                     <Button label="Extrude" raised rounded @click="sendCommand('extrude')">{{ $t('control.btn_extrude')
                         }}</Button>
                     <Button label="Retract" raised rounded @click="sendCommand('retract')">{{ $t('control.btn_retract')
@@ -196,13 +196,9 @@ export default defineComponent({
 <style scoped>
 canvas {
     display: block;
-    /* Removes extra space */
     margin: 0;
-    /* Reset margins */
     padding: 0;
-    /* Reset padding */
     border: none;
-    /* Remove borders */
 }
 
 .vertical-container {
@@ -211,12 +207,9 @@ canvas {
 }
 
 .vertical-btn-container {
-    /* position: absolute; */
     top: 50%;
     left: 50%;
 }
-
-.remote-container {}
 
 .extruder-container {
     button {

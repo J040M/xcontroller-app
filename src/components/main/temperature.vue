@@ -1,7 +1,6 @@
 <script lang="ts">
 import Chart, { ChartItem } from 'chart.js/auto';
 import { defineComponent } from 'vue'
-import { wsClient } from '../../init/client';
 
 export default defineComponent({
     name: 'temperatureComponent',
@@ -36,16 +35,6 @@ export default defineComponent({
             data: data,
             options: {},
         });
-
-        // TODO: Add websocket listener for temperature updates
-
-        // Create a timer that send a command every 30sec to get the temperature
-        // setInterval(() => {
-        //     wsClient.sendCommand({
-        //         message_type: 'GCommand',
-        //         message: 'M105'
-        //     })
-        // }, 30000)
     }
 })
 </script>

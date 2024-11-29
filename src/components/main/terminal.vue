@@ -41,7 +41,12 @@ export default defineComponent({
 </script>
 
 <template>
-    <Terminal prompt="xcontroller $ " />
+    <Terminal class="terminal" prompt="xcontroller $ " />
 </template>
 
-<style scoped></style>
+<style scoped>
+.terminal {
+    height: 750px;
+    width: 100%;
+}
+</style>

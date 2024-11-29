@@ -32,6 +32,10 @@ import Divider from 'primevue/divider';
 import Panel from 'primevue/panel';
 
 import { LineController, LineElement, PointElement, CategoryScale, LinearScale } from "chart.js/auto";
+
+import Toast from 'primevue/toast';
+import ToastService from 'primevue/toastservice';
+
 import { i18n } from "./utils/i18n";
 
 const app = createApp(App);
@@ -41,6 +45,7 @@ app.use(PrimeVue, {
         preset: Aura
     }
 })
+app.use(ToastService)
 // Primevue
 .component('Button', Button)
 .component('InputNumber', InputNumber)
@@ -67,5 +72,9 @@ app.use(PrimeVue, {
 .component('PointElement', PointElement)
 .component('CategoryScale', CategoryScale)
 .component('LinearScale', LinearScale)
+
+// Toast
+.component('Toast', Toast)
+
 // mount App
 .mount("#app");

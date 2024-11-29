@@ -29,11 +29,9 @@ export default defineComponent({
         }
     }
 })
-
 </script>
 
 <template>
-    <label><b>{{ $t('connector.status') }}</b> {{ connectionStatus }}</label><br><br>
     <div class="horizontal-container">
         <InputText type="text" placeholder="ws://websocket-server-url:port" @focusout="setWSURL" v-model="websocketURL"
             style="flex: 1; margin-right: 10px;" />

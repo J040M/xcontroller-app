@@ -12,11 +12,6 @@ export default defineComponent({
         Temperature,
         Terminal,
         GcodeViewer
-    },
-    data: () => ({
-        gcodeCommand: '',
-    }),
-    methods: {
     }
 })
 </script>
