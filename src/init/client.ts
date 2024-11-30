@@ -1,9 +1,12 @@
 import WebSocketConnector from "../utils/wsconnector";
-import { useToast } from "primevue/usetoast";
+import { Printer } from "../utils/printer";
+import { Message } from "../types/messages";
 
-const toast = useToast();
-// 
-// WS CLIENT INITIALIZATION
+
+/*********************/
+/***** WS CLIENT *****/
+/*********************/
+
 export const wsClient = new WebSocketConnector()
 
 // IF wsURL is saved, read and set wsClient url
@@ -11,13 +14,36 @@ const wsURL = localStorage.getItem('wsURL')
 if (wsURL) wsClient.wsURL = wsURL
 
 // Set listeners for connected and error events
-// TODO: Add translation for toast messages
-wsClient.on('connected', (message: MessageEvent<string>)=> {
+wsClient.on('connected', (message: MessageEvent<string>) => {
     console.log(message)
-    // $toast.add({severity:'success', summary: 'Success', detail: 'Connected to printer'})
 })
 
 wsClient.on('error', (error: Event) => {
     console.error(error)
-    // $toast.add({severity:'error', summary: 'Error', detail: 'Connection to printer failed'})
+})
+
+/**********************/
+/***** PRINTER ********/
+/**********************/
+
+export const printer = new Printer({
+    firmware: '',
+    axisPositions: {
+        x: 0,
+        y: 0,
+        z: 0,
+        e: 0
+    },
+    homed: false
+})
+
+//TODO: THis is just a test, it should be improved
+wsClient.on('message', (message: Message) => {
+
+    //TODO: Maybe this should be a method in the printer class
+    // or Switch case...
+    if (message.message_type === 'M114') {
+        const resp_axis = JSON.parse(message.message)
+        printer.axisPositions = resp_axis
+    }
 })
