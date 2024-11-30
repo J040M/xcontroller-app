@@ -11,13 +11,4 @@ export interface File {
     file_modified_date: string,
 }
 
-export class printer {
-
-    printStatus: PrinterStatus | undefined
-    printFile: File | undefined
-
-    constructor() {
-
-    }
-
-}
+export type Axis = 'x' | 'y' | 'z' | 'e'
