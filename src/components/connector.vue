@@ -14,9 +14,9 @@ export default defineComponent({
         }
     },
     mounted() {
-        // Define wsURL or null
+        // Get wsURL from local storage
         this.websocketURL = localStorage.getItem('wsURL')
-        // Listen to necessary ws client events
+        
         wsClient.on('connected', () => this.connectionStatus = true)
         wsClient.on('disconnected', () => this.connectionStatus = false)
     },
@@ -29,11 +29,9 @@ export default defineComponent({
         }
     }
 })
-
 </script>
 
 <template>
-    <label><b>{{ $t('connector.status') }}</b> {{ connectionStatus }}</label><br><br>
     <div class="horizontal-container">
         <InputText type="text" placeholder="ws://websocket-server-url:port" @focusout="setWSURL" v-model="websocketURL"
             style="flex: 1; margin-right: 10px;" />

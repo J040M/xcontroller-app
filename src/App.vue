@@ -22,6 +22,7 @@ export default defineComponent({
 </script>
 
 <template>
+  <Toast />
   <div class="main-container">
     <div class="left-container">
       <Accordion multiple>

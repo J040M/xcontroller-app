@@ -4,6 +4,7 @@ import { defineComponent } from 'vue'
 
 import TerminalService from 'primevue/terminalservice'
 import { wsClient } from '../../init/client';
+import { MessageResponse } from '../../types/messages';
 
 export default defineComponent({
     name: 'terminalComponent',
@@ -15,7 +16,13 @@ export default defineComponent({
         TerminalService.on("command", this.commandHandler)
 
         // Listen to messages from WS
-        wsClient.on('message', (message: string) => TerminalService.emit('response', message))
+        wsClient.on('message', (message: any) => { 
+            const data = JSON.parse(message.data) as MessageResponse
+
+            data.raw_message = data.raw_message.replace(/\r/g, ' ')
+
+            TerminalService.emit('response', data.raw_message) 
+        })
     },
     beforeUnmount() {
         TerminalService.off("command", this.commandHandler)
@@ -34,7 +41,12 @@ export default defineComponent({
 </script>
 
 <template>
-    <Terminal prompt="xcontroller $ " />
+    <Terminal class="terminal" prompt="xcontroller $ " />
 </template>
 
-<style scoped></style>
+<style scoped>
+.terminal {
+    height: 750px;
+    width: 100%;
+}
+</style>

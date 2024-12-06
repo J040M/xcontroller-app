@@ -1,10 +1,8 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import * as THREE from 'three'
-import { Message } from '../../types/messages';
-import { wsClient } from '../../init/client';
-
-type Axi = 'X' | 'Y' | 'Z' | 'X-' | 'Y-' | 'Z-'
+import { printer } from '../../init/client';
+import { Axis } from '../../types/printer';
 
 export default defineComponent({
     name: 'controlComponent',
@@ -94,41 +92,43 @@ export default defineComponent({
                 );
             }
         },
-        sendCommand(command: Axi | string): void {
-            const message: Message = {
-                message_type: 'Movement',
-                message: ''
-            }
-
+        sendCommand(command: Axis | string): void {
             switch (command) {
                 case 'extrude':
-                    message.message = `E${this.extruderValue}`
+                    printer.moveAxis('e', this.extruderValue, '+');
                     break;
                 case 'retract':
-                    message.message = `E-${this.extruderValue}`
+                    printer.moveAxis('e', this.extruderValue, '-');
                     break;
+                //TODO: This is probably not necessary
                 case 'lockmotor':
-                    message.message = `M17`
                     break;
                 case 'unlockmotor':
-                    message.message = `M18`
+                    printer.disableMotors();
                     break;
-                case 'X':
-                case 'Y':
-                case 'Z':
-                case 'X-':
-                case 'Y-':
-                case 'Z-':
-                    console.log(`Movement ${command}${this.movementValue}`)
-                    message.message = command + this.movementValue
+                case 'homemotor':
+                    printer.autoHome();
+                    break;
+                case 'homemotor':
+                    printer.bedLeveling();
+                    break;
+                case 'x+':
+                case 'y+':
+                case 'z+':
+                case 'x-':
+                case 'y-':
+                case 'z-':
+                    //seperatee the axis and the direction
+                    const axis = command[0] as Axis;
+                    const direction = command[1];
+
+                    printer.moveAxis(axis, this.movementValue, direction);
+
                     break;
                 default:
                     console.error('No command found. Returning...')
                     return
             }
-
-            if (message.message !== '') return
-            wsClient.sendCommand(message)
         }
     },
 });
@@ -167,21 +167,24 @@ export default defineComponent({
             <Panel :header="$t('control.header_fan')" class="vertical-container">
                 <div class="button-container fan-container vertical-btn-container">
                     <!-- Make this on/off switch -->
-                    <Button :label="$t('control.btn_fan_on')" raised rounded @click="sendCommand('Z')" />
-                    <Button :label="$t('control.btn_fan_off')" raised rounded @click="sendCommand('Z-')" />
+                    <!-- TODO: This should be a slider for the fan -->
                 </div>
             </Panel>
 
             <Panel :header="$t('control.header_motor')">
                 <div class="button-container motor-container">
-                    <Button label="Unlock motors" raised rounded @click="sendCommand('lockmotor')" />
-                    <Button label="Home motor" raised rounded @click="sendCommand('unlockmotor')" />
+                    <Button label="Home motor" raised rounded @click="sendCommand('homemotor')" />
+                    <Button label="Bed leveling" raised rounded @click="sendCommand('bedleveling')" />
+                </div>
+                <div class="button-container motor-container">
+                    <Button label="Lock motor" raised rounded @click="sendCommand('lockmotor')" />
+                    <Button label="Unlock motor" raised rounded @click="sendCommand('unlockmotor')" />
                 </div>
             </Panel>
 
             <Panel :header="$t('control.header_extruder')">
+                <InputNumber type="number" v-model="extruderValue" />
                 <div class="button-container extruder-container">
-                    <InputNumber type="number" v-model="extruderValue" />
                     <Button label="Extrude" raised rounded @click="sendCommand('extrude')">{{ $t('control.btn_extrude')
                         }}</Button>
                     <Button label="Retract" raised rounded @click="sendCommand('retract')">{{ $t('control.btn_retract')
@@ -196,13 +199,9 @@ export default defineComponent({
 <style scoped>
 canvas {
     display: block;
-    /* Removes extra space */
     margin: 0;
-    /* Reset margins */
     padding: 0;
-    /* Reset padding */
     border: none;
-    /* Remove borders */
 }
 
 .vertical-container {
@@ -211,12 +210,9 @@ canvas {
 }
 
 .vertical-btn-container {
-    /* position: absolute; */
     top: 50%;
     left: 50%;
 }
-
-.remote-container {}
 
 .extruder-container {
     button {

@@ -4,11 +4,11 @@ import { defineComponent } from 'vue'
 
 export default defineComponent({
     name: 'temperatureComponent',
-    // data: () => ({}),
+    
     methods: {
     },
     mounted() {
-        const labels = ['-1', '-30sec', 'now']
+        const labels = ['-1min', '-30sec', 'now']
 
         const data = {
             labels: labels,
@@ -21,7 +21,7 @@ export default defineComponent({
             },
             {
                 label: 'Bed',
-                data: [50, 51, 50, 49],
+                data: [50, 51, 50],
                 fill: false,
                 borderColor: 'rgb(255, 255, 0)',
                 tension: 0.1
