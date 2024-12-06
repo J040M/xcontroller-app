@@ -1,4 +1,4 @@
-interface PrinterStatus {
+export interface PrintStatus {
     state: string,
     file: string,
     elap_time: string,

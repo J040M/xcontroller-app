@@ -14,9 +14,9 @@ export default defineComponent({
         }
     },
     mounted() {
-        // Define wsURL or null
+        // Get wsURL from local storage
         this.websocketURL = localStorage.getItem('wsURL')
-        // Listen to necessary ws client events
+        
         wsClient.on('connected', () => this.connectionStatus = true)
         wsClient.on('disconnected', () => this.connectionStatus = false)
     },

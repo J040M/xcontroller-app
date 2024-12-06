@@ -26,15 +26,11 @@ import TabList from 'primevue/tablist';
 import Tab from 'primevue/tab';
 import TabPanels from 'primevue/tabpanels';
 import TabPanel from 'primevue/tabpanel';
-
+import Dropdown from 'primevue/dropdown';
 import Divider from 'primevue/divider';
-
 import Panel from 'primevue/panel';
 
 import { LineController, LineElement, PointElement, CategoryScale, LinearScale } from "chart.js/auto";
-
-import Toast from 'primevue/toast';
-import ToastService from 'primevue/toastservice';
 
 import { i18n } from "./utils/i18n";
 
@@ -45,36 +41,35 @@ app.use(PrimeVue, {
         preset: Aura
     }
 })
-app.use(ToastService)
-// Primevue
-.component('Button', Button)
-.component('InputNumber', InputNumber)
-.component('InputGroup', InputGroup)
-.component('InputText', InputText)
-.component('Terminal', Terminal)
+    // Primevue
+    .component('Button', Button)
+    .component('InputNumber', InputNumber)
+    .component('InputGroup', InputGroup)
+    .component('InputText', InputText)
+    .component('Terminal', Terminal)
 
-.component('Accordion', Accordion)
-.component('AccordionPanel', AccordionPanel)
-.component('AccordionHeader', AccordionHeader)
-.component('AccordionContent', AccordionContent)
+    .component('Accordion', Accordion)
+    .component('AccordionPanel', AccordionPanel)
+    .component('AccordionHeader', AccordionHeader)
+    .component('AccordionContent', AccordionContent)
 
-.component('Tabs', Tabs)
-.component('Tab', Tab)
-.component('TabList', TabList)
-.component('TabPanel', TabPanel)
-.component('TabPanels', TabPanels)
+    .component('Tabs', Tabs)
+    .component('Tab', Tab)
+    .component('TabList', TabList)
+    .component('TabPanel', TabPanel)
+    .component('TabPanels', TabPanels)
 
-.component('Divider', Divider)
-.component('Panel', Panel)
-// Chart.js
-.component('LineController', LineController)
-.component('LineElement', LineElement)
-.component('PointElement', PointElement)
-.component('CategoryScale', CategoryScale)
-.component('LinearScale', LinearScale)
+    .component('Divider', Divider)
+    .component('Panel', Panel)
 
-// Toast
-.component('Toast', Toast)
+    .component('Dropdown', Dropdown)
 
-// mount App
-.mount("#app");
+    // Chart.js
+    .component('LineController', LineController)
+    .component('LineElement', LineElement)
+    .component('PointElement', PointElement)
+    .component('CategoryScale', CategoryScale)
+    .component('LinearScale', LinearScale)
+
+    // mount App
+    .mount("#app");
