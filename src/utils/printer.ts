@@ -1,23 +1,5 @@
 import { wsClient } from "../init/client";
-import { Axis } from "../types/printer";
-
-export interface PrinterInfo {
-    firmware?: string
-    axisPositions: AxisPositions
-    dimensions?: {
-        x: number
-        y: number
-        z: number
-    }
-    homed: boolean // Define if the motor was homed, if not, the printer is not ready to print
-}
-
-interface AxisPositions {
-    x: number
-    y: number
-    z: number
-    e: number
-}
+import { Axis, AxisPositions, PrinterInfo } from "../types/printer";
 
 interface PrinterCommands {
     autoHome(): void
