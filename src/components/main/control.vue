@@ -7,7 +7,6 @@ import { Axis } from '../../types/printer';
 export default defineComponent({
     name: 'controlComponent',
     data: () => ({
-        gcodeCommand: '',
         movementValue: 10 as number,
         extruderValue: 1 as number,
         input: {
@@ -16,6 +15,8 @@ export default defineComponent({
             z: 0,
         },
         redSphere: undefined as THREE.Mesh | undefined,
+        fanValue: 0 as number,
+        lastFanCommandTime: null as NodeJS.Timeout | null,
     }),
     mounted() {
         // Scene, camera, and renderer setup
@@ -92,16 +93,13 @@ export default defineComponent({
                 );
             }
         },
-        sendCommand(command: Axis | string): void {
+        sendMovementCommand(command: Axis | string): void {
             switch (command) {
                 case 'extrude':
                     printer.moveAxis('e', this.extruderValue, '+');
                     break;
                 case 'retract':
                     printer.moveAxis('e', this.extruderValue, '-');
-                    break;
-                //TODO: This is probably not necessary
-                case 'lockmotor':
                     break;
                 case 'unlockmotor':
                     printer.disableMotors();
@@ -129,7 +127,15 @@ export default defineComponent({
                     console.error('No command found. Returning...')
                     return
             }
-        }
+        },
+        sendFanCommand(): void {
+            if (this.lastFanCommandTime) clearTimeout(this.lastFanCommandTime);
+
+            this.lastFanCommandTime = setTimeout(() => {
+                printer.setFanSpeed(this.fanValue);
+                this.lastFanCommandTime = null
+            }, 1000);
+        },
     },
 });
 
@@ -149,46 +155,42 @@ export default defineComponent({
                     <InputNumber type="number" v-model="movementValue" />
                     <div class="button-row">
                         <div class="directional-buttons">
-                            <Button icon="pi pi-arrow-up" raised rounded @click="sendCommand('X')" />
+                            <Button icon="pi pi-arrow-up" raised rounded @click="sendMovementCommand('X')" />
                             <div class="row">
-                                <Button icon="pi pi-arrow-left" raised rounded @click="sendCommand('X-')" />
-                                <Button icon="pi pi-arrow-right" raised rounded @click="sendCommand('Y')" />
+                                <Button icon="pi pi-arrow-left" raised rounded @click="sendMovementCommand('X-')" />
+                                <Button icon="pi pi-arrow-right" raised rounded @click="sendMovementCommand('Y')" />
                             </div>
-                            <Button icon="pi pi-arrow-down" raised rounded @click="sendCommand('Y-')" />
+                            <Button icon="pi pi-arrow-down" raised rounded @click="sendMovementCommand('Y-')" />
                         </div>
                         <div class="button-container">
-                            <Button icon="pi pi-arrow-up" raised rounded @click="sendCommand('Z')" />
-                            <Button icon="pi pi-arrow-down" raised rounded @click="sendCommand('Z-')" />
+                            <Button icon="pi pi-arrow-up" raised rounded @click="sendMovementCommand('Z')" />
+                            <Button icon="pi pi-arrow-down" raised rounded @click="sendMovementCommand('Z-')" />
                         </div>
                     </div>
                 </div>
             </Panel>
-            <!--  -->
+            
             <Panel :header="$t('control.header_fan')" class="vertical-container">
                 <div class="button-container fan-container vertical-btn-container">
-                    <!-- Make this on/off switch -->
-                    <!-- TODO: This should be a slider for the fan -->
+                    <Knob v-model="fanValue" :min="0" :max="255" :step="5" v-on:change="sendFanCommand" />
                 </div>
             </Panel>
 
             <Panel :header="$t('control.header_motor')">
                 <div class="button-container motor-container">
-                    <Button label="Home motor" raised rounded @click="sendCommand('homemotor')" />
-                    <Button label="Bed leveling" raised rounded @click="sendCommand('bedleveling')" />
+                    <Button :label="$t('control.btn_homemotor')" raised rounded @click="sendMovementCommand('homemotor')" />
+                    <Button :label="$t('control.btn_bedleveling')" raised rounded @click="sendMovementCommand('bedleveling')" />
                 </div>
                 <div class="button-container motor-container">
-                    <Button label="Lock motor" raised rounded @click="sendCommand('lockmotor')" />
-                    <Button label="Unlock motor" raised rounded @click="sendCommand('unlockmotor')" />
+                    <Button :label="$t('control.btn_unlockmotor')" raised rounded @click="sendMovementCommand('unlockmotor')" />
                 </div>
             </Panel>
 
             <Panel :header="$t('control.header_extruder')">
                 <InputNumber type="number" v-model="extruderValue" />
                 <div class="button-container extruder-container">
-                    <Button label="Extrude" raised rounded @click="sendCommand('extrude')">{{ $t('control.btn_extrude')
-                        }}</Button>
-                    <Button label="Retract" raised rounded @click="sendCommand('retract')">{{ $t('control.btn_retract')
-                        }}</Button>
+                    <Button :label="$t('control.btn_extrude')" raised rounded @click="sendMovementCommand('extrude')" />
+                    <Button :label="$t('control.btn_retract')" raised rounded @click="sendMovementCommand('retract')" />
                 </div>
             </Panel>
         </div>

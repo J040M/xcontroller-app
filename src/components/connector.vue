@@ -9,14 +9,13 @@ export default defineComponent({
         connectionStatus: false as boolean,
     }),
     setup() {
-        return {
-            wsClient
-        }
+        return { wsClient }
     },
     mounted() {
         // Get wsURL from local storage
         this.websocketURL = localStorage.getItem('wsURL')
         
+        // Set connection status on events
         wsClient.on('connected', () => this.connectionStatus = true)
         wsClient.on('disconnected', () => this.connectionStatus = false)
     },
@@ -35,8 +34,8 @@ export default defineComponent({
     <div class="horizontal-container">
         <InputText type="text" placeholder="ws://websocket-server-url:port" @focusout="setWSURL" v-model="websocketURL"
             style="flex: 1; margin-right: 10px;" />
-        <Button v-if="!connectionStatus" icon="pi pi-power-off" style="color: red" @click="wsClient.connect()"></Button>
-        <Button v-else icon="pi pi-power-off" style="color: green" @click="wsClient.disconnect()"></Button>
+        <Button v-if="!connectionStatus" icon="pi pi-power-off" style="color: red" @click="wsClient.connect()" />
+        <Button v-else icon="pi pi-power-off" style="color: green" @click="wsClient.disconnect()" />
     </div>
 </template>
 
