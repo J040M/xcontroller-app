@@ -1,0 +1,55 @@
+{
+    "pt": {
+        "app": {
+            "title": "Impressora 3D",
+            "name": "XController",
+            "connector": "Conetor",
+            "files": "Ficheiros",
+            "status": "Estado"
+        },
+        "files": {
+            "filename": "Nome do ficheiro:",
+            "file_modified_date": "Modificado",
+            "filesize": "Tamanho:"
+        },
+        "status": {
+            "state": "Estado:",
+            "file": "Ficheiro:",
+            "elapsed_time": "Tempo decorrido:",
+            "estimated_time": "Tempo estimado:"
+        },
+        "connector": {
+            "status": "Estado da ligação:",
+            "connect": "Ligar",
+            "disconnect": "Desligar"
+        },
+        "main": {
+            "control": "Controlo",
+            "temperature": "Temperatura",
+            "terminal": "Terminal",
+            "printerconfig": "Configuração da impressora",
+            "gcodeviewer": "Visualizador Gcode"
+        },
+        "control": {
+            "header_cartesian": "Movimento (X, Y, Z)",
+            "header_extruder": "Bico (E)",
+            "header_motor": "Motor",
+            "header_fan": "Ventoinha",
+            "btn_extrude": "Extrude",
+            "btn_retract": "Retract",
+            "btn_fan_on": "Ventoinha LIGADA",
+            "btn_fan_off": "Ventoinha DESLIGADA",
+            "btn_unlockmotor": "Desbloquear motor",
+            "btn_homemotor": "Home",
+            "btn_bedleveling": "Nivelar cama"
+        },
+        "printerconfig": {
+            "btn_save": "Guardar",
+            "btn_M115": "Obter informações (M115)"
+        },
+        "temperature": {
+            "grad_extruder": "Bico",
+            "grad_bed": "Cama"
+        }
+    }
+}

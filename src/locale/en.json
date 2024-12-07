@@ -1,6 +1,8 @@
 {
     "en": {
         "app": {
+            "title": "3D printer",
+            "name": "XController",
             "connector": "Connector",
             "files": "Files",
             "status": "Status"
@@ -29,9 +31,9 @@
             "gcodeviewer": "Gcode viewer"
         },
         "control": {
-            "extruder_value": "Extruder value (E)",
-            "header_cartesian": "Move X, Y, Z",
-            "header_extruder": "Extruder",
+            "extruder_value": "Extruder (E)",
+            "header_cartesian": "Movement (X, Y, Z)",
+            "header_extruder": "Extruder (E)",
             "header_motor": "Motor",
             "header_fan": "Fan",
             "btn_extrude": "Extrude",
@@ -39,7 +41,8 @@
             "btn_fan_on": "Fan on",
             "btn_fan_off": "Fan off",
             "btn_unlockmotor": "Unlock motor",
-            "btn_lockmoter": "Lock motor"
+            "btn_homemotor": "Home",
+            "btn_bedleveling": "Bed leveling"
         },
         "printerconfig": {
             "btn_save": "Save",
