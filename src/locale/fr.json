@@ -1,6 +1,8 @@
 {
     "fr": {
         "app": {
+            "title": "Imprimante 3D",
+            "name": "XController",
             "connector": "Connecteur",
             "files": "Fichiers",
             "status": "État"
@@ -29,14 +31,17 @@
             "gcodeviewer": "Gcode viewer"
         },
         "control": {
-            "movement_value": "Movement value (X,Y,Z)",
-            "extruder_value": "Buse value (E)",
+            "header_cartesian": "Movement (X, Y, Z)",
+            "header_extruder": "buse (E)",
+            "header_motor": "Motor",
+            "header_fan": "Ventilateur",
             "btn_extrude": "Extrude",
             "btn_retract": "Retract",
-            "btn_fan_on": "Fan on",
-            "btn_fan_off": "Fan off",
-            "btn_unlockmotor": "Unlock motor",
-            "btn_lockmoter": "Lock motor"
+            "btn_fan_on": "Ventilateur ON",
+            "btn_fan_off": "Ventilateur OFF",
+            "btn_unlockmotor": "Déverrouiller le moteur",
+            "btn_homemotor": "Home",
+            "btn_bedleveling": "Niveler le lit"
         },
         "printerconfig": {
             "btn_save": "Enregistrer",

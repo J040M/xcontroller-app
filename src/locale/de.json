@@ -1,0 +1,55 @@
+{
+    "de": {
+        "app": {
+            "title": "3D-Drucker",
+            "name": "XController",
+            "connector": "Verbindung",
+            "files": "Dateien",
+            "status": "Status"
+        },
+        "files": {
+            "filename": "Dateiname:",
+            "file_modified_date": "Geändert",
+            "filesize": "Größe:"
+        },
+        "status": {
+            "state": "Status:",
+            "file": "Datei:",
+            "elapsed_time": "Verstrichene Zeit:",
+            "estimated_time": "Geschätzte Zeit:"
+        },
+        "connector": {
+            "status": "Verbindungsstatus:",
+            "connect": "Verbinden",
+            "disconnect": "Trennen"
+        },
+        "main": {
+            "control": "Steuerung",
+            "temperature": "Temperatur",
+            "terminal": "Terminal",
+            "printerconfig": "Drucker-Konfiguration",
+            "gcodeviewer": "Gcode-Viewer"
+        },
+        "control": {
+            "header_cartesian": "Bewegung (X, Y, Z)",
+            "header_extruder": "Düse (E)",
+            "header_motor": "Motor",
+            "header_fan": "Lüfter",
+            "btn_extrude": "Extrudieren",
+            "btn_retract": "Zurückziehen",
+            "btn_fan_on": "Lüfter EIN",
+            "btn_fan_off": "Lüfter AUS",
+            "btn_unlockmotor": "Motor entsperren",
+            "btn_homemotor": "Home",
+            "btn_bedleveling": "Bett-Nivellierung"
+        },
+        "printerconfig": {
+            "btn_save": "Speichern",
+            "btn_M115": "Informationen abrufen (M115)"
+        },
+        "temperature": {
+            "grad_extruder": "Düse",
+            "grad_bed": "Bett"
+        }
+    }
+}
