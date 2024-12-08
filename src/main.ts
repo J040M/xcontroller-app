@@ -14,6 +14,7 @@ import InputNumber from 'primevue/inputnumber';
 import InputGroup from "primevue/inputgroup";
 import InputText from "primevue/inputtext";
 import Terminal from 'primevue/terminal';
+import AutoComplete from 'primevue/autocomplete';
 
 import Accordion from 'primevue/accordion';
 import AccordionPanel from 'primevue/accordionpanel';
@@ -49,6 +50,7 @@ app.use(PrimeVue, {
     .component('InputGroup', InputGroup)
     .component('InputText', InputText)
     .component('Terminal', Terminal)
+    .component('AutoComplete', AutoComplete)
 
     .component('Accordion', Accordion)
     .component('AccordionPanel', AccordionPanel)

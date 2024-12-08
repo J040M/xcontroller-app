@@ -11,8 +11,6 @@ interface File {
     file_modified_date: string,
 }
 
-type Axis = 'x' | 'y' | 'z' | 'e'
-
 interface AxisPositions {
     x: number
     y: number
@@ -20,21 +18,17 @@ interface AxisPositions {
     e: number
 }
 
-interface PrinterInfo {
-    firmware?: string
-    axisPositions: AxisPositions
-    dimensions?: { // Dimensions are in mm
+interface PrinterProfile {
+    name: string
+    url: string,
+    firmware: string,
+    dimensions: {
         x: number
         y: number
         z: number
     }
-    homed: boolean // Define if the motor was homed, if not, the printer is not ready to print
 }
 
-interface PrinterProfile {
-    name: string
-    url: string
-    printerInfo: PrinterInfo
-}
+type Axis = 'x' | 'y' | 'z' | 'e'
 
-export type { PrintStatus, File, Axis, AxisPositions, PrinterInfo, PrinterProfile }
+export type { PrintStatus, File, Axis, AxisPositions, PrinterProfile }
