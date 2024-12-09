@@ -36,6 +36,11 @@ import Dialog from 'primevue/dialog';
 import { LineController, LineElement, PointElement, CategoryScale, LinearScale } from "chart.js/auto";
 
 import { i18n } from "./utils/i18n";
+import { init } from "./init/init";
+
+
+// Initialize the defaults
+init();
 
 const app = createApp(App);
 app.use(i18n)
@@ -44,7 +49,7 @@ app.use(PrimeVue, {
         preset: Aura
     }
 })
-    // Primevue
+    // Primevue framwork components
     .component('Button', Button)
     .component('InputNumber', InputNumber)
     .component('InputGroup', InputGroup)
