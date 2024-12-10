@@ -1,19 +1,27 @@
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent, ref } from 'vue'
 import { wsClient } from '../init/client';
 import { PrinterProfile } from '../types/printer';
+import  printerProfile from './printerprofile.vue';
+
+import { eventBus } from '../utils/eventbus';
 
 export default defineComponent({
     name: 'connectorComponent',
+    components: {
+        printerProfile,
+    },
     data: () => ({
         printerProfiles: [] as PrinterProfile[],
         connectionStatus: false as boolean,
+        dialogOpen: false as boolean,
+        websocketURL: ref(''),
     }),
     setup() {
         return { wsClient }
     },
     mounted() {
-        this.printerProfiles = JSON.parse(localStorage.getItem('printerProfiles') || '[]') as PrinterProfile[]
+        this.printerProfiles = JSON.parse(localStorage.getItem('PrinterProfiles') || '[]') as PrinterProfile[]
 
         // Set connection status on events
         wsClient.on('connected', () => this.connectionStatus = true)
@@ -21,19 +29,23 @@ export default defineComponent({
     },
     methods: {
         setWSS(): void {
-            // wsClient.wsURL = this.websocketURL
+            console.log('Setting WS URL to:', this.websocketURL)
+            wsClient.wsURL = this.websocketURL
+        },
+        openProfileDialog(): void {
+            eventBus.emit('message', 'openProfileDialog')
         }
     }
 })
 </script>
 
 <template>
+    <printerProfile />
     <div class="card flex justify-center">
-        <AutoComplete dropdown :suggestions="printerProfiles" variant="filled" />
-        <!-- <InputText type="text" placeholder="ws://websocket-server-url:port" @focusout="setWSURL" v-model="websocketURL"
-            style="flex: 1; margin-right: 10px;" /> -->
+        <Select v-model="websocketURL" @focusout="setWSS" :options="printerProfiles" optionLabel="name" optionValue="url" filter filterBy="name" class="w-full" />
         <Button v-if="!connectionStatus" icon="pi pi-power-off" style="color: red" @click="wsClient.connect()" />
         <Button v-else icon="pi pi-power-off" style="color: green" @click="wsClient.disconnect()" />
+        <Button icon="pi pi-plus" style="color: green" @click="openProfileDialog" />
     </div>
 </template>
 

@@ -1,6 +1,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { PrinterProfile } from '../types/printer';
+import { eventBus } from '../utils/eventbus';
 
 export default defineComponent({
     name: 'printerProfileComponent',
@@ -14,28 +15,38 @@ export default defineComponent({
                 y: 0,
                 z: 0,
             },
-
         } as PrinterProfile,
+        visible: false,
     }),
+    mounted() {
+        eventBus.on('message', (message: string) => {
+            if (message === 'openProfileDialog') {
+                this.visible = true
+            }
+        })
+    },
     methods: {
         saveProfile(): void {
             let profiles = localStorage.getItem('printerProfiles')
-            if (profiles) {
+            if (profiles || profiles === '[]') {
                 const nProfiles = JSON.parse(profiles) as PrinterProfile[] || []
                 nProfiles.push(this.printerProfile)
-                localStorage.setItem('printerProfiles', JSON.stringify(profiles))
+                localStorage.setItem('PrinterProfiles', JSON.stringify(nProfiles))
             } else {
-                // TODO: Notify user that no profiles were found
-                console.error('Mistakes were made. No profiles found or initialized')
+                let nProfiles: PrinterProfile[] = []
+                nProfiles.push(this.printerProfile)
+                localStorage.setItem('PrinterProfiles', JSON.stringify(nProfiles))
+                // console.error('Mistakes were made. No profiles found or initialized')
             }
+            this.visible = false
         }
     }
 })
 </script>
 
 <template>
-    <Dialog modal header="Edit Profile" :style="{ width: '25rem' }">
-        <span class="text-surface-500 dark:text-surface-400 block mb-8">Add a new printer profile</span>
+    <Dialog :visible="visible" modal :header="$t('printer_profile.header')" :style="{ width: '25rem' }"
+        :closable="false" optionLabel="name" optionValue="url">
         <div class="flex items-center gap-4 mb-4">
             <label for="printerName" class="font-semibold w-24">{{ $t('printer_profile.label_name') }}</label>
             <InputText id="printerName" v-model="printerProfile.name" lass="flex-auto" autocomplete="off" />
@@ -59,8 +70,8 @@ export default defineComponent({
                 fluid />
         </div>
         <div class="flex justify-end gap-2">
-            <Button type="button" label="Cancel" severity="secondary" @click=""></Button>
-            <Button type="button" label="Save" @click="saveProfile"></Button>
+            <Button type="button" label="Cancel" severity="secondary" @click="visible = false"></Button>
+            <Button type="button" label="Save" @click="saveProfile" />
         </div>
     </Dialog>
 </template>
