@@ -51,6 +51,13 @@
         "temperature": {
             "grad_extruder": "Extruder",
             "grad_bed": "Bed"
+        },
+        "printer_profile": {
+            "header": "Printer profile",
+            "label_name": "Name",
+            "label_url": "URL",
+            "label_firmware": "Firmware",
+            "label_dimensions": "Dimensions"
         }
     }
 }

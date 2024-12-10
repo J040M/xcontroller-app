@@ -26,12 +26,12 @@ import TabList from 'primevue/tablist';
 import Tab from 'primevue/tab';
 import TabPanels from 'primevue/tabpanels';
 import TabPanel from 'primevue/tabpanel';
-import Dropdown from 'primevue/dropdown';
 import Divider from 'primevue/divider';
 import Panel from 'primevue/panel';
 import Knob from 'primevue/knob';
 import Toolbar from 'primevue/toolbar';
 import Dialog from 'primevue/dialog';
+import Select from 'primevue/select';
 
 import { LineController, LineElement, PointElement, CategoryScale, LinearScale } from "chart.js/auto";
 
@@ -70,9 +70,9 @@ app.use(PrimeVue, {
 
     .component('Divider', Divider)
     .component('Panel', Panel)
-    .component('Dropdown', Dropdown)
     .component('Knob', Knob)
     .component('Dialog', Dialog)
+    .component('Select', Select)
 
     // Chart.js
     .component('LineController', LineController)
