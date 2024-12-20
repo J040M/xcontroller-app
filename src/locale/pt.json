@@ -8,15 +8,17 @@
             "status": "Estado"
         },
         "files": {
-            "filename": "Nome do ficheiro:",
-            "file_modified_date": "Modificado",
-            "filesize": "Tamanho:"
+            "filename": "Nome: ",
+            "file_modified_date": "Modificado: ",
+            "filesize": "Tamanho: ",
+            "no_files": "Sem ficheiros"
         },
         "status": {
             "state": "Estado:",
             "file": "Ficheiro:",
             "elapsed_time": "Tempo decorrido:",
-            "estimated_time": "Tempo estimado:"
+            "estimated_time": "Tempo estimado:",
+            "no_status": "Sem informações de estado disponíveis"
         },
         "connector": {
             "status": "Estado da ligação:",
