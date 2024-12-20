@@ -1,6 +1,6 @@
 # Xcontroller-App
 
-Desktop application for controlling/managing 3D printers using XController [XController](https://github.com/J040M/xcontroller)
+Desktop application for controlling/managing 3D printers using [XController](https://github.com/J040M/xcontroller)
 
 ## Features
 

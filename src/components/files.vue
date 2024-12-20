@@ -5,23 +5,7 @@ import { File } from '../types/printer'
 export default defineComponent({
     name: 'filesComponent',
     data: () => ({
-        files: [
-            {
-                file_name: 'Benchie_PLA',
-                file_modified_date: '01.01.2024',
-                file_size: '324535',
-            },
-            {
-                file_name: 'Plate1_ABS',
-                file_modified_date: '04.04.2024',
-                file_size: '233112',
-            },
-            {
-                file_name: 'Rbim_PLA',
-                file_modified_date: '12.2.2024',
-                file_size: '91223',
-            },
-        ] as File[], 
+        files: undefined as File[] || undefined, 
     }),
 })
 </script>
@@ -34,7 +18,7 @@ export default defineComponent({
     <!-- Searchbar for file filtering -->
     <div class="file-search-container"></div>
 
-    <div class="file-container" v-for="file of files">
+    <div v-if="files" class="file-container" v-for="file of files">
         <label>{{ $t('files.filename') }} {{ file.file_name }}</label><br>
         <label>{{ $t('files.file_modified_date') }} {{ file.file_modified_date }}</label><br>
         <label>{{ $t('files.filesize') }} {{ file.file_size }}</label><br>
@@ -43,6 +27,9 @@ export default defineComponent({
             <Button icon="pi pi-file" />
             <Button icon="pi pi-trash" />
         </div>
+    </div>
+    <div v-else>
+        <label>{{ $t('files.no_files') }}</label>
     </div>
 </template>
 

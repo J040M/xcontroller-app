@@ -1,8 +1,10 @@
+type Axis = 'x' | 'y' | 'z' | 'e'
+
 interface PrintStatus {
     state: string,
     file: string,
-    elap_time: string,
-    est_time: string,
+    elapsed_time: string,
+    estimated_time: string,
 }
 
 interface File {
@@ -28,7 +30,5 @@ interface PrinterProfile {
         z: number
     }
 }
-
-type Axis = 'x' | 'y' | 'z' | 'e'
 
 export type { PrintStatus, File, Axis, AxisPositions, PrinterProfile }

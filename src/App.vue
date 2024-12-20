@@ -18,6 +18,9 @@ export default defineComponent({
     Files,
     FooterComponent
   },
+  data: () => ({
+    openedAccordion: ['0'] as [string],
+  }),
   setup() {
     const { t } = useI18n() // use as global scope
     return { t, changeLocale }
@@ -29,7 +32,7 @@ export default defineComponent({
   <div class="main-container">
     <div class="content-wrapper">
       <div class="left-container">
-        <Accordion multiple>
+        <Accordion :value="openedAccordion" multiple>
           <AccordionPanel value="0">
             <AccordionHeader> {{ $t('app.connector') }} </AccordionHeader>
             <AccordionContent>
