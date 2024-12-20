@@ -2,7 +2,7 @@
 import { defineComponent, ref } from 'vue'
 import { wsClient } from '../init/client';
 import { PrinterProfile } from '../types/printer';
-import  printerProfile from './printerprofile.vue';
+import printerProfile from './printerprofile.vue';
 
 import { eventBus } from '../utils/eventbus';
 
@@ -40,17 +40,30 @@ export default defineComponent({
 </script>
 
 <template>
+    <!-- This is a dialog for machine profiles. -->
+    <!-- Only show on new creating -->
     <printerProfile />
-    <div class="card flex justify-center">
-        <Select v-model="websocketURL" @focusout="setWSS" :options="printerProfiles" optionLabel="name" optionValue="url" filter filterBy="name" class="w-full" />
-        <Button v-if="!connectionStatus" icon="pi pi-power-off" style="color: red" @click="wsClient.connect()" />
-        <Button v-else icon="pi pi-power-off" style="color: green" @click="wsClient.disconnect()" />
-        <Button icon="pi pi-plus" style="color: green" @click="openProfileDialog" />
+    <!--  -->
+    <div class="flex flex-column">
+        <div class="flex  bg-primary m-2">
+            <Select class="full-width" v-model="websocketURL" @focusout="setWSS" :options="printerProfiles" optionLabel="name"
+                optionValue="url" filter filterBy="name" />
+        </div>
+        <div class="flex  bg-primary m-2">
+            <Button v-if="!connectionStatus" icon="pi pi-power-off" style="color: red" @click="wsClient.connect()" />
+            <Button v-else icon="pi pi-power-off" style="color: green" @click="wsClient.disconnect()" />
+            <Button icon="pi pi-plus" style="color: green" @click="openProfileDialog" />
+        </div>
     </div>
+    <!-- <div class="card flex justify-center"></div> -->
 </template>
 
 <style scoped>
 button {
     margin: 5px 5px 5px 0px;
+}
+
+.full-width {
+    width: 100%;
 }
 </style>
