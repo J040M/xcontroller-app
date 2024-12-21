@@ -29,6 +29,7 @@ export default defineComponent({
     },
     methods: {
         setWSS(): void {
+            //TODO: Modify this to use printer profile
             console.log('Setting WS URL to:', this.websocketURL)
             wsClient.wsURL = this.websocketURL
         },
@@ -46,8 +47,10 @@ export default defineComponent({
     <!--  -->
     <div class="flex flex-column">
         <div class="flex  bg-primary m-2">
-            <Select class="full-width" v-model="websocketURL" @focusout="setWSS" :options="printerProfiles" optionLabel="name"
-                optionValue="url" filter filterBy="name" />
+            <Select class="full-width" v-model="websocketURL" @focusout="setWSS" :options="printerProfiles"
+                optionLabel="name" optionValue="url" filter filterBy="name" 
+                :emptyMessage="$t('connector.empty_message')" :emptyFilterMessage="$t('connector.empty_filter_message')"
+                :emptySelectionMessage="$t('connector.empty_selection_message')" :selectionMessage="$t('connector.selection_message')"/>
         </div>
         <div class="flex  bg-primary m-2">
             <Button v-if="!connectionStatus" icon="pi pi-power-off" style="color: red" @click="wsClient.connect()" />
@@ -55,7 +58,6 @@ export default defineComponent({
             <Button icon="pi pi-plus" style="color: green" @click="openProfileDialog" />
         </div>
     </div>
-    <!-- <div class="card flex justify-center"></div> -->
 </template>
 
 <style scoped>

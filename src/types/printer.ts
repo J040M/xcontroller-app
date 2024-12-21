@@ -24,11 +24,13 @@ interface PrinterProfile {
     name: string
     url: string,
     firmware: string,
+    axisPositions: AxisPositions,
     dimensions: {
-        x: number
-        y: number
+        x: number,
+        y: number,
         z: number
-    }
+    },
+    homed: boolean
 }
 
 export type { PrintStatus, File, Axis, AxisPositions, PrinterProfile }

@@ -155,16 +155,16 @@ export default defineComponent({
                     <InputNumber type="number" v-model="movementValue" />
                     <div class="button-row">
                         <div class="directional-buttons">
-                            <Button icon="pi pi-arrow-up" raised rounded @click="sendMovementCommand('X')" />
+                            <Button icon="pi pi-arrow-up" raised rounded @click="sendMovementCommand('Y')" />
                             <div class="row">
-                                <Button icon="pi pi-arrow-left" raised rounded @click="sendMovementCommand('X-')" />
-                                <Button icon="pi pi-arrow-right" raised rounded @click="sendMovementCommand('Y')" />
+                                <Button icon="pi pi-arrow-left" class="button-left" raised rounded @click="sendMovementCommand('X-')" />
+                                <Button icon="pi pi-arrow-right" class="button-right" raised rounded @click="sendMovementCommand('X')" />
                             </div>
                             <Button icon="pi pi-arrow-down" raised rounded @click="sendMovementCommand('Y-')" />
                         </div>
-                        <div class="button-container">
-                            <Button icon="pi pi-arrow-up" raised rounded @click="sendMovementCommand('Z')" />
-                            <Button icon="pi pi-arrow-down" raised rounded @click="sendMovementCommand('Z-')" />
+                        <div class="button-container vertical-align-middle">
+                            <Button icon="pi pi-arrow-up" class="button-top" raised rounded @click="sendMovementCommand('Z')" />
+                            <Button icon="pi pi-arrow-down" class="button-bottom" raised rounded @click="sendMovementCommand('Z-')" />
                         </div>
                     </div>
                 </div>
@@ -217,12 +217,14 @@ canvas {
 }
 
 .extruder-container {
+    margin-top: 10%;
     button {
-        margin: 0 0 10px 0;
+        margin: 0 0 15px 0;
     }
 }
 
 .fan-container {
+    margin-top: 30%;
     button {
         margin: 0 0 10px 0;
     }
@@ -271,12 +273,26 @@ canvas {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin: 10px;
+    margin: 20px 10px 10px 10px;
 }
 
 /* Row for left and right buttons */
 .row {
     display: flex;
     justify-content: center;
+}
+
+/* Button alignment */
+.button-top {
+    margin-top: 70%;
+}
+.button-bottom {
+    margin-top: 10px;
+}
+.button-left {
+    margin-right: 10px;
+}
+.button-right {
+    margin-left: 10px;
 }
 </style>

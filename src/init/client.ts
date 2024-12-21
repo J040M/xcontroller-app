@@ -2,7 +2,6 @@ import WebSocketConnector from "../utils/wsconnector";
 import { Printer } from "../utils/printer";
 import { Message } from "../types/messages";
 
-
 /*********************/
 /***** WS CLIENT *****/
 /*********************/
@@ -10,6 +9,7 @@ import { Message } from "../types/messages";
 export const wsClient = new WebSocketConnector()
 
 // IF wsURL is saved, read and set wsClient url
+// TODO: Modify this to use the storage profiles
 const wsURL = localStorage.getItem('wsURL')
 if (wsURL) wsClient.wsURL = wsURL
 
@@ -27,12 +27,19 @@ wsClient.on('error', (error: Event) => {
 /**********************/
 
 export const printer = new Printer({
+    name: '',
+    url: '',
     firmware: '',
     axisPositions: {
         x: 0,
         y: 0,
         z: 0,
         e: 0
+    },
+    dimensions: {
+        x: 0,
+        y: 0,
+        z: 0
     },
     homed: false
 })
