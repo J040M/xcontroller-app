@@ -23,7 +23,11 @@
         "connector": {
             "status": "Verbindungsstatus:",
             "connect": "Verbinden",
-            "disconnect": "Trennen"
+            "disconnect": "Trennen",
+            "empty_message": "Keine verfügbaren Optionen",
+            "empty_filter_message": "Keine Optionen entsprechen dem Filter",
+            "empty_selection_message": "Keine Optionen ausgewählt",
+            "selection_message": "Ausgewählte Optionen"
         },
         "main": {
             "control": "Steuerung",

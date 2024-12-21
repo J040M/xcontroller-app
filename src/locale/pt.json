@@ -23,7 +23,11 @@
         "connector": {
             "status": "Estado da ligação:",
             "connect": "Ligar",
-            "disconnect": "Desligar"
+            "disconnect": "Desligar",
+            "empty_message": "Sem opções disponíveis",
+            "empty_filter_message": "Nenhuma opção corresponde ao filtro",
+            "empty_selection_message": "Nenhuma opção selecionada",
+            "selection_message": "Opções selecionadas"
         },
         "main": {
             "control": "Controlo",
