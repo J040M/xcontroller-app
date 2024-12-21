@@ -1,5 +1,5 @@
 import { wsClient } from "../init/client";
-import { Axis, AxisPositions, PrinterInfo } from "../types/printer";
+import { Axis, AxisPositions, PrinterProfile } from "../types/printer";
 
 interface PrinterCommands {
     autoHome(): void
@@ -15,9 +15,9 @@ interface PrinterCommands {
 }
 
 export class Printer implements PrinterCommands {
-    printerInfo: PrinterInfo
+    printerInfo: PrinterProfile
 
-    constructor(printer_info: PrinterInfo) {
+    constructor(printer_info: PrinterProfile) {
         this.printerInfo = printer_info
     }
 
