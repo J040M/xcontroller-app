@@ -36,7 +36,6 @@ export default defineComponent({
                 let nProfiles: PrinterProfile[] = []
                 nProfiles.push(this.printerProfile)
                 localStorage.setItem('PrinterProfiles', JSON.stringify(nProfiles))
-                // console.error('Mistakes were made. No profiles found or initialized')
             }
             this.visible = false
         }

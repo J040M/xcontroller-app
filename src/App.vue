@@ -19,7 +19,7 @@ export default defineComponent({
     FooterComponent
   },
   data: () => ({
-    openedAccordion: ['0'] as [string],
+    openedAccordion: '' as string,
   }),
   setup() {
     const { t } = useI18n() // use as global scope
