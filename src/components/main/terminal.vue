@@ -1,6 +1,6 @@
 <script lang="ts">
 
-import { defineComponent } from 'vue'
+import { defineComponent, ref } from 'vue'
 
 import TerminalService from 'primevue/terminalservice'
 import { wsClient } from '../../init/client';
@@ -35,14 +35,13 @@ export default defineComponent({
             // Check is a known command
             switch (command) {
                 case 'help':
-                    TerminalService.emit('response', "Available commands: help \n | gcommands (list of commands)")
+                    TerminalService.emit('response', "Available commands: help \n gcommands (list of commands)")
                     return
                 case 'gcommands':
                     TerminalService.emit('response', gcommands_list)
                     return
             }
 
-            console.log('Sending command to server:', command)
             wsClient.sendCommand({
                 message_type: 'Unsafe',
                 message: command

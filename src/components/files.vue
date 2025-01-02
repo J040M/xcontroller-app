@@ -15,7 +15,7 @@ export default defineComponent({
         <Button label="Upload file" icon="pi pi-upload" />
     </div>
 
-    <!-- Searchbar for file filtering -->
+    <!-- TODO: Searchbar for file filtering -->
     <div class="file-search-container"></div>
 
     <div v-if="files" class="file-container" v-for="file of files">

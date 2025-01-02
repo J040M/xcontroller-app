@@ -107,7 +107,7 @@ export default defineComponent({
                 case 'homemotor':
                     printer.autoHome();
                     break;
-                case 'homemotor':
+                case 'bedleveling':
                     printer.bedLeveling();
                     break;
                 case 'x+':

@@ -44,7 +44,6 @@ export class Printer implements PrinterCommands {
     }
 
     moveAxis(axis: Axis, distance: number, direction: string): void {
-
         //sum of substract using the direction (which is '-' or '+') from the current position
         let current_position = this.axisPositions[axis]
         let new_position = direction === '+' ? current_position + distance : current_position - distance
