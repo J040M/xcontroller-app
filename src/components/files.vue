@@ -5,7 +5,7 @@ import { File } from '../types/printer'
 export default defineComponent({
     name: 'filesComponent',
     data: () => ({
-        files: undefined as File[] || undefined, 
+        files: undefined as File[] | undefined, 
     }),
 })
 </script>

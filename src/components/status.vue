@@ -5,7 +5,7 @@ import { PrintStatus } from '../types/printer'
 export default defineComponent({
     name: 'statusComponent',
     data: () => ({
-        status: undefined as PrintStatus || undefined,
+        status: undefined as PrintStatus | undefined,
     })
 })
 </script>

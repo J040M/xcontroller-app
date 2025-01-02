@@ -1,40 +1,38 @@
 <script lang="ts">
-import Chart, { ChartItem } from 'chart.js/auto';
+import Chart, { ChartData, ChartItem } from 'chart.js/auto';
 import { defineComponent } from 'vue'
 
 export default defineComponent({
     name: 'temperatureComponent',
-    
-    methods: {
-    },
-    mounted() {
-        const labels = ['-1min', '-30sec', 'now']
-
-        const data = {
-            labels: labels,
+    data: () => ({
+        graphData: {
+            labels: ['+90sec', '+60sec', '+30sec', 'now'],
+            // TODO: Loop this for multiple extruders
             datasets: [{
                 label: 'Extruder 1',
-                data: [25, 130, 203],
+                data: [0, 0, 0, 0],
                 fill: false,
                 borderColor: 'rgb(75, 192, 192)',
                 tension: 0.1
             },
             {
                 label: 'Bed',
-                data: [50, 51, 50],
+                data: [0, 0, 0, 0],
                 fill: false,
                 borderColor: 'rgb(255, 255, 0)',
                 tension: 0.1
-            }
-            ]
-        };
-
+            }] as ChartData['datasets']
+        }
+    }),
+    mounted() {
         const ctx = document.getElementById('temp-graph') as ChartItem;
         new Chart(ctx, {
             type: 'line',
-            data: data,
+            data: this.graphData,
             options: {},
         });
+
+        //TODO: Fetch data from backend
     }
 })
 </script>
@@ -46,7 +44,6 @@ export default defineComponent({
 
             </canvas>
         </div>
-        <!-- TODO: Loop this for multiple extruders -->
         <label>
             {{ $t('temperature.grad_extruder') }}
         </label>
