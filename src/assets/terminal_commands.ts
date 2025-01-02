@@ -1,5 +1,6 @@
 export const gcommands_list = `
-G00 - Rapid Move \n G01 - Linear Move \n
+G00 - Rapid Move \n 
+G01 - Linear Move \n
 G02 - Clockwise Arc Move \n
 G03 - Counter-Clockwise Arc Move \n
 G04 - Dwell \n
