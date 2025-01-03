@@ -2,7 +2,7 @@
 import { defineComponent } from 'vue'
 import * as THREE from 'three'
 import { printer } from '../../init/client';
-import { Axis } from '../../types/printer';
+import type { Axis } from '../../types/printer';
 
 export default defineComponent({
     name: 'controlComponent',
@@ -18,6 +18,9 @@ export default defineComponent({
         fanValue: 0 as number,
         lastFanCommandTime: null as NodeJS.Timeout | null,
     }),
+    setup() {
+        return printer
+    },
     mounted() {
         // Scene, camera, and renderer setup
         const canvasID = document.getElementById('3dprinter-animation') as HTMLCanvasElement;
@@ -101,15 +104,6 @@ export default defineComponent({
                 case 'retract':
                     printer.moveAxis('e', this.extruderValue, '-');
                     break;
-                case 'unlockmotor':
-                    printer.disableMotors();
-                    break;
-                case 'homemotor':
-                    printer.autoHome();
-                    break;
-                case 'bedleveling':
-                    printer.bedLeveling();
-                    break;
                 case 'x+':
                 case 'y+':
                 case 'z+':
@@ -178,11 +172,11 @@ export default defineComponent({
 
             <Panel :header="$t('control.header_motor')">
                 <div class="button-container motor-container">
-                    <Button :label="$t('control.btn_homemotor')" raised rounded @click="sendMovementCommand('homemotor')" />
-                    <Button :label="$t('control.btn_bedleveling')" raised rounded @click="sendMovementCommand('bedleveling')" />
+                    <Button :label="$t('control.btn_homemotor')" raised rounded @click="autoHome" />
+                    <Button :label="$t('control.btn_bedleveling')" raised rounded @click="bedLeveling" />
                 </div>
                 <div class="button-container motor-container">
-                    <Button :label="$t('control.btn_unlockmotor')" raised rounded @click="sendMovementCommand('unlockmotor')" />
+                    <Button :label="$t('control.btn_unlockmotor')" raised rounded @click="disableMotors()" />
                 </div>
             </Panel>
 

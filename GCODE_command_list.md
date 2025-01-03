@@ -19,8 +19,9 @@
 
 ### Files
 - Select gcode: M23 <path_of_file>
-- Start print: M24 <path_of_file>
-- Upload file: M
+- Start print: M24 (of selected file)
+- Start Upload file: M28 <file>
+- End Upload file: M29
 - Report SD print status: M27 C (report currently open file)
 - Report SD print status: M27 S<seconds> (reports every x seconds)
 - Delete SD file: M30 <path_to_file>

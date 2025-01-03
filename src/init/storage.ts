@@ -2,7 +2,11 @@
 // STORAGE SCRIPTS //
 /*******************/
 
-export function initStorage() {
+/**
+ * Initialize the storage by creating 
+ * the default storage items if they don't exist
+ */
+export function initStorage(): void {
     // Create if not existant (default storage items)
     const storageItems = ['PrinterProfiles', 'Locale', 'Theme', 'PrinterPresets'];
     storageItems.forEach((item) => {

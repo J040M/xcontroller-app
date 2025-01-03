@@ -1,6 +1,13 @@
+/**
+ * @file Client initialization and WebSocket setup
+ * @description Initializes the WebSocket client and printer instance,
+ * handling connections and message processing for 3D printer control.
+ */
+
 import WebSocketConnector from "../utils/wsconnector";
 import { Printer } from "../utils/printer";
-import { Message } from "../types/messages";
+
+import type { Message } from "../types/messages";
 
 /*********************/
 /***** WS CLIENT *****/
@@ -8,12 +15,17 @@ import { Message } from "../types/messages";
 
 export const wsClient = new WebSocketConnector()
 
-// IF wsURL is saved, read and set wsClient url
-// TODO: Modify this to use the storage profiles
+/**
+ * Initialize WebSocket URL from localStorage if available
+ * @TODO: Refactor to implement profile-based storage system
+ */
 const wsURL = localStorage.getItem('wsURL')
 if (wsURL) wsClient.wsURL = wsURL
 
-// Set listeners for connected and error events
+/**
+ * WebSocket Event Handlers
+ * Manages connection state and error handling
+ */
 wsClient.on('connected', (message: MessageEvent<string>) => {
     console.log(message)
 })
@@ -26,6 +38,10 @@ wsClient.on('error', (error: Event) => {
 /***** PRINTER ********/
 /**********************/
 
+/**
+ * Initialize printer instance with default values
+ * Values will be updated through WebSocket messages
+ */
 export const printer = new Printer({
     name: '',
     url: '',
@@ -44,11 +60,14 @@ export const printer = new Printer({
     homed: false
 })
 
-//TODO: THis is just a test, it should be improved
+/**
+ * Message Handler for Printer Updates
+ * Processes incoming WebSocket messages and updates printer state
+ * 
+ * @TODO: Refactor into proper message handling system
+ * @messageType M114 - Position report message
+ */
 wsClient.on('message', (message: Message) => {
-
-    //TODO: Maybe this should be a method in the printer class
-    // or Switch case...
     if (message.message_type === 'M114') {
         const resp_axis = JSON.parse(message.message)
         printer.axisPositions = resp_axis
