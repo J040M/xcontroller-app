@@ -1,18 +1,7 @@
 import { wsClient } from "../init/client";
-import { Axis, AxisPositions, PrinterProfile } from "../types/printer";
+import { Axis, AxisPositions, PrinterProfile, PrinterCommands } from "../types/printer";
 
-interface PrinterCommands {
-    autoHome(): void
-    bedLeveling(): void
-    moveAxis(axis: Axis, distance: number, direction: string): void
-    startPrint(): void
-    pausePrint(): void
-    stopPrint(): void
-    setHotendTemperature(temp: number): void
-    setBedTemperature(temp: number): void
-    disableMotors(axe?: string): void
-    setFanSpeed(speed: number): void
-}
+
 
 export class Printer implements PrinterCommands {
     printerInfo: PrinterProfile
@@ -44,17 +33,33 @@ export class Printer implements PrinterCommands {
     }
 
     moveAxis(axis: Axis, distance: number, direction: string): void {
+        if (!this.printerInfo.homed) return
         //sum of substract using the direction (which is '-' or '+') from the current position
-        let current_position = this.axisPositions[axis]
+        const current_position = this.axisPositions[axis]
         let new_position = direction === '+' ? current_position + distance : current_position - distance
-        
+
+        // Check for printer limits to avoid crusing things
+        if (new_position < 0) new_position = 0
+        else if (axis !== 'e' && new_position > this.printerInfo.dimensions[axis]) {
+            new_position = this.printerInfo.dimensions[axis]
+        }
+
         wsClient.sendCommand({
             message_type: 'GCommand',
-            message: `G1 ${new_position}`
+            message: `G1 ${axis}${new_position}`.toUpperCase()
+        })
+
+        // Update the axis position after moving
+        this.getAxisPosition()
+    }
+
+    getAxisPosition(): void {
+        wsClient.sendCommand({
+            message_type: 'GCommand',
+            message: `M114`
         })
     }
 
-    // ALSO USED TO RESUME PRINT
     startPrint(): void {
         wsClient.sendCommand({
             message_type: 'GCommand',
@@ -86,17 +91,20 @@ export class Printer implements PrinterCommands {
     setBedTemperature(temp: number): void {
         wsClient.sendCommand({
             message_type: 'GCommand',
-            message: `M106 S${temp}`
+            message: `M140 S${temp}`
         })
     }
 
     disableMotors(axe?: string): void {
+        // Set homed to false to avoid moving the printer without homing
+        this.printerInfo.homed = false
+
         const message = {
             message_type: 'GCommand',
             message: 'M84'
         }
-        
-        if(axe) message.message = `M84 ${axe}`
+
+        if (axe) message.message += ` ${axe}`
 
         wsClient.sendCommand(message)
     }
@@ -107,5 +115,4 @@ export class Printer implements PrinterCommands {
             message: `M106 S${speed}`
         })
     }
-
 }

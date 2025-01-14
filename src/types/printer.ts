@@ -33,4 +33,17 @@ interface PrinterProfile {
     homed: boolean
 }
 
-export type { PrintStatus, File, Axis, AxisPositions, PrinterProfile }
+interface PrinterCommands {
+    autoHome(): void
+    bedLeveling(): void
+    moveAxis(axis: Axis, distance: number, direction: string): void
+    startPrint(): void
+    pausePrint(): void
+    stopPrint(): void
+    setHotendTemperature(temp: number): void
+    setBedTemperature(temp: number): void
+    disableMotors(axe?: string): void
+    setFanSpeed(speed: number): void
+}
+
+export type { PrintStatus, File, Axis, AxisPositions, PrinterProfile, PrinterCommands }
