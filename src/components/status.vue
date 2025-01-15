@@ -1,6 +1,6 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { PrintStatus } from '../types/printer'
+import type { PrintStatus } from '../types/printer'
 
 export default defineComponent({
     name: 'statusComponent',

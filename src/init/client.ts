@@ -1,3 +1,9 @@
+/**
+ * @file Client initialization and WebSocket setup
+ * @description Initializes the WebSocket client and printer instance,
+ * handling connections and message processing for 3D printer control.
+ */
+
 import WebSocketConnector from "../utils/wsconnector";
 import { Printer } from "../utils/printer";
 
@@ -9,12 +15,17 @@ import { reactive } from 'vue'
 
 export const wsClient = new WebSocketConnector()
 
-// IF wsURL is saved, read and set wsClient url
-// TODO: Modify this to use the storage profiles
+/**
+ * Initialize WebSocket URL from localStorage if available
+ * @TODO: Refactor to implement profile-based storage system
+ */
 const wsURL = localStorage.getItem('wsURL')
 if (wsURL) wsClient.wsURL = wsURL
 
-// Set listeners for connected and error events
+/**
+ * WebSocket Event Handlers
+ * Manages connection state and error handling
+ */
 wsClient.on('connected', (message: MessageEvent<string>) => {
     console.log(message)
 })

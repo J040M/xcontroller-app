@@ -4,8 +4,8 @@ import { defineComponent, ref } from 'vue'
 
 import TerminalService from 'primevue/terminalservice'
 import { wsClient } from '../../init/client';
-import { MessageResponse } from '../../types/messages';
 import { gcommands_list } from '../../assets/terminal_commands';
+import type { MessageResponse } from '../../types/messages';
 
 export default defineComponent({
     name: 'terminalComponent',

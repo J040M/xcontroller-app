@@ -1,12 +1,16 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { File } from '../types/printer'
+import { printer } from '../init/client'
+import type { File } from '../types/printer'
 
 export default defineComponent({
     name: 'filesComponent',
+    setup() {
+        return printer
+    },
     data: () => ({
         files: undefined as File[] | undefined, 
-    }),
+    }) 
 })
 </script>
 
@@ -23,9 +27,9 @@ export default defineComponent({
         <label>{{ $t('files.file_modified_date') }} {{ file.file_modified_date }}</label><br>
         <label>{{ $t('files.filesize') }} {{ file.file_size }}</label><br>
         <div class="button-action-group">
-            <Button icon="pi pi-arrow-circle-up" />
-            <Button icon="pi pi-file" />
-            <Button icon="pi pi-trash" />
+            <Button v-on:click="selectFile(file.file_size)" icon="pi pi-arrow-circle-up" />
+            <Button v-on:click="deleteFile(file.file_name)" icon="pi pi-trash" />
+            <!-- <Button icon="pi pi-file" /> -->
         </div>
     </div>
     <div v-else>

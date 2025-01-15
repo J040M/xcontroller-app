@@ -1,10 +1,9 @@
 <script lang="ts">
 import { defineComponent, ref } from 'vue'
-import { wsClient } from '../init/client';
-import { PrinterProfile } from '../types/printer';
-import printerProfile from './printerprofile.vue';
-
 import { eventBus } from '../utils/eventbus';
+import { wsClient } from '../init/client';
+import printerProfile from './printerprofile.vue';
+import type{ PrinterProfile } from '../types/printer';
 
 export default defineComponent({
     name: 'connectorComponent',

@@ -4,20 +4,36 @@ import { Axis, AxisPositions, PrinterProfile, PrinterCommands } from "../types/p
 
 
 export class Printer implements PrinterCommands {
+    /** Stores current printer configuration and state */
     printerInfo: PrinterProfile
 
+    /**
+     * Creates a new Printer instance
+     * @param printer_info - Initial printer configuration
+     */
     constructor(printer_info: PrinterProfile) {
         this.printerInfo = printer_info
     }
 
+    /**
+     * Sets the current position for all axes
+     * @param positions - Object containing positions for each axis
+     */
     set axisPositions(positions: AxisPositions) {
         this.printerInfo!.axisPositions = positions
     }
 
+    /**
+     * Retrieves current positions for all axes
+     * @returns Current axis positions
+     */
     get axisPositions(): AxisPositions {
         return this.printerInfo?.axisPositions
     }
 
+    /**
+     * Initiates auto-homing sequence (G28)
+     */
     autoHome(): void {
         wsClient.sendCommand({
             message_type: 'GCommand',
@@ -25,6 +41,9 @@ export class Printer implements PrinterCommands {
         })
     }
 
+    /**
+     * Starts automatic bed leveling procedure (G29)
+     */
     bedLeveling(): void {
         wsClient.sendCommand({
             message_type: 'GCommand',
@@ -32,6 +51,12 @@ export class Printer implements PrinterCommands {
         })
     }
 
+    /**
+     * Moves specified axis by given distance and direction
+     * @param axis - The axis to move (X, Y, Z)
+     * @param distance - Distance to move in mm
+     * @param direction - Direction of movement ('+' or '-')
+     */
     moveAxis(axis: Axis, distance: number, direction: string): void {
         if (!this.printerInfo.homed) return
         //sum of substract using the direction (which is '-' or '+') from the current position
@@ -67,6 +92,9 @@ export class Printer implements PrinterCommands {
         })
     }
 
+    /**
+     * Pauses current print job (M25)
+     */
     pausePrint(): void {
         wsClient.sendCommand({
             message_type: 'GCommand',
@@ -74,6 +102,9 @@ export class Printer implements PrinterCommands {
         })
     }
 
+    /**
+     * Stops current print job (M29)
+     */
     stopPrint(): void {
         wsClient.sendCommand({
             message_type: 'GCommand',
@@ -81,6 +112,10 @@ export class Printer implements PrinterCommands {
         })
     }
 
+    /**
+     * Sets hotend temperature
+     * @param temp - Target temperature in celsius
+     */
     setHotendTemperature(temp: number): void {
         wsClient.sendCommand({
             message_type: 'GCommand',
@@ -88,6 +123,10 @@ export class Printer implements PrinterCommands {
         })
     }
 
+    /**
+     * Sets bed temperature
+     * @param temp - Target temperature in celsius
+     */
     setBedTemperature(temp: number): void {
         wsClient.sendCommand({
             message_type: 'GCommand',
@@ -95,6 +134,10 @@ export class Printer implements PrinterCommands {
         })
     }
 
+    /**
+     * Disables stepper motors
+     * @param axe - Optional specific axis to disable
+     */
     disableMotors(axe?: string): void {
         // Set homed to false to avoid moving the printer without homing
         this.printerInfo.homed = false
@@ -109,6 +152,10 @@ export class Printer implements PrinterCommands {
         wsClient.sendCommand(message)
     }
 
+    /**
+     * Controls cooling fan speed
+     * @param speed - Fan speed (0-255)
+     */
     setFanSpeed(speed: number): void {
         wsClient.sendCommand({
             message_type: 'GCommand',
