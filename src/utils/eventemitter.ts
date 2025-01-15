@@ -1,9 +1,23 @@
-export class EventEmitter {
+/**
+ * @file Event Emitter Implementation
+ * @description A simple event emitter implementation providing pub/sub functionality
+ * for managing application-wide events and listeners.
+ */
 
-    //Store events and listeners, callback functions
+export class EventEmitter {
+    /**
+     * Storage for event listeners
+     * @private
+     * @type {Object.<string, Function[]>}
+     */
     private events: { [key: string]: Function[] } = {};
 
-    // Register listener to event
+    /**
+     * Register an event listener
+     * @param {string} event - The event name to listen for
+     * @param {Function} listener - Callback function to execute when event is emitted
+     * @throws {TypeError} If listener is not a function
+     */
     on(event: string, listener: Function): void {
         if (!this.events[event]) {
             this.events[event] = [];
@@ -11,7 +25,11 @@ export class EventEmitter {
         this.events[event].push(listener);
     }
 
-    // Unregister listener from event
+    /**
+     * Remove an event listener
+     * @param {string} event - The event name to remove listener from
+     * @param {Function} listener - The listener function to remove
+     */
     off(event: string, listener: Function): void {
         if (!this.events[event]) return;
         this.events[event] = this.events[event].filter((li) => li !== listener);
@@ -23,5 +41,4 @@ export class EventEmitter {
             this.events[event].forEach((listener) => listener(...args));
         }
     }
-
 }

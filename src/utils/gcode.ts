@@ -1,21 +1,35 @@
 import * as THREE from 'three'
 
+/**
+ * Represents a single G-code movement command
+ */
 export interface Command {
-    start: THREE.Vector3
-    end: THREE.Vector3,
-    travel: boolean
+    start: THREE.Vector3    // Starting position of the movement
+    end: THREE.Vector3,     // Ending position of the movement
+    travel: boolean         // Whether this is a travel move (G0) or extrusion move (G1)
 }
 
+/**
+ * Tracks the current visualization state
+ */
 export interface CurrentValues {
-    currentLine: THREE.LineSegments,
-    currentTravelLine: THREE.LineSegments,
+    currentLine: THREE.LineSegments,      // Current extrusion line being displayed
+    currentTravelLine: THREE.LineSegments // Current travel line being displayed
 }
 
+/**
+ * Result of parsing G-code containing commands and final Z height
+ */
 interface ParseResult {
-    commands: Command[],
-    zValue: number
+    commands: Command[],    // Array of parsed movement commands
+    zValue: number         // Final Z height encountered
 }
 
+/**
+ * Parses raw G-code string into an array of 3D movement commands
+ * @param gcode Raw G-code string to parse
+ * @returns ParseResult containing movement commands and final Z height
+ */
 export function parseGCode(gcode: string ): ParseResult {
     const lines = gcode.split('\n');
     const commands = [] as Command[];
@@ -45,6 +59,13 @@ export function parseGCode(gcode: string ): ParseResult {
     return { commands, zValue };
 }
 
+/**
+ * Creates or updates the visual representation of G-code commands in a Three.js scene
+ * @param commands Array of movement commands to visualize
+ * @param zLevel Current Z-height level to filter movements
+ * @param scene Three.js scene to render into
+ * @param currentLine Object containing references to current visualization lines
+ */
 export function visualizeGCode(
     commands: Command[], 
     zLevel: number, 
@@ -59,12 +80,15 @@ export function visualizeGCode(
     const extrudeMaterial = new THREE.LineBasicMaterial({ color: 0xff0000, linewidth: 3 });
     const travelMaterial = new THREE.LineBasicMaterial({ color: 0x0000ff, linewidth: 2 });
 
+    // Create separate geometries for travel and extrusion moves
     const extrudeGeometry = new THREE.BufferGeometry();
     const travelGeometry = new THREE.BufferGeometry();
 
+    // Collect vertices for travel and extrusion moves
     const extrudeVertices: number[] = [];
     const travelVertices: number[] = [];
 
+    // Filter and transform commands into vertex arrays
     commands.forEach(cmd => {
         if (cmd.start.z <= zLevel && cmd.end.z <= zLevel) {
             const vertexArray = cmd.travel ? travelVertices : extrudeVertices;
@@ -73,13 +97,14 @@ export function visualizeGCode(
         }
     });
 
-    // Only add geometry if there are vertices
+    // Create and add extrusion lines to scene if vertices exist
     if (extrudeVertices.length > 0) {
         extrudeGeometry.setAttribute('position', new THREE.Float32BufferAttribute(extrudeVertices, 3));
         currentLine.extrude = new THREE.LineSegments(extrudeGeometry, extrudeMaterial);
         scene.add(currentLine.extrude);
     }
 
+    // Create and add travel lines to scene if vertices exist
     if (travelVertices.length > 0) {
         travelGeometry.setAttribute('position', new THREE.Float32BufferAttribute(travelVertices, 3));
         currentLine.travel = new THREE.LineSegments(travelGeometry, travelMaterial);

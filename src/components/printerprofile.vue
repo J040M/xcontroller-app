@@ -1,7 +1,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { PrinterProfile } from '../types/printer';
 import { eventBus } from '../utils/eventbus';
+import type { PrinterProfile } from '../types/printer';
 
 export default defineComponent({
     name: 'printerProfileComponent',
