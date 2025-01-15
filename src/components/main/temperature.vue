@@ -32,8 +32,21 @@ export default defineComponent({
             options: {},
         });
 
-        //TODO: Fetch data from backend
-    }
+        //TODO: This will not work when having multiple extruders (let's fix)
+        // This is causing too much recursion
+        // setInterval(() => {
+        //     this.graphData.datasets[0].data = this.updateArray(this.graphData.datasets[0].data as number[], Math.floor(Math.random() * 100))
+        //     this.graphData.datasets[1].data = this.updateArray(this.graphData.datasets[1].data as number[], Math.floor(Math.random() * 100))
+        // }, 5000)
+    },
+    methods: {
+        updateArray(nArray: number[], newValue: number): number[] {
+            nArray.shift()
+            nArray.push(newValue)
+
+            return nArray
+        },
+    },
 })
 </script>
 
