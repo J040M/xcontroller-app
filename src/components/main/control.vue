@@ -13,9 +13,6 @@ export default defineComponent({
         fanValue: 0 as number,
         lastFanCommandTime: null as NodeJS.Timeout | null,
     }),
-    setup() {
-        return printer
-    },
     mounted() {
         // Scene, camera, and renderer setup
         const canvasID = document.getElementById('3dprinter-animation') as HTMLCanvasElement;

@@ -1,8 +1,6 @@
 import { wsClient } from "../init/client";
 import { Axis, AxisPositions, PrinterProfile, PrinterCommands } from "../types/printer";
 
-
-
 export class Printer implements PrinterCommands {
     /** Stores current printer configuration and state */
     printerInfo: PrinterProfile
@@ -160,6 +158,28 @@ export class Printer implements PrinterCommands {
         wsClient.sendCommand({
             message_type: 'GCommand',
             message: `M106 S${speed}`
+        })
+    }
+
+    /**
+     * Selects file for printing
+     * @param file - Name of the file to print
+     */
+    selectFile(file: string): void {
+        wsClient.sendCommand({
+            message_type: 'GCommand',
+            message: `M23 ${file}`
+        })
+    }
+
+    /**
+     * Deletes file from printer storage
+     * @param file - Name of the file to delete
+     */
+    deleteFile(file: string): void {
+        wsClient.sendCommand({
+            message_type: 'GCommand',
+            message: `M30 ${file}`
         })
     }
 }

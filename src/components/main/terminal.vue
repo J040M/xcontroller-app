@@ -1,6 +1,6 @@
 <script lang="ts">
 
-import { defineComponent, ref } from 'vue'
+import { defineComponent } from 'vue'
 
 import TerminalService from 'primevue/terminalservice'
 import { wsClient } from '../../init/client';
