@@ -54,13 +54,19 @@ const newPrinter = new Printer({
         y: 200,
         z: 200
     },
+    temperatures: {
+        e0: 0,
+        e0_set: 0,
+        bed: 0,
+        bed_set: 0
+    },
     homed: false
 })
 
 // TODO: Not the way I like to have this, but it's a start
 export const printer = reactive(newPrinter)
 
-//TODO: THis is just a test, it should be improved
+//TODO: THis is just a test, it should be improved and moved away from here
 wsClient.on('message', (message: any) => {
 
     message = JSON.parse(message.data)
@@ -69,5 +75,10 @@ wsClient.on('message', (message: any) => {
     if (message.message_type === 'M114') {
         const resp_axis = JSON.parse(message.message)
         printer.axisPositions = resp_axis
+    } else if(message.message_type === 'M105') {
+        console.log('Temperatures:', message.message)
+        const resp_temps = JSON.parse(message.message)
+        printer.temperatures = resp_temps
+        console.log(printer.temperatures)
     }
 })
