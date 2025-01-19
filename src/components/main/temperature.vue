@@ -1,6 +1,7 @@
 <script lang="ts">
 import Chart, { ChartData, ChartItem } from 'chart.js/auto';
 import { defineComponent } from 'vue'
+import { printer } from '../../init/client';
 
 export default defineComponent({
     name: 'temperatureComponent',
@@ -32,12 +33,15 @@ export default defineComponent({
             options: {},
         });
 
-        //TODO: This will not work when having multiple extruders (let's fix)
+        // TODO: This will not work when having multiple extruders (let's fix)
         // This is causing too much recursion
         // setInterval(() => {
         //     this.graphData.datasets[0].data = this.updateArray(this.graphData.datasets[0].data as number[], Math.floor(Math.random() * 100))
         //     this.graphData.datasets[1].data = this.updateArray(this.graphData.datasets[1].data as number[], Math.floor(Math.random() * 100))
         // }, 5000)
+    },
+    setup() {
+        return { printer }
     },
     methods: {
         updateArray(nArray: number[], newValue: number): number[] {
@@ -52,6 +56,9 @@ export default defineComponent({
 
 <template>
     <div class="temp-status-container">
+        <button class="temperature-btn" @click="printer.getTemperatures()">
+            Get temperatures
+        </button>
         <div class="temperature-graph-container">
             <canvas id="temp-graph">
 
