@@ -185,13 +185,13 @@ export default defineComponent({
             <Panel :header="$t('control.header_motor')">
                 <div class="button-container motor-container">
                     <Button :label="$t('control.btn_homemotor')" raised rounded
-                        @click="sendMovementCommand('homemotor')" />
+                        @click="printer.autoHome()" />
                     <Button :label="$t('control.btn_bedleveling')" raised rounded
-                        @click="sendMovementCommand('bedleveling')" />
+                        @click="printer.bedLeveling()" />
                 </div>
                 <div class="button-container motor-container">
                     <Button :label="$t('control.btn_unlockmotor')" raised rounded
-                        @click="sendMovementCommand('unlockmotor')" />
+                        @click="printer.disableMotors()" />
                 </div>
                 <div class="button-container motor-container">
                     <Button label="Request aces positions" raised rounded @click="M114" />
