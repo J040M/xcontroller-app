@@ -37,7 +37,8 @@ interface AxisPositions {
 }
 
 interface PrinterProfile {
-    name: string
+    status: boolean,
+    name: string,
     url: string,
     firmware: string,
     axisPositions: AxisPositions,
@@ -51,7 +52,7 @@ interface PrinterProfile {
         e0_set: number,
         bed: number,
         bed_set: number
-    }
+    },
     homed: boolean
 }
 
