@@ -91,13 +91,14 @@ export default defineComponent({
                 );
             }
         },
+        // TODO: This could be refactored to use the new printer method
         sendMovementCommand(command: Axis | string): void {
             switch (command) {
                 case 'extrude':
-                    printer.moveAxis('e', this.extruderValue, '+');
+                    printer.moveAxis('e', '+', this.extruderValue);
                     break;
                 case 'retract':
-                    printer.moveAxis('e', this.extruderValue, '-');
+                    printer.moveAxis('e', '-', this.extruderValue);
                     break;
                 case 'x+':
                 case 'y+':
@@ -109,7 +110,7 @@ export default defineComponent({
                     const axis = command[0] as Axis;
                     const direction = command[1];
 
-                    printer.moveAxis(axis, this.movementValue, direction);
+                    printer.moveAxis(axis, direction, this.movementValue);
 
                     break;
                 default:
@@ -124,9 +125,6 @@ export default defineComponent({
                 printer.setFanSpeed(this.fanValue);
                 this.lastFanCommandTime = null
             }, 1000);
-        },
-        M114(): void {
-            printer.getAxisPosition();
         },
     },
 });
@@ -144,7 +142,6 @@ export default defineComponent({
                 <div class="axis-item">X: {{ printer.axisPositions.x.toFixed(2) }}</div>
                 <div class="axis-item">Y: {{ printer.axisPositions.y.toFixed(2) }}</div>
                 <div class="axis-item">Z: {{ printer.axisPositions.z.toFixed(2) }}</div>
-                <!-- <div class="axis-item">E: {{ printer.axisPositions.e.toFixed(2) }}</div> -->
             </div>
         </Panel>
     </div>
@@ -192,9 +189,6 @@ export default defineComponent({
                 <div class="button-container motor-container">
                     <Button :label="$t('control.btn_unlockmotor')" raised rounded
                         @click="printer.disableMotors()" />
-                </div>
-                <div class="button-container motor-container">
-                    <Button label="Request aces positions" raised rounded @click="M114" />
                 </div>
             </Panel>
 
