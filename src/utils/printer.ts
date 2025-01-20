@@ -4,6 +4,7 @@ import { Axis, AxisPositions, PrinterProfile, PrinterCommands } from "../types/p
 /**
  * Class representing a 3D printer instance
  * Handles printer control commands and state management
+ * Using the verifyConnection() decorator to verify the connection
  */
 export class Printer implements PrinterCommands {
     /** Stores current printer configuration and state */
@@ -57,19 +58,17 @@ export class Printer implements PrinterCommands {
 
     /**
      * Initiates auto-homing sequence (G28)
-     * Get the axis position after leveling
+     * Get the axis position after homing
      */
+    @Printer.verifyConnection
     autoHome(): void {
         wsClient.sendCommand({
             message_type: 'GCommand',
             message: 'G28'
         })
 
-
         this.printerInfo.homed = true
-        console.log('Printer homed ', this.printerInfo.homed)
 
-        // Update the axis position after homing
         this.getAxisPosition()
     }
 
@@ -77,6 +76,7 @@ export class Printer implements PrinterCommands {
      * Starts automatic bed leveling procedure (G29)
      * Get the axis position after leveling
      */
+    @Printer.verifyConnection
     bedLeveling(): void {
         wsClient.sendCommand({
             message_type: 'GCommand',
@@ -96,6 +96,7 @@ export class Printer implements PrinterCommands {
      * @param direction - Direction of movement ('+' or '-')
      * @param distance - Distance to move in mm
      */
+    @Printer.verifyConnection
     moveAxis(axis: Axis, direction: string, distance: number): void {
         if (!this.printerInfo.homed) {
             console.error('Printer must be homed before moving the axis')
@@ -111,6 +112,7 @@ export class Printer implements PrinterCommands {
             new_position = this.printerInfo.dimensions[axis]
         }
         
+        // Check for hotend temperature before moving
         if (axis === 'e' && (Math.abs(this.printerInfo.temperatures.e0 - this.printerInfo.temperatures.e0_set) > 3 
         || this.printerInfo.temperatures.e0 < this.hotendMinTemp)) {
             console.error('Extruder temp very different from target temp')
@@ -129,8 +131,8 @@ export class Printer implements PrinterCommands {
     /**
      * Retrieves current position for all axes
      */
+    @Printer.verifyConnection
     getAxisPosition(): void {
-        console.log('Getting axis position')
         if(!this.printerInfo.homed) {
             console.error('Printer must be homed before getting axis position')
             return
@@ -145,6 +147,7 @@ export class Printer implements PrinterCommands {
     /**
      * Retrieves current hotend and bed temperatures
      */
+    @Printer.verifyConnection
     getTemperatures(): void {
         wsClient.sendCommand({
             message_type: 'GCommand',
@@ -155,6 +158,7 @@ export class Printer implements PrinterCommands {
     /**
      * Starts current print job (M24)
      */
+    @Printer.verifyConnection
     startPrint(): void {
         wsClient.sendCommand({
             message_type: 'GCommand',
@@ -165,6 +169,7 @@ export class Printer implements PrinterCommands {
     /**
      * Pauses current print job (M25)
      */
+    @Printer.verifyConnection
     pausePrint(): void {
         wsClient.sendCommand({
             message_type: 'GCommand',
@@ -175,6 +180,7 @@ export class Printer implements PrinterCommands {
     /**
      * Stops current print job (M29)
      */
+    @Printer.verifyConnection
     stopPrint(): void {
         wsClient.sendCommand({
             message_type: 'GCommand',
@@ -186,6 +192,7 @@ export class Printer implements PrinterCommands {
      * Sets hotend temperature
      * @param temp - Target temperature in celsius
      */
+    @Printer.verifyConnection
     setHotendTemperature(temp: number): void {
         wsClient.sendCommand({
             message_type: 'GCommand',
@@ -197,6 +204,7 @@ export class Printer implements PrinterCommands {
      * Sets bed temperature
      * @param temp - Target temperature in celsius
      */
+    @Printer.verifyConnection
     setBedTemperature(temp: number): void {
         wsClient.sendCommand({
             message_type: 'GCommand',
@@ -209,6 +217,7 @@ export class Printer implements PrinterCommands {
      * Set homed to false to avoid moving the printer without homing
      * @param axe - Optional specific axis to disable
      */
+    @Printer.verifyConnection
     disableMotors(axe?: string): void {
         this.printerInfo.homed = false
 
@@ -226,6 +235,7 @@ export class Printer implements PrinterCommands {
      * Controls cooling fan speed
      * @param speed - Fan speed (0-255)
      */
+    @Printer.verifyConnection
     setFanSpeed(speed: number): void {
         if (speed < 0 || speed > 255) {
             console.error('Fan speed must be between 0 and 255')
@@ -242,6 +252,7 @@ export class Printer implements PrinterCommands {
      * Selects file for printing
      * @param file - Name of the file to print
      */
+    @Printer.verifyConnection
     selectFile(file: string): void {
         wsClient.sendCommand({
             message_type: 'GCommand',
@@ -253,10 +264,23 @@ export class Printer implements PrinterCommands {
      * Deletes file from printer storage
      * @param file - Name of the file to delete
      */
+    @Printer.verifyConnection
     deleteFile(file: string): void {
         wsClient.sendCommand({
             message_type: 'GCommand',
             message: `M30 ${file}`
         })
+    }
+
+    private static verifyConnection(_target: any, _propertyKey: string, descriptor: PropertyDescriptor) {
+        const originalMethod = descriptor.value;
+        descriptor.value = function (this: Printer, ...args: any[]) {
+            if (!this.printerInfo.status) {
+                console.error('Printer is not connected');
+                return;
+            }
+            return originalMethod.apply(this, args);
+        };
+        return descriptor;
     }
 }

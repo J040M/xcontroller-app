@@ -21,11 +21,12 @@ export default defineComponent({
                 fill: false,
                 borderColor: 'rgb(255, 255, 0)',
                 tension: 0.1
-            }] as ChartData['datasets']
+            }] as ChartData['datasets'],
+            height: 200
         },
         graphOptions: {
             responsive: true,
-            maintainAspectRatio: false
+            maintainAspectRatio: true
         }
     }),
     mounted() {
@@ -36,7 +37,7 @@ export default defineComponent({
          * TODO: Probably a better approach could improve this code
          */
         setInterval(() => {
-            if(!this.printer) return;
+            // if (!this.printer.printerInfo.status) return;
 
             setTimeout(() => {
                 this.printer.getTemperatures();
@@ -44,7 +45,7 @@ export default defineComponent({
 
             const e0 = [...this.graphData.datasets[0].data.slice(1), this.printer.printerInfo.temperatures.e0];
             const bed = [...this.graphData.datasets[0].data.slice(1), this.printer.printerInfo.temperatures.bed];
-            
+
             this.graphData.datasets[0].data = e0;
             this.graphData.datasets[1].data = bed;
         }, 30000);
@@ -60,13 +61,6 @@ export default defineComponent({
         <div class="temperature-graph-container">
             <Chart type="line" :data="graphData" :options="graphOptions" />
         </div>
-        <label>
-            {{ $t('temperature.grad_extruder') }}
-        </label>
-        <label>
-            {{ $t('temperature.grad_bed') }}
-        </label>
-
     </div>
 </template>
 
