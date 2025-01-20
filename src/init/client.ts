@@ -22,23 +22,12 @@ export const wsClient = new WebSocketConnector()
 const wsURL = localStorage.getItem('wsURL')
 if (wsURL) wsClient.wsURL = wsURL
 
-/**
- * WebSocket Event Handlers
- * Manages connection state and error handling
- */
-wsClient.on('connected', (message: MessageEvent<string>) => {
-    console.log(message)
-})
-
-wsClient.on('error', (error: Event) => {
-    console.error(error)
-})
-
 /**********************/
 /***** PRINTER ********/
 /**********************/
 
 const newPrinter = new Printer({
+    status: false,
     name: '',
     url: '',
     firmware: '',
@@ -68,7 +57,6 @@ export const printer = reactive(newPrinter)
 
 // TODO: This is just a test, it should be improved and moved away from here
 wsClient.on('message', (message: any) => {
-
     message = JSON.parse(message.data)
     // TODO: Maybe this should be a method in the printer class
     // or Switch case...
@@ -76,9 +64,22 @@ wsClient.on('message', (message: any) => {
         const resp_axis = JSON.parse(message.message)
         printer.axisPositions = resp_axis
     } else if (message.message_type === 'M105') {
-        console.log('Temperatures:', message.message)
         const resp_temps = JSON.parse(message.message)
         printer.temperatures = resp_temps
-        console.log(printer.temperatures)
     }
+})
+
+/**
+ * WebSocket Event Handlers
+ * Manages connection state and error handling
+ */
+wsClient.on('connected', () => {
+    console.log('Connected to WebSocket server')
+    printer.printerInfo.status = true
+
+    console.log('printerInfo.status ', printer.printerInfo.status)
+})
+wsClient.on('disconnected', () => printer.printerInfo.status = false)
+wsClient.on('error', (error: Event) => {
+    console.error(error)
 })
