@@ -1,7 +1,8 @@
 interface PrinterCommands {
+    printerInfo: PrinterProfile
     autoHome(): void
     bedLeveling(): void
-    moveAxis(axis: Axis, distance: number, direction: string): void
+    moveAxis(axis: Axis, direction: string, distance: number): void
     selectFile(file: string): void
     deleteFile(file: string): void
     startPrint(): void
@@ -12,7 +13,6 @@ interface PrinterCommands {
     disableMotors(axe?: string): void
     setFanSpeed(speed: number): void
 }
-
 
 type Axis = 'x' | 'y' | 'z' | 'e'
 
@@ -53,19 +53,6 @@ interface PrinterProfile {
         bed_set: number
     }
     homed: boolean
-}
-
-interface PrinterCommands {
-    autoHome(): void
-    bedLeveling(): void
-    moveAxis(axis: Axis, distance: number, direction: string): void
-    startPrint(): void
-    pausePrint(): void
-    stopPrint(): void
-    setHotendTemperature(temp: number): void
-    setBedTemperature(temp: number): void
-    disableMotors(axe?: string): void
-    setFanSpeed(speed: number): void
 }
 
 export type { PrintStatus, File, Axis, AxisPositions, PrinterProfile, PrinterCommands }

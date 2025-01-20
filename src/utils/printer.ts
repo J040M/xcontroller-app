@@ -1,9 +1,19 @@
 import { wsClient } from "../init/client";
 import { Axis, AxisPositions, PrinterProfile, PrinterCommands } from "../types/printer";
 
+/**
+ * Class representing a 3D printer instance
+ * Handles printer control commands and state management
+ */
 export class Printer implements PrinterCommands {
     /** Stores current printer configuration and state */
     printerInfo: PrinterProfile
+    
+    /**
+     *  Fixed minimum temp to avoid breaking things in the hotend
+     *  This will not work for most filaments, but it's a good start
+     */
+    private hotendMinTemp = 190
 
     /**
      * Creates a new Printer instance
@@ -55,6 +65,10 @@ export class Printer implements PrinterCommands {
             message: 'G28'
         })
 
+
+        this.printerInfo.homed = true
+        console.log('Printer homed ', this.printerInfo.homed)
+
         // Update the axis position after homing
         this.getAxisPosition()
     }
@@ -69,18 +83,20 @@ export class Printer implements PrinterCommands {
             message: 'G29'
         })
 
-        this.getAxisPosition()
+        // TODO: This is not really necessary, is it!?
+        this.autoHome()
     }
 
     /**
      * Moves specified axis by given distance and direction
      * Get the axis position after leveling
      * Check for printer limits to avoid crusing things
-     * @param axis - The axis to move (X, Y, Z)
-     * @param distance - Distance to move in mm
+     * GCode requires uppercase letters
+     * @param axis - The axis to move (X, Y, Z, E)
      * @param direction - Direction of movement ('+' or '-')
+     * @param distance - Distance to move in mm
      */
-    moveAxis(axis: Axis, distance: number, direction: string): void {
+    moveAxis(axis: Axis, direction: string, distance: number): void {
         if (!this.printerInfo.homed) {
             console.error('Printer must be homed before moving the axis')
             return
@@ -93,11 +109,13 @@ export class Printer implements PrinterCommands {
         if (new_position < 0) new_position = 0
         else if (axis !== 'e' && new_position > this.printerInfo.dimensions[axis]) {
             new_position = this.printerInfo.dimensions[axis]
-        } else if (axis === 'e') {
-            console.error('Cannot move extruder axis')
+        }
+        
+        if (axis === 'e' && (Math.abs(this.printerInfo.temperatures.e0 - this.printerInfo.temperatures.e0_set) > 3 
+        || this.printerInfo.temperatures.e0 < this.hotendMinTemp)) {
+            console.error('Extruder temp very different from target temp')
             return
         }
-
 
         wsClient.sendCommand({
             message_type: 'GCommand',
@@ -112,6 +130,7 @@ export class Printer implements PrinterCommands {
      * Retrieves current position for all axes
      */
     getAxisPosition(): void {
+        console.log('Getting axis position')
         if(!this.printerInfo.homed) {
             console.error('Printer must be homed before getting axis position')
             return
@@ -123,6 +142,9 @@ export class Printer implements PrinterCommands {
         })
     }
     
+    /**
+     * Retrieves current hotend and bed temperatures
+     */
     getTemperatures(): void {
         wsClient.sendCommand({
             message_type: 'GCommand',
@@ -205,6 +227,11 @@ export class Printer implements PrinterCommands {
      * @param speed - Fan speed (0-255)
      */
     setFanSpeed(speed: number): void {
+        if (speed < 0 || speed > 255) {
+            console.error('Fan speed must be between 0 and 255')
+            return
+        }
+
         wsClient.sendCommand({
             message_type: 'GCommand',
             message: `M106 S${speed}`
