@@ -1,5 +1,5 @@
 <script lang="ts">
-import Chart, { ChartData, ChartItem } from 'chart.js/auto';
+import { ChartData } from 'chart.js/auto';
 import { defineComponent } from 'vue'
 import { printer } from '../../init/client';
 
@@ -8,7 +8,6 @@ export default defineComponent({
     data: () => ({
         graphData: {
             labels: ['+90sec', '+60sec', '+30sec', 'now'],
-            // TODO: Loop this for multiple extruders
             datasets: [{
                 label: 'Extruder 1',
                 data: [0, 0, 0, 0],
@@ -23,46 +22,43 @@ export default defineComponent({
                 borderColor: 'rgb(255, 255, 0)',
                 tension: 0.1
             }] as ChartData['datasets']
+        },
+        graphOptions: {
+            responsive: true,
+            maintainAspectRatio: false
         }
     }),
     mounted() {
-        const ctx = document.getElementById('temp-graph') as ChartItem;
-        new Chart(ctx, {
-            type: 'line',
-            data: this.graphData,
-            options: {},
-        });
+        /**
+         * Get the temperatures every 30 seconds and update the graph
+         * set a timeout of 1 second to get the temperatures and wait to update the graph
+         * to avoid the graph to be updated before the temperatures are fetched
+         * TODO: Probably a better approach could improve this code
+         */
+        setInterval(() => {
+            if(!this.printer) return;
 
-        // TODO: This will not work when having multiple extruders (let's fix)
-        // This is causing too much recursion
-        // setInterval(() => {
-        //     this.graphData.datasets[0].data = this.updateArray(this.graphData.datasets[0].data as number[], Math.floor(Math.random() * 100))
-        //     this.graphData.datasets[1].data = this.updateArray(this.graphData.datasets[1].data as number[], Math.floor(Math.random() * 100))
-        // }, 5000)
+            setTimeout(() => {
+                this.printer.getTemperatures();
+            }, 1000);
+
+            const e0 = [...this.graphData.datasets[0].data.slice(1), this.printer.printerInfo.temperatures.e0];
+            const bed = [...this.graphData.datasets[0].data.slice(1), this.printer.printerInfo.temperatures.bed];
+            
+            this.graphData.datasets[0].data = e0;
+            this.graphData.datasets[1].data = bed;
+        }, 30000);
     },
     setup() {
         return { printer }
-    },
-    methods: {
-        updateArray(nArray: number[], newValue: number): number[] {
-            nArray.shift()
-            nArray.push(newValue)
-
-            return nArray
-        },
     },
 })
 </script>
 
 <template>
     <div class="temp-status-container">
-        <button class="temperature-btn" @click="printer.getTemperatures()">
-            Get temperatures
-        </button>
         <div class="temperature-graph-container">
-            <canvas id="temp-graph">
-
-            </canvas>
+            <Chart type="line" :data="graphData" :options="graphOptions" />
         </div>
         <label>
             {{ $t('temperature.grad_extruder') }}

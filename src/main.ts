@@ -37,7 +37,8 @@ import Select from 'primevue/select';
 /**
  * Chart.js Components
  */
-import { LineController, LineElement, PointElement, CategoryScale, LinearScale } from "chart.js/auto";
+// import { LineController, LineElement, PointElement, CategoryScale, LinearScale } from "chart.js/auto";
+import Chart from "primevue/chart";
 
 /**
  * Application Services
@@ -86,14 +87,9 @@ app.use(PrimeVue, {
     .component('Knob', Knob)
     .component('Dialog', Dialog)
     .component('Select', Select)
-
-// Register Chart.js components
-    .component('LineController', LineController)
-    .component('LineElement', LineElement)
-    .component('PointElement', PointElement)
-    .component('CategoryScale', CategoryScale)
-    .component('LinearScale', LinearScale)
     .component('Toolbar', Toolbar)
+
+    .component('Chart', Chart)
 
 // Mount the application
     .mount("#app");

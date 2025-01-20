@@ -66,16 +66,16 @@ const newPrinter = new Printer({
 // TODO: Not the way I like to have this, but it's a start
 export const printer = reactive(newPrinter)
 
-//TODO: THis is just a test, it should be improved and moved away from here
+// TODO: This is just a test, it should be improved and moved away from here
 wsClient.on('message', (message: any) => {
 
     message = JSON.parse(message.data)
-    //TODO: Maybe this should be a method in the printer class
+    // TODO: Maybe this should be a method in the printer class
     // or Switch case...
     if (message.message_type === 'M114') {
         const resp_axis = JSON.parse(message.message)
         printer.axisPositions = resp_axis
-    } else if(message.message_type === 'M105') {
+    } else if (message.message_type === 'M105') {
         console.log('Temperatures:', message.message)
         const resp_temps = JSON.parse(message.message)
         printer.temperatures = resp_temps
