@@ -64,6 +64,13 @@
             "label_url": "URL",
             "label_firmware": "Firmware",
             "label_dimensions": "Dimensions"
+        },
+        "heating_profile": {
+            "header": "Heating profile",
+            "label_name": "Profile name",
+            "heating_values": "Heating values",
+            "label_bed": "Bed",
+            "label_extruder": "Extruder"
         }
     }
 }
