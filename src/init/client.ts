@@ -12,7 +12,6 @@ import { reactive } from 'vue'
 /*********************/
 /***** WS CLIENT *****/
 /*********************/
-
 export const wsClient = new WebSocketConnector()
 
 /**
@@ -25,6 +24,7 @@ if (wsURL) wsClient.wsURL = wsURL
 /**********************/
 /***** PRINTER ********/
 /**********************/
+// const newPrinter: Printer | null = null
 
 const newPrinter = new Printer({
     status: false,
@@ -55,6 +55,11 @@ const newPrinter = new Printer({
 // TODO: Not the way I like to have this, but it's a start
 export const printer = reactive(newPrinter)
 
+/**
+ * WebSocket Event Handlers
+ * Manages messages, connection state and error handling
+ */
+
 // TODO: This is just a test, it should be improved and moved away from here
 wsClient.on('message', (message: any) => {
     message = JSON.parse(message.data)
@@ -69,15 +74,9 @@ wsClient.on('message', (message: any) => {
     }
 })
 
-/**
- * WebSocket Event Handlers
- * Manages connection state and error handling
- */
 wsClient.on('connected', () => {
     console.log('Connected to WebSocket server')
     printer.printerInfo.status = true
-
-    console.log('printerInfo.status ', printer.printerInfo.status)
 })
 wsClient.on('disconnected', () => printer.printerInfo.status = false)
 wsClient.on('error', (error: Event) => {
