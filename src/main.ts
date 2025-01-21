@@ -33,11 +33,12 @@ import Knob from 'primevue/knob';
 import Toolbar from 'primevue/toolbar';
 import Dialog from 'primevue/dialog';
 import Select from 'primevue/select';
+import DataTable from "primevue/datatable";
+import Column from 'primevue/column';
 
 /**
  * Chart.js Components
  */
-// import { LineController, LineElement, PointElement, CategoryScale, LinearScale } from "chart.js/auto";
 import Chart from "primevue/chart";
 
 /**
@@ -88,6 +89,9 @@ app.use(PrimeVue, {
     .component('Dialog', Dialog)
     .component('Select', Select)
     .component('Toolbar', Toolbar)
+
+    .component('DataTable', DataTable)
+    .component('Column', Column)
 
     .component('Chart', Chart)
 
