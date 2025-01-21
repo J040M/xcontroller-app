@@ -56,6 +56,20 @@
         "temperature": {
             "grad_extruder": "Düse",
             "grad_bed": "Bett"
+        },
+        "printer_profile": {
+            "header": "Druckerprofil",
+            "label_name": "Name",
+            "label_url": "URL",
+            "label_firmware": "Firmware",
+            "label_dimensions": "Abmessungen"
+        },
+        "heating_profile": {
+            "header": "Heizprofil",
+            "label_name": "Name",
+            "heating_values": "Heizwerte",
+            "label_bed": "Bett",
+            "label_extruder": "Düse"
         }
     }
 }

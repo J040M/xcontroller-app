@@ -1,0 +1,60 @@
+<script lang="ts">
+import { defineComponent } from 'vue'
+import { eventBus } from '../utils/eventbus';
+import type { HeatingProfile } from '../types/printer';
+
+export default defineComponent({
+    name: 'heatingProfileComponent',
+    data: () => ({
+        heatingProfile: {
+            e0: 0,
+            bed: 0,
+        } as HeatingProfile,
+        visible: false,
+    }),
+    mounted() {
+        eventBus.on('message', (message: string) => {
+            if (message === 'openHeatingDialog') {
+                this.visible = true
+            }
+        })
+    },
+    methods: {
+        saveProfile(): void {
+            let profiles = localStorage.getItem('HeatingProfiles')
+            if (profiles || profiles === '[]') {
+                const nProfiles = JSON.parse(profiles) as HeatingProfile[] || []
+                nProfiles.push(this.heatingProfile)
+                localStorage.setItem('HeatingProfiles', JSON.stringify(nProfiles))
+            } else {
+                let nProfiles: HeatingProfile[] = []
+                nProfiles.push(this.heatingProfile)
+                localStorage.setItem('HeatingProfiles', JSON.stringify(nProfiles))
+            }
+            this.visible = false
+        }
+    }
+})
+</script>
+
+<template>
+    <Dialog :visible="visible" modal :header="$t('heating_profile.header')" :style="{ width: '25rem' }"
+        :closable="false" optionLabel="name" optionValue="url">
+        <div class="flex items-center gap-4 mb-4">
+            <label for="profileName" class="font-semibold w-24">{{ $t('heating_profile.label_name') }}</label>
+            <InputText id="profileName" v-model="heatingProfile.name" lass="flex-auto" autocomplete="off" />
+        </div>
+        <div class="flex items-center gap-4 mb-8">
+            <label for="heatingValues" class="font-semibold w-24">{{ $t('heating_profile.heating_values')
+                }}</label>
+            <InputNumber prefix="e0 " placeholder="e0" id="e0Value" v-model="heatingProfile.e0" inputId="heatingE0" suffix=" °C" fluid />
+            <InputNumber prefix="bed " placeholder="bed" id="bedValue" v-model="heatingProfile.bed" inputId="heatingBed" suffix=" °C" fluid />
+        </div>
+        <div class="flex justify-end gap-2">
+            <Button type="button" label="Cancel" severity="secondary" @click="visible = false"></Button>
+            <Button type="button" label="Save" @click="saveProfile" />
+        </div>
+    </Dialog>
+</template>
+
+<style scoped></style>

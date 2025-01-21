@@ -12,7 +12,6 @@ import { reactive } from 'vue'
 /*********************/
 /***** WS CLIENT *****/
 /*********************/
-
 export const wsClient = new WebSocketConnector()
 
 /**
@@ -22,23 +21,13 @@ export const wsClient = new WebSocketConnector()
 const wsURL = localStorage.getItem('wsURL')
 if (wsURL) wsClient.wsURL = wsURL
 
-/**
- * WebSocket Event Handlers
- * Manages connection state and error handling
- */
-wsClient.on('connected', (message: MessageEvent<string>) => {
-    console.log(message)
-})
-
-wsClient.on('error', (error: Event) => {
-    console.error(error)
-})
-
 /**********************/
 /***** PRINTER ********/
 /**********************/
+// const newPrinter: Printer | null = null
 
 const newPrinter = new Printer({
+    status: false,
     name: '',
     url: '',
     firmware: '',
@@ -54,20 +43,42 @@ const newPrinter = new Printer({
         y: 200,
         z: 200
     },
+    temperatures: {
+        e0: 0,
+        e0_set: 0,
+        bed: 0,
+        bed_set: 0
+    },
     homed: false
 })
 
 // TODO: Not the way I like to have this, but it's a start
 export const printer = reactive(newPrinter)
 
-//TODO: THis is just a test, it should be improved
-wsClient.on('message', (message: any) => {
+/**
+ * WebSocket Event Handlers
+ * Manages messages, connection state and error handling
+ */
 
+// TODO: This is just a test, it should be improved and moved away from here
+wsClient.on('message', (message: any) => {
     message = JSON.parse(message.data)
-    //TODO: Maybe this should be a method in the printer class
+    // TODO: Maybe this should be a method in the printer class
     // or Switch case...
     if (message.message_type === 'M114') {
         const resp_axis = JSON.parse(message.message)
         printer.axisPositions = resp_axis
+    } else if (message.message_type === 'M105') {
+        const resp_temps = JSON.parse(message.message)
+        printer.temperatures = resp_temps
     }
+})
+
+wsClient.on('connected', () => {
+    console.log('Connected to WebSocket server')
+    printer.printerInfo.status = true
+})
+wsClient.on('disconnected', () => printer.printerInfo.status = false)
+wsClient.on('error', (error: Event) => {
+    console.error(error)
 })

@@ -33,11 +33,13 @@ import Knob from 'primevue/knob';
 import Toolbar from 'primevue/toolbar';
 import Dialog from 'primevue/dialog';
 import Select from 'primevue/select';
+import DataTable from "primevue/datatable";
+import Column from 'primevue/column';
 
 /**
  * Chart.js Components
  */
-import { LineController, LineElement, PointElement, CategoryScale, LinearScale } from "chart.js/auto";
+import Chart from "primevue/chart";
 
 /**
  * Application Services
@@ -86,14 +88,12 @@ app.use(PrimeVue, {
     .component('Knob', Knob)
     .component('Dialog', Dialog)
     .component('Select', Select)
-
-// Register Chart.js components
-    .component('LineController', LineController)
-    .component('LineElement', LineElement)
-    .component('PointElement', PointElement)
-    .component('CategoryScale', CategoryScale)
-    .component('LinearScale', LinearScale)
     .component('Toolbar', Toolbar)
+
+    .component('DataTable', DataTable)
+    .component('Column', Column)
+
+    .component('Chart', Chart)
 
 // Mount the application
     .mount("#app");
