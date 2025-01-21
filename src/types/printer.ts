@@ -3,6 +3,7 @@ interface PrinterCommands {
     autoHome(): void
     bedLeveling(): void
     moveAxis(axis: Axis, direction: string, distance: number): void
+    listFiles(): void
     selectFile(file: string): void
     deleteFile(file: string): void
     startPrint(): void
@@ -18,7 +19,7 @@ type Axis = 'x' | 'y' | 'z' | 'e'
 
 interface PrintStatus {
     state: string,
-    file: string,
+    file: File,
     elapsed_time: string,
     estimated_time: string,
 }
@@ -38,6 +39,7 @@ interface AxisPositions {
 
 interface PrinterProfile {
     status: boolean,
+    printStatus?: PrintStatus,
     name: string,
     url: string,
     firmware: string,

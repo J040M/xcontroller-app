@@ -154,6 +154,17 @@ export class Printer implements PrinterCommands {
             message: `M105`
         })
     }
+
+    /**
+     * Retrieves list of files stored on the printer
+     */
+    @Printer.verifyConnection
+    listFiles(): void {
+        wsClient.sendCommand({
+            message_type: 'GCommand',
+            message: 'M20'
+        })
+    }
     
     /**
      * Starts current print job (M24)

@@ -1,21 +1,32 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { printer } from '../init/client'
-import type { File } from '../types/printer'
+import { printer, wsClient } from '../init/client'
+// import type { File } from '../types/printer'
 
 export default defineComponent({
     name: 'filesComponent',
-    setup() {
-        return printer
-    },
     data: () => ({
-        files: undefined as File[] | undefined, 
-    }) 
+        files: undefined as string[] | undefined,
+    }),
+    mounted() {
+        wsClient.on('message', (message: any) => {
+            message = JSON.parse(message.data)
+            if (message.message_type === 'M20') {
+                // TODO: This will change in the future. parser20() will return an obj instead of an array
+                this.files = message.message.replace(/[\[\]"]/g, '').split(',')
+                    .map((item: string) => item.trim());
+            }
+        })
+    },
+    setup() {
+        return { printer }
+    },
 })
 </script>
 
 <template>
     <div class="upload-container">
+        <Button @click="printer.listFiles()" icon="pi pi-refresh" />
         <Button label="Upload file" icon="pi pi-upload" />
     </div>
 
@@ -23,12 +34,13 @@ export default defineComponent({
     <div class="file-search-container"></div>
 
     <div v-if="files" class="file-container" v-for="file of files">
-        <label>{{ $t('files.filename') }} {{ file.file_name }}</label><br>
+        <label> {{ file }}</label><br>
+        <!-- <label>{{ $t('files.filename') }} {{ file.file_name }}</label><br>
         <label>{{ $t('files.file_modified_date') }} {{ file.file_modified_date }}</label><br>
-        <label>{{ $t('files.filesize') }} {{ file.file_size }}</label><br>
+        <label>{{ $t('files.filesize') }} {{ file.file_size }}</label><br> -->
         <div class="button-action-group">
-            <Button v-on:click="selectFile(file.file_size)" icon="pi pi-arrow-circle-up" />
-            <Button v-on:click="deleteFile(file.file_name)" icon="pi pi-trash" />
+            <Button v-on:click="printer.selectFile(file)" icon="pi pi-arrow-circle-up" />
+            <Button v-on:click="printer.deleteFile(file)" icon="pi pi-trash" />
             <!-- <Button icon="pi pi-file" /> -->
         </div>
     </div>
