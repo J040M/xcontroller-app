@@ -63,9 +63,9 @@ export default defineComponent({
         openHeatingDialog(): void {
             eventBus.emit('message', 'openHeatingDialog')
         },
-        selectProfile(e0: number, bed:number): void {
-            this.printer.setHotendTemperature(e0)
-            this.printer.setBedTemperature(bed)
+        selectProfile(profileIndex: number): void {
+            this.printer.setHotendTemperature(this.heatingProfiles[profileIndex].e0)
+            this.printer.setBedTemperature(this.heatingProfiles[profileIndex].bed)
         }
     },
     setup() {
@@ -90,8 +90,10 @@ export default defineComponent({
         <Column field="e0" header="Extruder 1"></Column>
         <Column field="bed" header="Bed"></Column>
         <Column field="actions" header="Actions">
-            <Button icon="pi pi-check" class="mr-2" />
-            <Button icon="pi pi-trash" />
+            <template #body="{ index }">
+                <Button icon="pi pi-check" class="mr-2" @click="selectProfile(index)" />
+                <Button icon="pi pi-trash" />
+            </template>
         </Column>
     </DataTable>
 </template>
