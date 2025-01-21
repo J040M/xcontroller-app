@@ -9,7 +9,7 @@ import { Axis, AxisPositions, PrinterProfile, PrinterCommands } from "../types/p
 export class Printer implements PrinterCommands {
     /** Stores current printer configuration and state */
     printerInfo: PrinterProfile
-    
+
     /**
      *  Fixed minimum temp to avoid breaking things in the hotend
      *  This will not work for most filaments, but it's a good start
@@ -111,10 +111,10 @@ export class Printer implements PrinterCommands {
         else if (axis !== 'e' && new_position > this.printerInfo.dimensions[axis]) {
             new_position = this.printerInfo.dimensions[axis]
         }
-        
+
         // Check for hotend temperature before moving
-        if (axis === 'e' && (Math.abs(this.printerInfo.temperatures.e0 - this.printerInfo.temperatures.e0_set) > 3 
-        || this.printerInfo.temperatures.e0 < this.hotendMinTemp)) {
+        if (axis === 'e' && (Math.abs(this.printerInfo.temperatures.e0 - this.printerInfo.temperatures.e0_set) > 3
+            || this.printerInfo.temperatures.e0 < this.hotendMinTemp)) {
             console.error('Extruder temp very different from target temp')
             return
         }
@@ -133,7 +133,7 @@ export class Printer implements PrinterCommands {
      */
     @Printer.verifyConnection
     getAxisPosition(): void {
-        if(!this.printerInfo.homed) {
+        if (!this.printerInfo.homed) {
             console.error('Printer must be homed before getting axis position')
             return
         }
@@ -143,7 +143,7 @@ export class Printer implements PrinterCommands {
             message: `M114`
         })
     }
-    
+
     /**
      * Retrieves current hotend and bed temperatures
      */
@@ -165,12 +165,14 @@ export class Printer implements PrinterCommands {
             message: 'M20'
         })
     }
-    
+
     /**
      * Starts current print job (M24)
      */
     @Printer.verifyConnection
     startPrint(): void {
+        this.printerInfo.printStatus!.state = 'printing'
+
         wsClient.sendCommand({
             message_type: 'GCommand',
             message: 'M24'
@@ -182,6 +184,8 @@ export class Printer implements PrinterCommands {
      */
     @Printer.verifyConnection
     pausePrint(): void {
+        this.printerInfo.printStatus!.state = 'paused'
+
         wsClient.sendCommand({
             message_type: 'GCommand',
             message: 'M25'
@@ -193,6 +197,8 @@ export class Printer implements PrinterCommands {
      */
     @Printer.verifyConnection
     stopPrint(): void {
+        this.printerInfo.printStatus!.state = 'stopped'
+
         wsClient.sendCommand({
             message_type: 'GCommand',
             message: 'M29'
@@ -261,25 +267,43 @@ export class Printer implements PrinterCommands {
 
     /**
      * Selects file for printing
-     * @param file - Name of the file to print
+     * If no file is provided, clears the current selection
+     * @param file_name - Name of the file to print
      */
     @Printer.verifyConnection
-    selectFile(file: string): void {
+    selectFile(file_name?: string): void {
+
+        if (!file_name) {
+            delete this.printerInfo.printStatus
+            return
+        }
+
+        this.printerInfo.printStatus = {
+            state: 'idle',
+            file: {
+                file_name: file_name,
+                file_size: 0,
+                file_modified_date: '0'
+            },
+            elapsed_time: 0,
+            estimated_time: 0
+        }
+
         wsClient.sendCommand({
             message_type: 'GCommand',
-            message: `M23 ${file}`
+            message: `M23 ${file_name}`
         })
     }
 
     /**
      * Deletes file from printer storage
-     * @param file - Name of the file to delete
+     * @param file_name - Name of the file to delete
      */
     @Printer.verifyConnection
-    deleteFile(file: string): void {
+    deleteFile(file_name: string): void {
         wsClient.sendCommand({
             message_type: 'GCommand',
-            message: `M30 ${file}`
+            message: `M30 ${file_name}`
         })
     }
 

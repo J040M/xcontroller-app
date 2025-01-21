@@ -16,17 +16,18 @@ interface PrinterCommands {
 }
 
 type Axis = 'x' | 'y' | 'z' | 'e'
+type State = 'idle' | 'printing' | 'paused' | 'stopped' | 'error'
 
 interface PrintStatus {
-    state: string,
+    state: State,
     file: File,
-    elapsed_time: string,
-    estimated_time: string,
+    elapsed_time: number,
+    estimated_time: number,
 }
 
 interface File {
     file_name: string,
-    file_size: string,
+    file_size: number,
     file_modified_date: string,
 }
 
@@ -58,4 +59,12 @@ interface PrinterProfile {
     homed: boolean
 }
 
-export type { PrintStatus, File, Axis, AxisPositions, PrinterProfile, PrinterCommands }
+interface HeatingProfile {
+    name: string,
+    e0: number,
+    e1: number,
+    e2: number,
+    bed: number
+}
+
+export type { PrintStatus, File, Axis, AxisPositions, PrinterProfile, PrinterCommands, HeatingProfile }
