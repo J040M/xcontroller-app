@@ -2,10 +2,18 @@
 import { ChartData } from 'chart.js/auto';
 import { defineComponent } from 'vue'
 import { printer } from '../../init/client';
+import { eventBus } from '../../utils/eventbus';
+
+import heatingProfile from '../heatingprofile.vue';
+import type { HeatingProfile } from '../../types/printer';
 
 export default defineComponent({
     name: 'temperatureComponent',
+    components: {
+        heatingProfile
+    },
     data: () => ({
+        heatingProfiles: [] as HeatingProfile[],
         graphData: {
             labels: ['+90sec', '+60sec', '+30sec', 'now'],
             datasets: [{
@@ -30,6 +38,7 @@ export default defineComponent({
         }
     }),
     mounted() {
+        this.heatingProfiles = JSON.parse(localStorage.getItem('HeatingProfiles') || '[]') as HeatingProfile[]
         /**
          * Get the temperatures every 30 seconds and update the graph
          * set a timeout of 1 second to get the temperatures and wait to update the graph
@@ -37,7 +46,7 @@ export default defineComponent({
          * TODO: Probably a better approach could improve this code
          */
         setInterval(() => {
-            // if (!this.printer.printerInfo.status) return;
+            if (!this.printer.printerInfo.status) return;
 
             setTimeout(() => {
                 this.printer.getTemperatures();
@@ -50,6 +59,15 @@ export default defineComponent({
             this.graphData.datasets[1].data = bed;
         }, 30000);
     },
+    methods: {
+        openHeatingDialog(): void {
+            eventBus.emit('message', 'openHeatingDialog')
+        },
+        selectProfile(e0: number, bed:number): void {
+            this.printer.setHotendTemperature(e0)
+            this.printer.setBedTemperature(bed)
+        }
+    },
     setup() {
         return { printer }
     },
@@ -57,11 +75,25 @@ export default defineComponent({
 </script>
 
 <template>
+    <heatingProfile />
+
     <div class="temp-status-container">
         <div class="temperature-graph-container">
             <Chart type="line" :data="graphData" :options="graphOptions" />
         </div>
     </div>
+
+    <Button @click="openHeatingDialog" icon="pi pi-plus" />
+
+    <DataTable v-if="heatingProfiles.length > 0" :value="heatingProfiles">
+        <Column field="name" header="Name"></Column>
+        <Column field="e0" header="Extruder 1"></Column>
+        <Column field="bed" header="Bed"></Column>
+        <Column field="actions" header="Actions">
+            <Button icon="pi pi-check" class="mr-2" />
+            <Button icon="pi pi-trash" />
+        </Column>
+    </DataTable>
 </template>
 
 <style scoped></style>
