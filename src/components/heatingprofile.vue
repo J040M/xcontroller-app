@@ -51,10 +51,14 @@ export default defineComponent({
             <InputNumber prefix="bed " placeholder="bed" id="bedValue" v-model="heatingProfile.bed" inputId="heatingBed" suffix=" °C" fluid />
         </div>
         <div class="flex justify-end gap-2">
-            <Button type="button" label="Cancel" severity="secondary" @click="visible = false"></Button>
             <Button type="button" label="Save" @click="saveProfile" />
+            <Button type="button" label="Cancel" severity="secondary" @click="visible = false"></Button>
         </div>
     </Dialog>
 </template>
 
-<style scoped></style>
+<style scoped>
+button {
+    margin: 10px 10px 0 0;
+}
+</style>
