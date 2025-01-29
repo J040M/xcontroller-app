@@ -8,7 +8,8 @@
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
-    "tauricon": "tauricon"
+    "tauricon": "tauricon",
+    "test": "vitest"
   },
   "dependencies": {
     "@primevue/themes": "^4.1.0",
@@ -26,8 +27,10 @@
     "@tauri-apps/tauricon": "github:tauri-apps/tauricon",
     "@types/three": "^0.171.0",
     "@vitejs/plugin-vue": "^5.0.4",
+    "happy-dom": "^16.7.3",
     "typescript": "^5.0.2",
     "vite": "^6.0.4",
+    "vitest": "^3.0.4",
     "vue-tsc": "^2.1.6"
   },
   "resolutions": {}
