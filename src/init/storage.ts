@@ -1,7 +1,3 @@
-/*******************/
-// STORAGE SCRIPTS //
-/*******************/
-
 /**
  * Initialize the storage by creating 
  * the default storage items if they don't exist

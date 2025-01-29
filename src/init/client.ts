@@ -9,9 +9,6 @@ import { Printer } from "../utils/printer";
 
 import { reactive } from 'vue'
 
-/*********************/
-/***** WS CLIENT *****/
-/*********************/
 export const wsClient = new WebSocketConnector()
 
 /**
@@ -21,11 +18,7 @@ export const wsClient = new WebSocketConnector()
 const wsURL = localStorage.getItem('wsURL')
 if (wsURL) wsClient.wsURL = wsURL
 
-/**********************/
-/***** PRINTER ********/
-/**********************/
 // const newPrinter: Printer | null = null
-
 const newPrinter = new Printer({
     status: false,
     name: '',
