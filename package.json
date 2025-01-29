@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "tauricon": "tauricon",
-    "test": "vitest"
+    "test": "vitest run"
   },
   "dependencies": {
     "@primevue/themes": "^4.1.0",
