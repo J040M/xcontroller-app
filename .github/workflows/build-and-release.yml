@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - master
-    # tags:
-    #   - 'v*'
 
 jobs:
     publish-tauri:
@@ -51,6 +49,9 @@ jobs:
             
         - name: install frontend dependencies
           run: npm install
+
+        - name: Run tests
+          run: npm test
 
         - name: Build Web Version
           if: matrix.args == '--target web'
