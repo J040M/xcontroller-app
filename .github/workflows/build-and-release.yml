@@ -2,10 +2,8 @@ name: 'publish'
 
 on:
   push:
-    # branches:
-    #   - master
-    tags:
-      - 'v*'
+    branches:
+      - master
 
 jobs:
     publish-tauri:
@@ -15,10 +13,10 @@ jobs:
         fail-fast: false
         matrix:
           include:
-            - platform: 'macos-latest'
-              args: '--target aarch64-apple-darwin'
-            - platform: 'macos-latest'
-              args: '--target x86_64-apple-darwin'
+            # - platform: 'macos-latest'
+            #   args: '--target aarch64-apple-darwin'
+            # - platform: 'macos-latest'
+            #   args: '--target x86_64-apple-darwin'
             - platform: 'ubuntu-22.04'
               args: ''
             - platform: 'windows-latest'
@@ -51,6 +49,9 @@ jobs:
             
         - name: install frontend dependencies
           run: npm install
+
+        - name: Run tests
+          run: npm test
 
         - name: Build Web Version
           if: matrix.args == '--target web'

@@ -2,18 +2,13 @@
 import { defineComponent } from 'vue'
 import * as THREE from 'three'
 import { printer } from '../../init/client';
-import { Axis } from '../../types/printer';
+import type { Axis } from '../../types/printer';
 
 export default defineComponent({
     name: 'controlComponent',
     data: () => ({
         movementValue: 10 as number,
         extruderValue: 1 as number,
-        input: {
-            x: 0,
-            y: 0,
-            z: 0,
-        },
         redSphere: undefined as THREE.Mesh | undefined,
         fanValue: 0 as number,
         lastFanCommandTime: null as NodeJS.Timeout | null,
@@ -79,6 +74,9 @@ export default defineComponent({
         };
         animate();
     },
+    setup() {
+        return { printer };
+    },
     methods: {
         // TODO: The values from the commands must be scaled for the sphere
         updateRedSpherePosition(): void {
@@ -87,28 +85,20 @@ export default defineComponent({
                 // Limit the red sphere's position to stay within the cube
                 const halfSize = 1; // Half of the cube size
                 this.redSphere.position.set(
-                    THREE.MathUtils.clamp(-this.input.y, -halfSize + 0.1, halfSize - 0.1),
-                    THREE.MathUtils.clamp(this.input.z, -halfSize + 0.1, halfSize - 0.1),
-                    THREE.MathUtils.clamp(this.input.x, -halfSize + 0.1, halfSize - 0.1),
+                    THREE.MathUtils.clamp(this.printer.axisPositions.y, -halfSize + 0.1, halfSize - 0.1),
+                    THREE.MathUtils.clamp(this.printer.axisPositions.z, -halfSize + 0.1, halfSize - 0.1),
+                    THREE.MathUtils.clamp(this.printer.axisPositions.x, -halfSize + 0.1, halfSize - 0.1),
                 );
             }
         },
+        // TODO: This could be refactored to use the new printer method
         sendMovementCommand(command: Axis | string): void {
             switch (command) {
                 case 'extrude':
-                    printer.moveAxis('e', this.extruderValue, '+');
+                    printer.moveAxis('e', '+', this.extruderValue);
                     break;
                 case 'retract':
-                    printer.moveAxis('e', this.extruderValue, '-');
-                    break;
-                case 'unlockmotor':
-                    printer.disableMotors();
-                    break;
-                case 'homemotor':
-                    printer.autoHome();
-                    break;
-                case 'homemotor':
-                    printer.bedLeveling();
+                    printer.moveAxis('e', '-', this.extruderValue);
                     break;
                 case 'x+':
                 case 'y+':
@@ -120,7 +110,7 @@ export default defineComponent({
                     const axis = command[0] as Axis;
                     const direction = command[1];
 
-                    printer.moveAxis(axis, this.movementValue, direction);
+                    printer.moveAxis(axis, direction, this.movementValue);
 
                     break;
                 default:
@@ -146,6 +136,15 @@ export default defineComponent({
     <div class="printer-head-animation">
         <canvas id="3dprinter-animation" width="800" height="600"></canvas>
     </div>
+    <div class="axis-values">
+        <Panel header="Current Position">
+            <div class="axis-grid">
+                <div class="axis-item">X: {{ printer.axisPositions.x.toFixed(2) }}</div>
+                <div class="axis-item">Y: {{ printer.axisPositions.y.toFixed(2) }}</div>
+                <div class="axis-item">Z: {{ printer.axisPositions.z.toFixed(2) }}</div>
+            </div>
+        </Panel>
+    </div>
 
     <div id="remote-controller">
         <div class="button-row">
@@ -155,21 +154,25 @@ export default defineComponent({
                     <InputNumber type="number" v-model="movementValue" />
                     <div class="button-row">
                         <div class="directional-buttons">
-                            <Button icon="pi pi-arrow-up" raised rounded @click="sendMovementCommand('Y')" />
+                            <Button icon="pi pi-arrow-up" raised rounded @click="sendMovementCommand('y+')" />
                             <div class="row">
-                                <Button icon="pi pi-arrow-left" class="button-left" raised rounded @click="sendMovementCommand('X-')" />
-                                <Button icon="pi pi-arrow-right" class="button-right" raised rounded @click="sendMovementCommand('X')" />
+                                <Button icon="pi pi-arrow-left" class="button-left" raised rounded
+                                    @click="sendMovementCommand('x-')" />
+                                <Button icon="pi pi-arrow-right" class="button-right" raised rounded
+                                    @click="sendMovementCommand('x+')" />
                             </div>
-                            <Button icon="pi pi-arrow-down" raised rounded @click="sendMovementCommand('Y-')" />
+                            <Button icon="pi pi-arrow-down" raised rounded @click="sendMovementCommand('y-')" />
                         </div>
                         <div class="button-container vertical-align-middle">
-                            <Button icon="pi pi-arrow-up" class="button-top" raised rounded @click="sendMovementCommand('Z')" />
-                            <Button icon="pi pi-arrow-down" class="button-bottom" raised rounded @click="sendMovementCommand('Z-')" />
+                            <Button icon="pi pi-arrow-up" class="button-top" raised rounded
+                                @click="sendMovementCommand('z+')" />
+                            <Button icon="pi pi-arrow-down" class="button-bottom" raised rounded
+                                @click="sendMovementCommand('z-')" />
                         </div>
                     </div>
                 </div>
             </Panel>
-            
+
             <Panel :header="$t('control.header_fan')" class="vertical-container">
                 <div class="button-container fan-container vertical-btn-container">
                     <Knob v-model="fanValue" :min="0" :max="255" :step="5" v-on:change="sendFanCommand" />
@@ -178,11 +181,14 @@ export default defineComponent({
 
             <Panel :header="$t('control.header_motor')">
                 <div class="button-container motor-container">
-                    <Button :label="$t('control.btn_homemotor')" raised rounded @click="sendMovementCommand('homemotor')" />
-                    <Button :label="$t('control.btn_bedleveling')" raised rounded @click="sendMovementCommand('bedleveling')" />
+                    <Button :label="$t('control.btn_homemotor')" raised rounded
+                        @click="printer.autoHome()" />
+                    <Button :label="$t('control.btn_bedleveling')" raised rounded
+                        @click="printer.bedLeveling()" />
                 </div>
                 <div class="button-container motor-container">
-                    <Button :label="$t('control.btn_unlockmotor')" raised rounded @click="sendMovementCommand('unlockmotor')" />
+                    <Button :label="$t('control.btn_unlockmotor')" raised rounded
+                        @click="printer.disableMotors()" />
                 </div>
             </Panel>
 
@@ -206,6 +212,23 @@ canvas {
     border: none;
 }
 
+.axis-values {
+    margin: 20px 0;
+}
+
+.axis-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    text-align: center;
+}
+
+.axis-item {
+    padding: 8px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
 .vertical-container {
     display: table-cell;
     text-align: center;
@@ -218,6 +241,7 @@ canvas {
 
 .extruder-container {
     margin-top: 10%;
+
     button {
         margin: 0 0 15px 0;
     }
@@ -225,6 +249,7 @@ canvas {
 
 .fan-container {
     margin-top: 30%;
+
     button {
         margin: 0 0 10px 0;
     }
@@ -286,12 +311,15 @@ canvas {
 .button-top {
     margin-top: 70%;
 }
+
 .button-bottom {
     margin-top: 10px;
 }
+
 .button-left {
     margin-right: 10px;
 }
+
 .button-right {
     margin-left: 10px;
 }

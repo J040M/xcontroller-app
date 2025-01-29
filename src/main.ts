@@ -1,11 +1,12 @@
 import { createApp } from "vue";
-
 import App from "./App.vue";
 
 import 'primeicons/primeicons.css'
 import "./styles.css";
 
-// Theme and styled components
+/**
+ * PrimeVue theme configuration
+ */
 import PrimeVue from 'primevue/config';
 import Aura from '@primevue/themes/aura';
 
@@ -32,24 +33,38 @@ import Knob from 'primevue/knob';
 import Toolbar from 'primevue/toolbar';
 import Dialog from 'primevue/dialog';
 import Select from 'primevue/select';
+import DataTable from "primevue/datatable";
+import Column from 'primevue/column';
 
-import { LineController, LineElement, PointElement, CategoryScale, LinearScale } from "chart.js/auto";
+/**
+ * Chart.js Components
+ */
+import Chart from "primevue/chart";
 
+/**
+ * Application Services
+ */
 import { i18n } from "./utils/i18n";
 import { init } from "./init/init";
 
-
-// Initialize the defaults
+// Initialize application defaults
 init();
 
+/**
+ * Create and configure Vue application instance
+ * Register all required components and plugins
+ */
 const app = createApp(App);
+
+// Register core plugins
 app.use(i18n)
 app.use(PrimeVue, {
     theme: {
         preset: Aura
     }
 })
-    // Primevue framwork components
+
+// Register PrimeVue components
     .component('Button', Button)
     .component('InputNumber', InputNumber)
     .component('InputGroup', InputGroup)
@@ -73,13 +88,12 @@ app.use(PrimeVue, {
     .component('Knob', Knob)
     .component('Dialog', Dialog)
     .component('Select', Select)
-
-    // Chart.js
-    .component('LineController', LineController)
-    .component('LineElement', LineElement)
-    .component('PointElement', PointElement)
-    .component('CategoryScale', CategoryScale)
-    .component('LinearScale', LinearScale)
     .component('Toolbar', Toolbar)
 
+    .component('DataTable', DataTable)
+    .component('Column', Column)
+
+    .component('Chart', Chart)
+
+// Mount the application
     .mount("#app");

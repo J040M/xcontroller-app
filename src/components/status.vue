@@ -1,21 +1,21 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { PrintStatus } from '../types/printer'
+import { printer } from '../init/client'
 
 export default defineComponent({
     name: 'statusComponent',
-    data: () => ({
-        status: undefined as PrintStatus || undefined,
-    })
+    setup() {
+        return { printer }
+    },
 })
 </script>
 
 <template>
-    <div v-if="status">
-        <label>{{ $t('status.state') }}</label>{{ status.state }} <br>
-        <label>{{ $t('status.file') }}</label> {{ status.file }}<br>
-        <label>{{ $t('status.elapsed_time') }}</label> {{ status.elapsed_time }}<br>
-        <label>{{ $t('status.estimated_time') }}</label>{{ status.estimated_time }}<br>
+    <div v-if="printer.printerInfo.printStatus">
+        <label>{{ $t('status.state') }}</label>{{ printer.printerInfo.printStatus.state }} <br>
+        <label>{{ $t('status.file') }}</label> {{ printer.printerInfo.printStatus.file.file_name }}<br>
+        <label>{{ $t('status.elapsed_time') }}</label> {{ printer.printerInfo.printStatus.elapsed_time }}<br>
+        <label>{{ $t('status.estimated_time') }}</label>{{ printer.printerInfo.printStatus.estimated_time }}<br>
     
         <div class="button-action-group">
             <Button label="print" icon="pi pi-play" />

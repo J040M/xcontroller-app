@@ -4,24 +4,25 @@ import { defineComponent } from 'vue'
 
 import TerminalService from 'primevue/terminalservice'
 import { wsClient } from '../../init/client';
-import { MessageResponse } from '../../types/messages';
+import { gcommands_list } from '../../assets/terminal_commands';
+import type { MessageResponse } from '../../types/messages';
 
 export default defineComponent({
     name: 'terminalComponent',
     data: () => ({
-        commandHistory: [] as string[]
+        commandHistory: [] as string[],
     }),
     mounted() {
         // Listen to commands from terminal 
         TerminalService.on("command", this.commandHandler)
 
         // Listen to messages from WS
-        wsClient.on('message', (message: any) => { 
+        wsClient.on('message', (message: any) => {
             const data = JSON.parse(message.data) as MessageResponse
 
             data.raw_message = data.raw_message.replace(/\r/g, ' ')
 
-            TerminalService.emit('response', data.raw_message) 
+            TerminalService.emit('response', data.raw_message)
         })
     },
     beforeUnmount() {
@@ -30,6 +31,16 @@ export default defineComponent({
     methods: {
         commandHandler(command: string): void {
             this.commandHistory.push(command)
+
+            // Check is a known command
+            switch (command) {
+                case 'help':
+                    TerminalService.emit('response', "Available commands: help \n gcommands (list of commands)")
+                    return
+                case 'gcommands':
+                    TerminalService.emit('response', gcommands_list)
+                    return
+            }
 
             wsClient.sendCommand({
                 message_type: 'Unsafe',

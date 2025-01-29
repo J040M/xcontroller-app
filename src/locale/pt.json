@@ -56,6 +56,20 @@
         "temperature": {
             "grad_extruder": "Bico",
             "grad_bed": "Cama"
+        },
+        "printer_profile": {
+            "header": "Perfil da impressora",
+            "label_name": "Nome",
+            "label_url": "URL",
+            "label_firmware": "Firmware",
+            "label_dimensions": "Dimensões"
+        },
+        "heating_profile": {
+            "header": "Perfil de aquecimento",
+            "label_name": "Nome",
+            "heating_values": "Valores de aquecimento",
+            "label_bed": "Cama",
+            "label_extruder": "Bico"
         }
     }
 }
