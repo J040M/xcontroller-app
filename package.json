@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "tauricon": "tauricon",
-    "test": "vitest"
+    "test": "vitest run"
   },
   "dependencies": {
     "@primevue/themes": "^4.1.0",
@@ -27,6 +27,7 @@
     "@tauri-apps/tauricon": "github:tauri-apps/tauricon",
     "@types/three": "^0.171.0",
     "@vitejs/plugin-vue": "^5.0.4",
+    "@vue/test-utils": "^2.4.6",
     "happy-dom": "^16.7.3",
     "typescript": "^5.0.2",
     "vite": "^6.0.4",
