@@ -5,10 +5,22 @@ on:
     branches:
       - master
 
+permissions:
+  contents: write
+  pull-requests: read
+
 jobs:
+    test:
+      runs-on: ubuntu-latest
+      steps:
+        - name: install frontend dependencies
+          run: npm install
+
+        - name: Run tests
+          run: npm test
+
     publish-tauri:
-      permissions:
-        contents: write
+      needs: test
       strategy:
         fail-fast: false
         matrix:
@@ -21,7 +33,7 @@ jobs:
               args: ''
             - platform: 'windows-latest'
               args: ''
-            - platform: 'ubuntu-latest'
+            - platform: 'web'
               args: '--target web'
   
       runs-on: ${{ matrix.platform }}
@@ -45,13 +57,11 @@ jobs:
           if: matrix.platform == 'ubuntu-22.04'
           run: |
             sudo apt-get update
-            sudo apt-get install -y libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+            sudo apt install libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+
             
         - name: install frontend dependencies
           run: npm install
-
-        - name: Run tests
-          run: npm test
 
         - name: Build Web Version
           if: matrix.args == '--target web'
