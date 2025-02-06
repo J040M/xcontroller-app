@@ -27,7 +27,7 @@ interface ParseResult {
 
 /**
  * Parses raw G-code string into an array of 3D movement commands
- * @param gcode Raw G-code string to parse
+ * @param {string} gcode Raw G-code string to parse
  * @returns ParseResult containing movement commands and final Z height
  */
 export function parseGCode(gcode: string ): ParseResult {
@@ -61,10 +61,11 @@ export function parseGCode(gcode: string ): ParseResult {
 
 /**
  * Creates or updates the visual representation of G-code commands in a Three.js scene
- * @param commands Array of movement commands to visualize
- * @param zLevel Current Z-height level to filter movements
- * @param scene Three.js scene to render into
- * @param currentLine Object containing references to current visualization lines
+ * @param {Command[]} commands Array of movement commands to visualize
+ * @param {number} zLevel Current Z-height level to filter movements
+ * @param {THREE.Scene} scene Three.js scene to render into
+ * @param {CurrentValues} currentLine Object containing references to current visualization lines
+ * @returns {void}
  */
 export function visualizeGCode(
     commands: Command[], 
