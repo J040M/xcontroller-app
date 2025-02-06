@@ -1,0 +1,50 @@
+name: build-web-and-release
+
+on:
+  push:
+    branches: [ releases ]
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  build-web:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: etup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run build
+
+      - name: Zip dist folder
+        run: zip -r dist.zip dist
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist-files
+          path: dist.zip
+
+      - name: Get version
+        id: package_version
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist.zip
+          tag_name: v${{ steps.package_version.outputs.version }}
+          name: Release v${{ steps.package_version.outputs.version }}
+          draft: false
+          prerelease: false
