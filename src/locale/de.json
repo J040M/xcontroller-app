@@ -70,6 +70,9 @@
             "heating_values": "Heizwerte",
             "label_bed": "Bett",
             "label_extruder": "Düse"
+        },
+        "error_message": {
+            "connection_error": "Verbindungsfehler"
         }
     }
 }

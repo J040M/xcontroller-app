@@ -1,5 +1,6 @@
 import { wsClient } from "../init/client";
 import { Axis, AxisPositions, PrinterProfile, PrinterCommands } from "../types/printer";
+import { eventBus } from "./eventbus";
 
 /**
  * Class representing a 3D printer instance
@@ -336,6 +337,7 @@ export class Printer implements PrinterCommands {
         descriptor.value = function (this: Printer, ...args: any[]) {
             if (!this.printerInfo.status) {
                 console.error('Printer is not connected');
+                eventBus.emit('message','openConnectionErrorDialog');
                 return;
             }
             return originalMethod.apply(this, args);

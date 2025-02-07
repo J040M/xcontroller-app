@@ -6,6 +6,7 @@ import Main from './components/main/main.vue';
 import Files from './components/files.vue';
 import FooterComponent from './components/footer.vue';
 
+import { eventBus } from './utils/eventbus';
 import { useI18n } from 'vue-i18n';
 import { changeLocale } from './utils/i18n';
 
@@ -20,15 +21,30 @@ export default defineComponent({
   },
   data: () => ({
     openedAccordion: '' as string,
+    errorMessageDialog: false as boolean
   }),
+  mounted() {
+    eventBus.on('message', (message: string) => {
+      if (message === 'openConnectionErrorDialog') {
+        this.errorMessageDialog = true
+      }
+    })
+  },
   setup() {
     const { t } = useI18n() // use as global scope
     return { t, changeLocale }
-  },
+  }
 })
 </script>
 
 <template>
+  <Dialog :visible="errorMessageDialog" modal :header="$t('heating_profile.header')" :style="{ width: '25rem' }" :closable="false"
+    optionLabel="name" optionValue="url">
+    <p class="mb-0">{{ $t('error_message.connection_error') }}</p>
+    <div class="flex justify-end gap-2">
+            <Button type="button" label="Cancel" severity="secondary" @click="errorMessageDialog = false"></Button>
+        </div>
+  </Dialog>
   <div class="main-container">
     <div class="content-wrapper">
       <div class="left-container">

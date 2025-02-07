@@ -70,6 +70,9 @@
             "heating_values": "Valores de aquecimento",
             "label_bed": "Cama",
             "label_extruder": "Bico"
+        },
+        "error_message": {
+            "connection_error": "Erro de ligação"
         }
     }
 }

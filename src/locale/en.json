@@ -71,6 +71,9 @@
             "heating_values": "Heating values",
             "label_bed": "Bed",
             "label_extruder": "Extruder"
+        },
+        "error_message": {
+            "connection_error": "Connection error"
         }
     }
 }
