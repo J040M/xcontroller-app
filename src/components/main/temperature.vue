@@ -46,14 +46,14 @@ export default defineComponent({
          * TODO: Probably a better approach could improve this code
          */
         setInterval(() => {
-            if (!this.printer.printerInfo.status) return;
+            if (!printer.printerInfo.status) return;
 
             setTimeout(() => {
-                this.printer.getTemperatures();
+                printer.getTemperatures();
             }, 1000);
 
-            const e0 = [...this.graphData.datasets[0].data.slice(1), this.printer.printerInfo.temperatures.e0];
-            const bed = [...this.graphData.datasets[0].data.slice(1), this.printer.printerInfo.temperatures.bed];
+            const e0 = [...this.graphData.datasets[0].data.slice(1), printer.printerInfo.temperatures.e0];
+            const bed = [...this.graphData.datasets[0].data.slice(1), printer.printerInfo.temperatures.bed];
 
             this.graphData.datasets[0].data = e0;
             this.graphData.datasets[1].data = bed;
@@ -64,13 +64,17 @@ export default defineComponent({
             eventBus.emit('message', 'openHeatingDialog')
         },
         selectProfile(profileIndex: number): void {
-            this.printer.setHotendTemperature(this.heatingProfiles[profileIndex].e0)
-            this.printer.setBedTemperature(this.heatingProfiles[profileIndex].bed)
+            printer.setHotendTemperature(this.heatingProfiles[profileIndex].e0)
+            printer.setBedTemperature(this.heatingProfiles[profileIndex].bed)
+        },
+        shutdownHeating(): void {
+            printer.setHotendTemperature(0)
+            printer.setBedTemperature(0)
         }
     },
-    setup() {
-        return { printer }
-    },
+    // setup() {
+    //     return { printer }
+    // },
 })
 </script>
 
@@ -91,11 +95,15 @@ export default defineComponent({
         <Column field="bed" header="Bed"></Column>
         <Column field="actions" header="Actions">
             <template #body="{ index }">
-                <Button icon="pi pi-check" class="mr-2" @click="selectProfile(index)" />
+                <Button icon="pi pi-check" class="mr-2 btn-pad" @click="selectProfile(index)" />
                 <Button icon="pi pi-trash" />
             </template>
         </Column>
     </DataTable>
 </template>
 
-<style scoped></style>
+<style scoped>
+.btn-pad {
+    margin-right: 5px;
+}
+</style>

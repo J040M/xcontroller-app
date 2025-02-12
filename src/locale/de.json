@@ -70,6 +70,10 @@
             "heating_values": "Heizwerte",
             "label_bed": "Bett",
             "label_extruder": "Düse"
+        },
+        "error_message": {
+            "header": "Fehler Alarm",
+            "connection_error": "Verbindungsfehler! Bitte überprüfen Sie die Verbindung und versuchen Sie es erneut."
         }
     }
 }

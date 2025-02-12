@@ -70,6 +70,10 @@
             "heating_values": "Valeurs de chauffage",
             "label_bed": "Plateau",
             "label_extruder": "Buse"
+        },
+        "error_message": {
+            "header": "Alert error",
+            "connection_error": "Erreur de connexion! Vérifiez la connexion et réessayez."
         }
     }
 }

@@ -1,5 +1,6 @@
 import { wsClient } from "../init/client";
 import { Axis, AxisPositions, PrinterProfile, PrinterCommands } from "../types/printer";
+import { eventBus } from "./eventbus";
 
 /**
  * Class representing a 3D printer instance
@@ -325,6 +326,19 @@ export class Printer implements PrinterCommands {
     }
 
     /**
+     * Sends custom command to the printer without backend validation
+     * Most commonly used for debugging and terminal commands
+     * @param command 
+     */
+    @Printer.verifyConnection
+    unsafeCommand(command: string): void {
+        wsClient.sendCommand({
+            message_type: 'Unsafe',
+            message: command
+        })
+    }
+
+    /**
      * Decorator to verify printer connection before executing commands
      * @param {any} _target - The target object
      * @param {string} _propertyKey - The property key
@@ -336,6 +350,7 @@ export class Printer implements PrinterCommands {
         descriptor.value = function (this: Printer, ...args: any[]) {
             if (!this.printerInfo.status) {
                 console.error('Printer is not connected');
+                eventBus.emit('message','openConnectionErrorDialog');
                 return;
             }
             return originalMethod.apply(this, args);

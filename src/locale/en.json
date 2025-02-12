@@ -71,6 +71,10 @@
             "heating_values": "Heating values",
             "label_bed": "Bed",
             "label_extruder": "Extruder"
+        },
+        "error_message": {
+            "header": "Error alert!",
+            "connection_error": "No connection to printer! Verify the connection."
         }
     }
 }
