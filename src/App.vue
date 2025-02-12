@@ -38,7 +38,7 @@ export default defineComponent({
 </script>
 
 <template>
-  <Dialog :visible="errorMessageDialog" modal :header="$t('heating_profile.header')" :style="{ width: '25rem' }" :closable="false"
+  <Dialog :visible="errorMessageDialog" modal :header="$t('error_message.header')" :style="{ width: '25rem' }" :closable="false"
     optionLabel="name" optionValue="url">
     <p class="mb-0">{{ $t('error_message.connection_error') }}</p>
     <div class="flex justify-end gap-2">
