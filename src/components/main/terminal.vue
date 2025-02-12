@@ -3,7 +3,7 @@
 import { defineComponent } from 'vue'
 
 import TerminalService from 'primevue/terminalservice'
-import { wsClient } from '../../init/client';
+import { wsClient, printer } from '../../init/client';
 import { gcommands_list } from '../../assets/terminal_commands';
 import type { MessageResponse } from '../../types/messages';
 
@@ -35,17 +35,14 @@ export default defineComponent({
             // Check is a known command
             switch (command) {
                 case 'help':
-                    TerminalService.emit('response', "Available commands: help \n gcommands (list of commands)")
+                    TerminalService.emit('response', "Available commands: <help> \n <gcommands> (list of commands)")
                     return
                 case 'gcommands':
                     TerminalService.emit('response', gcommands_list)
                     return
             }
 
-            wsClient.sendCommand({
-                message_type: 'Unsafe',
-                message: command
-            })
+            printer.unsafeCommand(command)
         }
     },
 })
