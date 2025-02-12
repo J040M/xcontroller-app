@@ -73,7 +73,8 @@
             "label_extruder": "Extruder"
         },
         "error_message": {
-            "connection_error": "Connection error"
+            "header": "Error alert!",
+            "connection_error": "No connection to printer! Verify the connection."
         }
     }
 }

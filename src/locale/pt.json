@@ -72,7 +72,8 @@
             "label_extruder": "Bico"
         },
         "error_message": {
-            "connection_error": "Erro de ligação"
+            "header": "Alerta erro!",
+            "connection_error": "Sem ligação a impressora. Verifique a ligação e tente novamente."
         }
     }
 }

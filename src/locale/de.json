@@ -72,7 +72,8 @@
             "label_extruder": "Düse"
         },
         "error_message": {
-            "connection_error": "Verbindungsfehler"
+            "header": "Fehler Alarm",
+            "connection_error": "Verbindungsfehler! Bitte überprüfen Sie die Verbindung und versuchen Sie es erneut."
         }
     }
 }

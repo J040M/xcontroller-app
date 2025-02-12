@@ -72,7 +72,8 @@
             "label_extruder": "Buse"
         },
         "error_message": {
-            "connection_error": "Erreur de connexion"
+            "header": "Alert error",
+            "connection_error": "Erreur de connexion! Vérifiez la connexion et réessayez."
         }
     }
 }
