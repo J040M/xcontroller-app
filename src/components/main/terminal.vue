@@ -20,9 +20,12 @@ export default defineComponent({
         wsClient.on('message', (message: any) => {
             const data = JSON.parse(message.data) as MessageResponse
 
-            data.raw_message = data.raw_message.replace(/\r/g, ' ')
+            if (data.message_type == 'Unsafe') {
+                console.log('Message to terminals')
+                data.raw_message = data.raw_message.replace(/\r/g, ' ')
+                TerminalService.emit('response', data.raw_message)
+            } 
 
-            TerminalService.emit('response', data.raw_message)
         })
     },
     beforeUnmount() {

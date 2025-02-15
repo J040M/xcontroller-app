@@ -326,9 +326,27 @@ export class Printer implements PrinterCommands {
     }
 
     /**
+     * Uploads file to printer storage
+     * @param {string} file_content - Content of the file to upload
+     * @returns {void}
+     */
+    @Printer.verifyConnection
+    uploadFile(file_content: string): void {
+        console.log({
+            message_type: 'FileUpload',
+            message: file_content
+        })
+        wsClient.sendCommand({
+            message_type: 'FileUpload',
+            message: file_content
+        })
+    }
+
+    /**
      * Sends custom command to the printer without backend validation
      * Most commonly used for debugging and terminal commands
-     * @param command 
+     * @param {string} command 
+     * @returns {void}
      */
     @Printer.verifyConnection
     unsafeCommand(command: string): void {
