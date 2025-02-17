@@ -7,7 +7,7 @@ import { eventBus } from "./eventbus";
  * Handles printer control commands and state management
  * Using the verifyConnection() decorator to verify the connection
  */
-export class Printer implements PrinterCommands {
+export default class Printer implements PrinterCommands {
     /** Stores current printer configuration and state */
     printerInfo: PrinterProfile
 
@@ -368,7 +368,7 @@ export class Printer implements PrinterCommands {
         descriptor.value = function (this: Printer, ...args: any[]) {
             if (!this.printerInfo.status) {
                 console.error('Printer is not connected');
-                eventBus.emit('message','openConnectionErrorDialog');
+                eventBus.emit('message', 'openConnectionErrorDialog');
                 return;
             }
             return originalMethod.apply(this, args);
