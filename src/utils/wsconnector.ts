@@ -58,7 +58,7 @@ export default class WebSocketConnector extends EventEmitter {
      */
     connect(protocols?: string | string[]): void {
         // Initialize wsClient with the WebSocket instance
-        this.wsClient = new WebSocket(this._wsURL, protocols);
+        this.wsClient = new WebSocket(this._wsURL, protocols)
 
         // Attach events
         this.attachEventListeners()
@@ -78,10 +78,7 @@ export default class WebSocketConnector extends EventEmitter {
      * @returns {void}
      */
     sendCommand(command: Message): void {
-        if (!this.wsClient || this.wsClient.readyState !== WebSocket.OPEN) {
-            console.error('WebSocket is not connected')
-            return
-        }
+        if (!this.wsClient || this.wsClient.readyState !== WebSocket.OPEN) return
 
         this.wsClient.send(JSON.stringify(command))
     }

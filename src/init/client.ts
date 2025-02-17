@@ -56,7 +56,7 @@ export const printer = reactive(newPrinter)
  * Manages messages, connection state and error handling
  */
 // TODO: This is just a test, it should be improved and moved away from here
-wsClient.on('message', (incomingMessage: { data: string }) => {
+wsClient.on('message', (incomingMessage: MessageEvent) => {
     const message: Message = JSON.parse(incomingMessage.data)
     // TODO: Maybe this should be a method in the printer class
     // or Switch case...
