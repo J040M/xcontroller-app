@@ -19,17 +19,33 @@ export default defineComponent({
         })
     },
     methods: {
-        readFile(event: any) {
-            const file = event.target.files[0]
+        /**
+         * Read the content of the gcode file
+         * Prefix the content with the filename for backend processing
+         * @param {Event} event 
+         * @return void
+         */
+        readFile(event: Event): void {
+            const input = event.target as HTMLInputElement || null;
+            if (!input || !input.files) return;
+
+            const file = input.files[0];
+
             const reader = new FileReader()
-            reader.onload = function(e) {
+            reader.onload = function (e) {
                 let fileContent = e.target?.result as string
-                // fileContent = ';' + file.name + '\n' + fileContent
+                fileContent = ';' + file.name + '\n' + fileContent
+
                 printer.uploadFile(fileContent)
             }
             reader.readAsText(file)
         },
-        deleteFile(file: string) {
+        /**
+         * Delete a file from the printer
+         * @param {string} file 
+         * @return void
+         */
+        deleteFile(file: string): void {
             printer.deleteFile(file)
             printer.listFiles()
         },
@@ -43,7 +59,7 @@ export default defineComponent({
 <template>
     <div class="upload-container">
         <Button @click="printer.listFiles()" icon="pi pi-refresh" />
-        <input type="file" @change="readFile" />
+        <!-- <input type="file" @change="readFile" /> -->
     </div>
 
     <!-- TODO: Searchbar for file filtering -->
