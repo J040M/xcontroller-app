@@ -7,7 +7,7 @@ import { eventBus } from "./eventbus";
  * Handles printer control commands and state management
  * Using the verifyConnection() decorator to verify the connection
  */
-export class Printer implements PrinterCommands {
+export default class Printer implements PrinterCommands {
     /** Stores current printer configuration and state */
     printerInfo: PrinterProfile
 
@@ -326,9 +326,27 @@ export class Printer implements PrinterCommands {
     }
 
     /**
+     * Uploads file to printer storage
+     * @param {string} file_content - Content of the file to upload
+     * @returns {void}
+     */
+    @Printer.verifyConnection
+    uploadFile(file_content: string): void {
+        console.log({
+            message_type: 'FileUpload',
+            message: file_content
+        })
+        wsClient.sendCommand({
+            message_type: 'FileUpload',
+            message: file_content
+        })
+    }
+
+    /**
      * Sends custom command to the printer without backend validation
      * Most commonly used for debugging and terminal commands
-     * @param command 
+     * @param {string} command 
+     * @returns {void}
      */
     @Printer.verifyConnection
     unsafeCommand(command: string): void {
@@ -350,7 +368,7 @@ export class Printer implements PrinterCommands {
         descriptor.value = function (this: Printer, ...args: any[]) {
             if (!this.printerInfo.status) {
                 console.error('Printer is not connected');
-                eventBus.emit('message','openConnectionErrorDialog');
+                eventBus.emit('message', 'openConnectionErrorDialog');
                 return;
             }
             return originalMethod.apply(this, args);

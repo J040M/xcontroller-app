@@ -45,19 +45,19 @@ export default defineComponent({
          * to avoid the graph to be updated before the temperatures are fetched
          * TODO: Probably a better approach could improve this code
          */
-        setInterval(() => {
-            if (!printer.printerInfo.status) return;
+        // setInterval(() => {
+        //     if (!printer.printerInfo.status) return;
 
-            setTimeout(() => {
-                printer.getTemperatures();
-            }, 1000);
+        //     setTimeout(() => {
+        //         printer.getTemperatures();
+        //     }, 1000);
 
-            const e0 = [...this.graphData.datasets[0].data.slice(1), printer.printerInfo.temperatures.e0];
-            const bed = [...this.graphData.datasets[0].data.slice(1), printer.printerInfo.temperatures.bed];
+        //     const e0 = [...this.graphData.datasets[0].data.slice(1), printer.printerInfo.temperatures.e0];
+        //     const bed = [...this.graphData.datasets[0].data.slice(1), printer.printerInfo.temperatures.bed];
 
-            this.graphData.datasets[0].data = e0;
-            this.graphData.datasets[1].data = bed;
-        }, 30000);
+        //     this.graphData.datasets[0].data = e0;
+        //     this.graphData.datasets[1].data = bed;
+        // }, 30000);
     },
     methods: {
         openHeatingDialog(): void {
