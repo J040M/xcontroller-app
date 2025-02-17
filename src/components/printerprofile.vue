@@ -1,6 +1,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { eventBus } from '../utils/eventbus';
+import { storage } from '../init/client';
 import type { PrinterProfile } from '../types/printer';
 
 export default defineComponent({
@@ -27,16 +28,7 @@ export default defineComponent({
     },
     methods: {
         saveProfile(): void {
-            let profiles = localStorage.getItem('printerProfiles')
-            if (profiles || profiles === '[]') {
-                const nProfiles = JSON.parse(profiles) as PrinterProfile[] || []
-                nProfiles.push(this.printerProfile)
-                localStorage.setItem('PrinterProfiles', JSON.stringify(nProfiles))
-            } else {
-                let nProfiles: PrinterProfile[] = []
-                nProfiles.push(this.printerProfile)
-                localStorage.setItem('PrinterProfiles', JSON.stringify(nProfiles))
-            }
+            storage.saveProfile('PrinterProfiles', this.printerProfile)
             this.visible = false
         }
     }

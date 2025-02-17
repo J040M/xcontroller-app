@@ -1,6 +1,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { eventBus } from '../utils/eventbus';
+import { storage } from '../init/client';
 import type { HeatingProfile } from '../types/printer';
 
 export default defineComponent({
@@ -21,16 +22,7 @@ export default defineComponent({
     },
     methods: {
         saveProfile(): void {
-            let profiles = localStorage.getItem('HeatingProfiles')
-            if (profiles || profiles === '[]') {
-                const nProfiles = JSON.parse(profiles) as HeatingProfile[] || []
-                nProfiles.push(this.heatingProfile)
-                localStorage.setItem('HeatingProfiles', JSON.stringify(nProfiles))
-            } else {
-                let nProfiles: HeatingProfile[] = []
-                nProfiles.push(this.heatingProfile)
-                localStorage.setItem('HeatingProfiles', JSON.stringify(nProfiles))
-            }
+            storage.saveProfile('HeatingProfiles', this.heatingProfile)
             this.visible = false
         }
     }
