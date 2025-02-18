@@ -13,7 +13,7 @@ export default class PrinterStorage {
     }
     /**
      * Save profiles to local storage
-     * @param {string} key 
+     * @param {StorageTypes} key 
      * @param {T} profile 
      */
     saveProfile<T>(key: StorageTypes, profile: T): void {
@@ -26,6 +26,23 @@ export default class PrinterStorage {
             let nProfiles: T[] = []
             nProfiles.push(profile)
             localStorage.setItem(key, JSON.stringify(nProfiles))
+        }
+    }
+    /**
+     * Delete profile from local storage
+     * @param {StorageTypes} key
+     * @param {string} uuid
+     * @returns {void}
+     */
+    deleteProfile(key: StorageTypes, uuid: string): void {
+        let profiles = localStorage.getItem(key)
+        if (profiles) {
+            const nProfiles = JSON.parse(profiles) as any[]
+            const index = nProfiles.findIndex((profile) => profile.uuid === uuid)
+            if (index !== -1) {
+                nProfiles.splice(index, 1)
+                localStorage.setItem(key, JSON.stringify(nProfiles))
+            }
         }
     }
 
