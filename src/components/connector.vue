@@ -1,5 +1,5 @@
 <script lang="ts">
-import { defineComponent, ref } from 'vue'
+import { defineComponent } from 'vue'
 import { eventBus } from '../utils/eventbus';
 import { wsClient } from '../init/client';
 import printerProfile from './printerprofile.vue';
@@ -14,7 +14,7 @@ export default defineComponent({
         printerProfiles: [] as PrinterProfile[],
         connectionStatus: false as boolean,
         dialogOpen: false as boolean,
-        websocketURL: ref(''),
+        selectedProfile: '' as string,
     }),
     setup() {
         return { wsClient }
@@ -28,9 +28,10 @@ export default defineComponent({
     },
     methods: {
         setWSS(): void {
-            //TODO: Modify this to use printer profile
-            console.log('Setting WS URL to:', this.websocketURL)
-            wsClient.wsURL = this.websocketURL
+            //TODO: Modify this to use printer profile,
+            // but unfortunately the select component does not support objects
+            console.log('Setting WS URL to:', this.selectedProfile)
+            wsClient.wsURL = this.selectedProfile
         },
         openProfileDialog(): void {
             eventBus.emit('message', 'openProfileDialog')
@@ -46,8 +47,8 @@ export default defineComponent({
     <!--  -->
     <div class="flex flex-column">
         <div class="flex  bg-primary m-2">
-            <Select class="full-width" v-model="websocketURL" @focusout="setWSS" :options="printerProfiles"
-                optionLabel="name" optionValue="url" filter filterBy="name" 
+            <Select class="full-width" v-model="selectedProfile" @focusout="setWSS" :options="printerProfiles"
+                optionLabel="name" optionValue="url" filter filterBy="name"
                 :emptyMessage="$t('connector.empty_message')" :emptyFilterMessage="$t('connector.empty_filter_message')"
                 :emptySelectionMessage="$t('connector.empty_selection_message')" :selectionMessage="$t('connector.selection_message')"/>
         </div>
