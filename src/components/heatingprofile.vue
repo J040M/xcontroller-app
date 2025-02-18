@@ -8,7 +8,11 @@ export default defineComponent({
     name: 'heatingProfileComponent',
     data: () => ({
         heatingProfile: {
+            uuid: '',
+            name: '',
             e0: 0,
+            e1: 0,
+            e2: 0,
             bed: 0,
         } as HeatingProfile,
         visible: false,
@@ -22,7 +26,9 @@ export default defineComponent({
     },
     methods: {
         saveProfile(): void {
+            this.heatingProfile.uuid = crypto.randomUUID()
             storage.saveProfile('HeatingProfiles', this.heatingProfile)
+            this.heatingProfile = {} as HeatingProfile
             this.visible = false
         }
     }
