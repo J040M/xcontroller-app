@@ -1,24 +1,41 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { printer, wsClient } from '../init/client'
+import { eventBus } from '../utils/eventbus';
 
 export default defineComponent({
     name: 'filesComponent',
     data: () => ({
         files: undefined as string[] | undefined,
+        loadingStatus: false as boolean,
     }),
     mounted() {
         wsClient.on('message', (message: any) => {
             message = JSON.parse(message.data)
 
             if (message.message_type === 'M20') {
+                this.loadingStatus = false
                 // TODO: This will change in the future. parser20() will return an obj instead of an array
                 this.files = message.message.replace(/[\[\]"]/g, '').split(',')
                     .map((item: string) => item.trim());
             }
         })
+        eventBus.on('message', (message: string) => {
+            if (message === 'openConnectionErrorDialog') {
+                this.loadingStatus = false
+            }
+        })
     },
     methods: {
+        /**
+         * List all files on the printer
+         * loadingStatus is set to true to show a loading spinner
+         * @return void
+         */
+        listFiles(): void {
+            this.loadingStatus = true
+            printer.listFiles()
+        },
         /**
          * Read the content of the gcode file
          * Prefix the content with the filename for backend processing
@@ -58,7 +75,7 @@ export default defineComponent({
 
 <template>
     <div class="upload-container">
-        <Button @click="printer.listFiles()" icon="pi pi-refresh" />
+        <Button @click="listFiles()" :loading="loadingStatus" icon="pi pi-refresh" />
         <!-- <input type="file" @change="readFile" /> -->
     </div>
 
