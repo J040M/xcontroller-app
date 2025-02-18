@@ -1,7 +1,7 @@
 <script lang="ts">
 import { ChartData } from 'chart.js/auto';
 import { defineComponent } from 'vue'
-import { printer } from '../../init/client';
+import { printer, storage } from '../../init/client';
 import { eventBus } from '../../utils/eventbus';
 
 import heatingProfile from '../heatingprofile.vue';
@@ -60,9 +60,6 @@ export default defineComponent({
         // }, 30000);
     },
     methods: {
-        openHeatingDialog(): void {
-            eventBus.emit('message', 'openHeatingDialog')
-        },
         selectProfile(profileIndex: number): void {
             printer.setHotendTemperature(this.heatingProfiles[profileIndex].e0)
             printer.setBedTemperature(this.heatingProfiles[profileIndex].bed)
@@ -72,9 +69,9 @@ export default defineComponent({
             printer.setBedTemperature(0)
         }
     },
-    // setup() {
-    //     return { printer }
-    // },
+    setup() {
+        return { eventBus, storage }
+    }
 })
 </script>
 
@@ -87,7 +84,8 @@ export default defineComponent({
         </div>
     </div>
 
-    <Button @click="openHeatingDialog" icon="pi pi-plus" />
+    <Button @click="eventBus.emit('message', 'openHeatingDialog')" icon="pi pi-plus" />
+    <Button @click="shutdownHeating" style="color: red" icon="pi pi-power-off" />
 
     <DataTable v-if="heatingProfiles.length > 0" :value="heatingProfiles">
         <Column field="name" header="Name"></Column>
@@ -96,7 +94,7 @@ export default defineComponent({
         <Column field="actions" header="Actions">
             <template #body="{ index }">
                 <Button icon="pi pi-check" class="mr-2 btn-pad" @click="selectProfile(index)" />
-                <Button icon="pi pi-trash" />
+                <Button icon="pi pi-trash" @click="storage.deleteProfile('HeatingProfiles', heatingProfiles[index].uuid)"/>
             </template>
         </Column>
     </DataTable>
