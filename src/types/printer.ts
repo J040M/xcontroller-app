@@ -53,6 +53,8 @@ interface PrinterProfile {
     temperatures: {
         e0: number,
         e0_set: number,
+        e1: number,
+        e1_set: number,
         bed: number,
         bed_set: number
     },
