@@ -44,7 +44,7 @@ interface PrinterProfile {
     printStatus?: PrintStatus,
     name: string,
     url: string,
-    firmware: string,
+    firmware?: string,
     axisPositions: AxisPositions,
     dimensions: {
         x: number,
