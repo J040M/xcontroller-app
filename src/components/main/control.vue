@@ -95,10 +95,10 @@ export default defineComponent({
         sendMovementCommand(command: Axis | string): void {
             switch (command) {
                 case 'extrude':
-                    printer.moveAxis('e', '+', this.extruderValue);
+                    printer.moveAxis('e0', '+', this.extruderValue);
                     break;
                 case 'retract':
-                    printer.moveAxis('e', '-', this.extruderValue);
+                    printer.moveAxis('e0', '-', this.extruderValue);
                     break;
                 case 'x+':
                 case 'y+':

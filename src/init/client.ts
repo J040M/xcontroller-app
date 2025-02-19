@@ -19,6 +19,7 @@ export const wsClient = new WebSocketConnector()
  * @TODO Not the way I like to have this, but it's a start
  */
 const newPrinter = new Printer({
+    uuid: '',
     status: false,
     name: '',
     url: '',
@@ -27,7 +28,8 @@ const newPrinter = new Printer({
         x: 0,
         y: 0,
         z: 0,
-        e: 0
+        e0: 0,
+        e1: 0
     },
     //Default dimensions
     dimensions: {

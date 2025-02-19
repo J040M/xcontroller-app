@@ -15,7 +15,7 @@ interface PrinterCommands {
     setFanSpeed(speed: number): void
 }
 
-type Axis = 'x' | 'y' | 'z' | 'e'
+type Axis = 'x' | 'y' | 'z' | 'e0' | 'e1'
 type State = 'idle' | 'printing' | 'paused' | 'stopped' | 'error'
 
 interface PrintStatus {
@@ -35,7 +35,8 @@ interface AxisPositions {
     x: number
     y: number
     z: number
-    e: number
+    e0: number
+    e1: number
 }
 
 interface PrinterProfile {

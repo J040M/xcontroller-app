@@ -6,7 +6,7 @@ import type { StorageTypes } from '../types/storage'
  */
 export default class PrinterStorage {
 
-    private storageItemsList: StorageTypes[] = ['PrinterProfiles', 'HeatingProfiles', 'Locale', 'Theme']
+    public storageItemsList: StorageTypes[] = ['PrinterProfiles', 'HeatingProfiles', 'Locale', 'Theme']
 
     constructor() {
         this.initStorage()
