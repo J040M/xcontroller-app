@@ -1,12 +1,14 @@
-import { wsClient } from "../init/client";
-import { Axis, AxisPositions, PrinterProfile, PrinterCommands } from "../types/printer";
-import { eventBus } from "./eventbus";
-
 /**
+ * @file Printer.ts
  * Class representing a 3D printer instance
  * Handles printer control commands and state management
  * Using the verifyConnection() decorator to verify the connection
  */
+
+import { wsClient } from "../init/client";
+import { Axis, AxisPositions, PrinterProfile, PrinterCommands } from "../types/printer";
+import { eventBus } from "./eventbus";
+
 export default class Printer implements PrinterCommands {
     /** Stores current printer configuration and state */
     printerInfo: PrinterProfile
@@ -87,9 +89,6 @@ export default class Printer implements PrinterCommands {
             message_type: 'GCommand',
             message: 'G29'
         })
-
-        // TODO: This is not really necessary, is it!?
-        this.autoHome()
     }
 
     /**
@@ -112,15 +111,23 @@ export default class Printer implements PrinterCommands {
         const current_position = this.axisPositions[axis]
         let new_position = direction === '+' ? current_position + distance : current_position - distance
 
-        // Check for printer limits to avoid crusing things
-        if (new_position < 0) new_position = 0
-        else if (axis !== 'e' && new_position > this.printerInfo.dimensions[axis]) {
-            new_position = this.printerInfo.dimensions[axis]
+        // Check for printer limits to avoid crusing things (only for X, Y, Z)
+        if (axis !== 'e0' && axis !== 'e1') {
+            if (new_position < 0) new_position = 0
+            else if (new_position > this.printerInfo.dimensions[axis]) {
+                new_position = this.printerInfo.dimensions[axis]
+            }
         }
 
         // Check for hotend temperature before moving
-        if (axis === 'e' && (Math.abs(this.printerInfo.temperatures.e0 - this.printerInfo.temperatures.e0_set) > 3
+        if (axis === 'e0' && (Math.abs(this.printerInfo.temperatures.e0 - this.printerInfo.temperatures.e0_set) > 3
             || this.printerInfo.temperatures.e0 < this.hotendMinTemp)) {
+            console.error('Extruder temp very different from target temp')
+            return
+        }
+
+        if (axis === 'e1' && (Math.abs(this.printerInfo.temperatures.e1 - this.printerInfo.temperatures.e1_set) > 3
+            || this.printerInfo.temperatures.e1 < this.hotendMinTemp)) {
             console.error('Extruder temp very different from target temp')
             return
         }
