@@ -75,7 +75,7 @@ export default defineComponent({
 
 <template>
     <div class="upload-container">
-        <Button @click="listFiles()" :loading="loadingStatus" icon="pi pi-refresh" />
+        <Button @click="listFiles()" :loading="loadingStatus" icon="pi pi-refresh" size="small" />
         <!-- <input type="file" @change="readFile" /> -->
     </div>
 
