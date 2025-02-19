@@ -84,7 +84,7 @@ export default defineComponent({
         </div>
     </div>
 
-    <Button @click="eventBus.emit('message', 'openHeatingDialog')" icon="pi pi-plus" />
+    <Button @click="eventBus.emit('message', 'openHeatingDialog')" icon="pi pi-plus" class="btn-pad" />
     <Button @click="shutdownHeating" style="color: red" icon="pi pi-power-off" />
 
     <DataTable v-if="heatingProfiles.length > 0" :value="heatingProfiles">
