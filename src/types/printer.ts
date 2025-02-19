@@ -15,7 +15,7 @@ interface PrinterCommands {
     setFanSpeed(speed: number): void
 }
 
-type Axis = 'x' | 'y' | 'z' | 'e'
+type Axis = 'x' | 'y' | 'z' | 'e0' | 'e1'
 type State = 'idle' | 'printing' | 'paused' | 'stopped' | 'error'
 
 interface PrintStatus {
@@ -35,15 +35,17 @@ interface AxisPositions {
     x: number
     y: number
     z: number
-    e: number
+    e0: number
+    e1: number
 }
 
 interface PrinterProfile {
+    uuid: string,
     status: boolean,
     printStatus?: PrintStatus,
     name: string,
     url: string,
-    firmware: string,
+    firmware?: string,
     axisPositions: AxisPositions,
     dimensions: {
         x: number,
@@ -53,6 +55,8 @@ interface PrinterProfile {
     temperatures: {
         e0: number,
         e0_set: number,
+        e1: number,
+        e1_set: number,
         bed: number,
         bed_set: number
     },
@@ -60,6 +64,7 @@ interface PrinterProfile {
 }
 
 interface HeatingProfile {
+    uuid: string,
     name: string,
     e0: number,
     e1: number,

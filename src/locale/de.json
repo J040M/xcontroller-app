@@ -60,16 +60,20 @@
         "printer_profile": {
             "header": "Druckerprofil",
             "label_name": "Name",
-            "label_url": "URL",
+            "label_url": "ws://myprinter.local:9002",
             "label_firmware": "Firmware",
             "label_dimensions": "Abmessungen"
         },
         "heating_profile": {
             "header": "Heizprofil",
-            "label_name": "Name",
+            "label_name": "Drucker name",
             "heating_values": "Heizwerte",
             "label_bed": "Bett",
             "label_extruder": "Düse"
+        },
+        "error_message": {
+            "header": "Fehler Alarm",
+            "connection_error": "Verbindungsfehler! Bitte überprüfen Sie die Verbindung und versuchen Sie es erneut."
         }
     }
 }

@@ -1,12 +1,15 @@
-import { wsClient } from "../init/client";
-import { Axis, AxisPositions, PrinterProfile, PrinterCommands } from "../types/printer";
-
 /**
+ * @file Printer.ts
  * Class representing a 3D printer instance
  * Handles printer control commands and state management
  * Using the verifyConnection() decorator to verify the connection
  */
-export class Printer implements PrinterCommands {
+
+import { wsClient } from "../init/client";
+import { Axis, AxisPositions, PrinterProfile, PrinterCommands } from "../types/printer";
+import { eventBus } from "./eventbus";
+
+export default class Printer implements PrinterCommands {
     /** Stores current printer configuration and state */
     printerInfo: PrinterProfile
 
@@ -86,9 +89,6 @@ export class Printer implements PrinterCommands {
             message_type: 'GCommand',
             message: 'G29'
         })
-
-        // TODO: This is not really necessary, is it!?
-        this.autoHome()
     }
 
     /**
@@ -111,15 +111,23 @@ export class Printer implements PrinterCommands {
         const current_position = this.axisPositions[axis]
         let new_position = direction === '+' ? current_position + distance : current_position - distance
 
-        // Check for printer limits to avoid crusing things
-        if (new_position < 0) new_position = 0
-        else if (axis !== 'e' && new_position > this.printerInfo.dimensions[axis]) {
-            new_position = this.printerInfo.dimensions[axis]
+        // Check for printer limits to avoid crusing things (only for X, Y, Z)
+        if (axis !== 'e0' && axis !== 'e1') {
+            if (new_position < 0) new_position = 0
+            else if (new_position > this.printerInfo.dimensions[axis]) {
+                new_position = this.printerInfo.dimensions[axis]
+            }
         }
 
         // Check for hotend temperature before moving
-        if (axis === 'e' && (Math.abs(this.printerInfo.temperatures.e0 - this.printerInfo.temperatures.e0_set) > 3
+        if (axis === 'e0' && (Math.abs(this.printerInfo.temperatures.e0 - this.printerInfo.temperatures.e0_set) > 3
             || this.printerInfo.temperatures.e0 < this.hotendMinTemp)) {
+            console.error('Extruder temp very different from target temp')
+            return
+        }
+
+        if (axis === 'e1' && (Math.abs(this.printerInfo.temperatures.e1 - this.printerInfo.temperatures.e1_set) > 3
+            || this.printerInfo.temperatures.e1 < this.hotendMinTemp)) {
             console.error('Extruder temp very different from target temp')
             return
         }
@@ -325,6 +333,37 @@ export class Printer implements PrinterCommands {
     }
 
     /**
+     * Uploads file to printer storage
+     * @param {string} file_content - Content of the file to upload
+     * @returns {void}
+     */
+    @Printer.verifyConnection
+    uploadFile(file_content: string): void {
+        console.log({
+            message_type: 'FileUpload',
+            message: file_content
+        })
+        wsClient.sendCommand({
+            message_type: 'FileUpload',
+            message: file_content
+        })
+    }
+
+    /**
+     * Sends custom command to the printer without backend validation
+     * Most commonly used for debugging and terminal commands
+     * @param {string} command 
+     * @returns {void}
+     */
+    @Printer.verifyConnection
+    unsafeCommand(command: string): void {
+        wsClient.sendCommand({
+            message_type: 'Unsafe',
+            message: command
+        })
+    }
+
+    /**
      * Decorator to verify printer connection before executing commands
      * @param {any} _target - The target object
      * @param {string} _propertyKey - The property key
@@ -336,6 +375,7 @@ export class Printer implements PrinterCommands {
         descriptor.value = function (this: Printer, ...args: any[]) {
             if (!this.printerInfo.status) {
                 console.error('Printer is not connected');
+                eventBus.emit('message', 'openConnectionErrorDialog');
                 return;
             }
             return originalMethod.apply(this, args);
