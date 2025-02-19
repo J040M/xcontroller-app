@@ -1,22 +1,71 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { printer, wsClient } from '../init/client'
-// import type { File } from '../types/printer'
+import { eventBus } from '../utils/eventbus';
 
 export default defineComponent({
     name: 'filesComponent',
     data: () => ({
         files: undefined as string[] | undefined,
+        loadingStatus: false as boolean,
     }),
     mounted() {
         wsClient.on('message', (message: any) => {
             message = JSON.parse(message.data)
+
             if (message.message_type === 'M20') {
+                this.loadingStatus = false
                 // TODO: This will change in the future. parser20() will return an obj instead of an array
                 this.files = message.message.replace(/[\[\]"]/g, '').split(',')
                     .map((item: string) => item.trim());
             }
         })
+        eventBus.on('message', (message: string) => {
+            if (message === 'openConnectionErrorDialog') {
+                this.loadingStatus = false
+            }
+        })
+    },
+    methods: {
+        /**
+         * List all files on the printer
+         * loadingStatus is set to true to show a loading spinner
+         * @return void
+         */
+        listFiles(): void {
+            this.loadingStatus = true
+            printer.listFiles()
+        },
+        /**
+         * Read the content of the gcode file
+         * Prefix the content with the filename for backend processing
+         * @param {Event} event 
+         * @return void
+         */
+        readFile(event: Event): void {
+            const input = event.target as HTMLInputElement || null;
+            if (!input || !input.files) return;
+
+            const file = input.files[0];
+
+            const reader = new FileReader()
+            reader.onload = function (e) {
+                let fileContent = e.target?.result as string
+                fileContent = ';' + file.name + '\n' + fileContent
+
+                printer.uploadFile(fileContent)
+            }
+            reader.readAsText(file)
+        },
+        /**
+         * Delete a file from the printer
+         * @param {string} file 
+         * @return void
+         */
+        deleteFile(file: string): void {
+            printer.deleteFile(file)
+            printer.listFiles()
+        },
     },
     setup() {
         return { printer }
@@ -26,8 +75,8 @@ export default defineComponent({
 
 <template>
     <div class="upload-container">
-        <Button @click="printer.listFiles()" icon="pi pi-refresh" />
-        <Button label="Upload file" icon="pi pi-upload" />
+        <Button @click="listFiles()" :loading="loadingStatus" icon="pi pi-refresh" size="small" />
+        <!-- <input type="file" @change="readFile" /> -->
     </div>
 
     <!-- TODO: Searchbar for file filtering -->
@@ -40,7 +89,7 @@ export default defineComponent({
         <label>{{ $t('files.filesize') }} {{ file.file_size }}</label><br> -->
         <div class="button-action-group">
             <Button v-on:click="printer.selectFile(file)" icon="pi pi-arrow-circle-up" />
-            <Button v-on:click="printer.deleteFile(file)" icon="pi pi-trash" />
+            <Button v-on:click="deleteFile(file)" icon="pi pi-trash" />
             <!-- <Button icon="pi pi-file" /> -->
         </div>
     </div>

@@ -45,10 +45,6 @@ import Chart from "primevue/chart";
  * Application Services
  */
 import { i18n } from "./utils/i18n";
-import { init } from "./init/init";
-
-// Initialize application defaults
-init();
 
 /**
  * Create and configure Vue application instance

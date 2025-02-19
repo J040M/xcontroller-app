@@ -59,17 +59,21 @@
         },
         "printer_profile": {
             "header": "Perfil da impressora",
-            "label_name": "Nome",
-            "label_url": "URL",
+            "label_name": "Nome da impressora",
+            "label_url": "ws://myprinter.local:9002",
             "label_firmware": "Firmware",
             "label_dimensions": "Dimensões"
         },
         "heating_profile": {
             "header": "Perfil de aquecimento",
-            "label_name": "Nome",
+            "label_name": "Nome do perfil",
             "heating_values": "Valores de aquecimento",
             "label_bed": "Cama",
             "label_extruder": "Bico"
+        },
+        "error_message": {
+            "header": "Alerta erro!",
+            "connection_error": "Sem ligação a impressora. Verifique a ligação e tente novamente."
         }
     }
 }

@@ -5,27 +5,19 @@
  */
 
 import WebSocketConnector from "../utils/wsconnector";
-import { Printer } from "../utils/printer";
+import Printer from "../utils/printer";
+import PrinterStorage from "../utils/storage";
 
 import { reactive } from 'vue'
+import type { Message } from "../types/messages";
 
-/*********************/
-/***** WS CLIENT *****/
-/*********************/
+export const storage = new PrinterStorage()
 export const wsClient = new WebSocketConnector()
 
 /**
- * Initialize WebSocket URL from localStorage if available
- * @TODO: Refactor to implement profile-based storage system
+ * Printer instance
+ * @TODO Not the way I like to have this, but it's a start
  */
-const wsURL = localStorage.getItem('wsURL')
-if (wsURL) wsClient.wsURL = wsURL
-
-/**********************/
-/***** PRINTER ********/
-/**********************/
-// const newPrinter: Printer | null = null
-
 const newPrinter = new Printer({
     status: false,
     name: '',
@@ -46,23 +38,22 @@ const newPrinter = new Printer({
     temperatures: {
         e0: 0,
         e0_set: 0,
+        e1: 0,
+        e1_set: 0,
         bed: 0,
         bed_set: 0
     },
     homed: false
 })
-
-// TODO: Not the way I like to have this, but it's a start
 export const printer = reactive(newPrinter)
 
 /**
  * WebSocket Event Handlers
  * Manages messages, connection state and error handling
+ * @TODO This is just a test, it should be improved and moved away from here
  */
-
-// TODO: This is just a test, it should be improved and moved away from here
-wsClient.on('message', (message: any) => {
-    message = JSON.parse(message.data)
+wsClient.on('message', (incomingMessage: MessageEvent) => {
+    const message: Message = JSON.parse(incomingMessage.data)
     // TODO: Maybe this should be a method in the printer class
     // or Switch case...
     if (message.message_type === 'M114') {
@@ -73,7 +64,6 @@ wsClient.on('message', (message: any) => {
         printer.temperatures = resp_temps
     }
 })
-
 wsClient.on('connected', () => {
     console.log('Connected to WebSocket server')
     printer.printerInfo.status = true

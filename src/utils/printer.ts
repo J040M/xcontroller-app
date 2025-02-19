@@ -1,12 +1,13 @@
 import { wsClient } from "../init/client";
 import { Axis, AxisPositions, PrinterProfile, PrinterCommands } from "../types/printer";
+import { eventBus } from "./eventbus";
 
 /**
  * Class representing a 3D printer instance
  * Handles printer control commands and state management
  * Using the verifyConnection() decorator to verify the connection
  */
-export class Printer implements PrinterCommands {
+export default class Printer implements PrinterCommands {
     /** Stores current printer configuration and state */
     printerInfo: PrinterProfile
 
@@ -18,7 +19,7 @@ export class Printer implements PrinterCommands {
 
     /**
      * Creates a new Printer instance
-     * @param printer_info - Initial printer configuration
+     * @param {PrinterProfile} printer_info - Initial printer configuration
      */
     constructor(printer_info: PrinterProfile) {
         this.printerInfo = printer_info
@@ -26,7 +27,8 @@ export class Printer implements PrinterCommands {
 
     /**
      * Sets the current position for all axes
-     * @param positions - Object containing positions for each axis
+     * @param {AxisPositions} positions - Object containing positions for each axis
+     * @returns {void}
      */
     set axisPositions(positions: AxisPositions) {
         this.printerInfo!.axisPositions = positions
@@ -34,7 +36,7 @@ export class Printer implements PrinterCommands {
 
     /**
      * Retrieves current positions for all axes
-     * @returns Current axis positions
+     * @returns {AxisPositions} Current axis positions
      */
     get axisPositions(): AxisPositions {
         return this.printerInfo?.axisPositions
@@ -43,6 +45,7 @@ export class Printer implements PrinterCommands {
     /**
      * Sets the current temperatures for hotend and bed
      * @param temps - Object containing hotend and bed temperatures
+     * @returns {void}
      */
     set temperatures(temps: PrinterProfile['temperatures']) {
         this.printerInfo.temperatures = temps
@@ -50,7 +53,7 @@ export class Printer implements PrinterCommands {
 
     /**
      * Retrieves current temperatures for hotend and bed
-     * @returns Current temperatures
+     * @returns {PrinterProfile['temperatures']} Current temperatures
      */
     get temperatures(): PrinterProfile['temperatures'] {
         return this.printerInfo.temperatures
@@ -59,6 +62,7 @@ export class Printer implements PrinterCommands {
     /**
      * Initiates auto-homing sequence (G28)
      * Get the axis position after homing
+     * @returns {void}
      */
     @Printer.verifyConnection
     autoHome(): void {
@@ -75,6 +79,7 @@ export class Printer implements PrinterCommands {
     /**
      * Starts automatic bed leveling procedure (G29)
      * Get the axis position after leveling
+     * @returns {void}
      */
     @Printer.verifyConnection
     bedLeveling(): void {
@@ -92,9 +97,10 @@ export class Printer implements PrinterCommands {
      * Get the axis position after leveling
      * Check for printer limits to avoid crusing things
      * GCode requires uppercase letters
-     * @param axis - The axis to move (X, Y, Z, E)
-     * @param direction - Direction of movement ('+' or '-')
-     * @param distance - Distance to move in mm
+     * @param {Axis} axis - The axis to move (X, Y, Z, E)
+     * @param {string} direction - Direction of movement ('+' or '-')
+     * @param {number} distance - Distance to move in mm
+     * @returns {void}
      */
     @Printer.verifyConnection
     moveAxis(axis: Axis, direction: string, distance: number): void {
@@ -130,6 +136,7 @@ export class Printer implements PrinterCommands {
 
     /**
      * Retrieves current position for all axes
+     * @returns {void}
      */
     @Printer.verifyConnection
     getAxisPosition(): void {
@@ -146,6 +153,7 @@ export class Printer implements PrinterCommands {
 
     /**
      * Retrieves current hotend and bed temperatures
+     * @returns {void}
      */
     @Printer.verifyConnection
     getTemperatures(): void {
@@ -157,6 +165,7 @@ export class Printer implements PrinterCommands {
 
     /**
      * Retrieves list of files stored on the printer
+     * @returns {void}
      */
     @Printer.verifyConnection
     listFiles(): void {
@@ -168,6 +177,7 @@ export class Printer implements PrinterCommands {
 
     /**
      * Starts current print job (M24)
+     * @returns {void}
      */
     @Printer.verifyConnection
     startPrint(): void {
@@ -181,6 +191,7 @@ export class Printer implements PrinterCommands {
 
     /**
      * Pauses current print job (M25)
+     * @returns {void}
      */
     @Printer.verifyConnection
     pausePrint(): void {
@@ -194,6 +205,7 @@ export class Printer implements PrinterCommands {
 
     /**
      * Stops current print job (M29)
+     * @returns {void}
      */
     @Printer.verifyConnection
     stopPrint(): void {
@@ -207,7 +219,8 @@ export class Printer implements PrinterCommands {
 
     /**
      * Sets hotend temperature
-     * @param temp - Target temperature in celsius
+     * @param {number} temp - Target temperature in celsius
+     * @returns {void}
      */
     @Printer.verifyConnection
     setHotendTemperature(temp: number): void {
@@ -219,7 +232,8 @@ export class Printer implements PrinterCommands {
 
     /**
      * Sets bed temperature
-     * @param temp - Target temperature in celsius
+     * @param {number} temp - Target temperature in celsius
+     * @returns {void}
      */
     @Printer.verifyConnection
     setBedTemperature(temp: number): void {
@@ -232,7 +246,8 @@ export class Printer implements PrinterCommands {
     /**
      * Disables stepper motors, allowing manual movement
      * Set homed to false to avoid moving the printer without homing
-     * @param axe - Optional specific axis to disable
+     * @param {string} [axe] - Optional specific axis to disable
+     * @returns {void}
      */
     @Printer.verifyConnection
     disableMotors(axe?: string): void {
@@ -250,7 +265,8 @@ export class Printer implements PrinterCommands {
 
     /**
      * Controls cooling fan speed
-     * @param speed - Fan speed (0-255)
+     * @param {number} speed - Fan speed (0-255)
+     * @returns {void}
      */
     @Printer.verifyConnection
     setFanSpeed(speed: number): void {
@@ -268,7 +284,8 @@ export class Printer implements PrinterCommands {
     /**
      * Selects file for printing
      * If no file is provided, clears the current selection
-     * @param file_name - Name of the file to print
+     * @param {string} [file_name] - Name of the file to print
+     * @returns {void}
      */
     @Printer.verifyConnection
     selectFile(file_name?: string): void {
@@ -297,7 +314,8 @@ export class Printer implements PrinterCommands {
 
     /**
      * Deletes file from printer storage
-     * @param file_name - Name of the file to delete
+     * @param {string} file_name - Name of the file to delete
+     * @returns {void}
      */
     @Printer.verifyConnection
     deleteFile(file_name: string): void {
@@ -307,11 +325,50 @@ export class Printer implements PrinterCommands {
         })
     }
 
+    /**
+     * Uploads file to printer storage
+     * @param {string} file_content - Content of the file to upload
+     * @returns {void}
+     */
+    @Printer.verifyConnection
+    uploadFile(file_content: string): void {
+        console.log({
+            message_type: 'FileUpload',
+            message: file_content
+        })
+        wsClient.sendCommand({
+            message_type: 'FileUpload',
+            message: file_content
+        })
+    }
+
+    /**
+     * Sends custom command to the printer without backend validation
+     * Most commonly used for debugging and terminal commands
+     * @param {string} command 
+     * @returns {void}
+     */
+    @Printer.verifyConnection
+    unsafeCommand(command: string): void {
+        wsClient.sendCommand({
+            message_type: 'Unsafe',
+            message: command
+        })
+    }
+
+    /**
+     * Decorator to verify printer connection before executing commands
+     * @param {any} _target - The target object
+     * @param {string} _propertyKey - The property key
+     * @param {PropertyDescriptor} descriptor - The property descriptor
+     * @returns {PropertyDescriptor} Modified property descriptor
+     */
     private static verifyConnection(_target: any, _propertyKey: string, descriptor: PropertyDescriptor) {
         const originalMethod = descriptor.value;
         descriptor.value = function (this: Printer, ...args: any[]) {
             if (!this.printerInfo.status) {
                 console.error('Printer is not connected');
+                eventBus.emit('message', 'openConnectionErrorDialog');
                 return;
             }
             return originalMethod.apply(this, args);

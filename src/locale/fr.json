@@ -59,8 +59,8 @@
         },
         "printer_profile": {
             "header": "Profil de l'imprimante",
-            "label_name": "Nom",
-            "label_url": "URL",
+            "label_name": "Nom de l'imprimante",
+            "label_url": "ws://myprinter.local:9002",
             "label_firmware": "Firmware",
             "label_dimensions": "Dimensions"
         },
@@ -70,6 +70,10 @@
             "heating_values": "Valeurs de chauffage",
             "label_bed": "Plateau",
             "label_extruder": "Buse"
+        },
+        "error_message": {
+            "header": "Alert error",
+            "connection_error": "Erreur de connexion! Vérifiez la connexion et réessayez."
         }
     }
 }
