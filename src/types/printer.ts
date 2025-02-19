@@ -39,6 +39,7 @@ interface AxisPositions {
 }
 
 interface PrinterProfile {
+    uuid: string,
     status: boolean,
     printStatus?: PrintStatus,
     name: string,
@@ -53,6 +54,8 @@ interface PrinterProfile {
     temperatures: {
         e0: number,
         e0_set: number,
+        e1: number,
+        e1_set: number,
         bed: number,
         bed_set: number
     },
@@ -60,6 +63,7 @@ interface PrinterProfile {
 }
 
 interface HeatingProfile {
+    uuid: string,
     name: string,
     e0: number,
     e1: number,

@@ -11,17 +11,13 @@ import PrinterStorage from "../utils/storage";
 import { reactive } from 'vue'
 import type { Message } from "../types/messages";
 
-export const wsClient = new WebSocketConnector()
-/**
- * Initialize WebSocket URL from localStorage if available
- * @TODO: Refactor to implement profile-based storage system
- */
 export const storage = new PrinterStorage()
+export const wsClient = new WebSocketConnector()
 
-const wsURL = localStorage.getItem('wsURL')
-if (wsURL) wsClient.wsURL = wsURL
-
-// const newPrinter: Printer | null = null
+/**
+ * Printer instance
+ * @TODO Not the way I like to have this, but it's a start
+ */
 const newPrinter = new Printer({
     status: false,
     name: '',
@@ -42,21 +38,21 @@ const newPrinter = new Printer({
     temperatures: {
         e0: 0,
         e0_set: 0,
+        e1: 0,
+        e1_set: 0,
         bed: 0,
         bed_set: 0
     },
     homed: false
 })
-// TODO: Not the way I like to have this, but it's a start
 export const printer = reactive(newPrinter)
-
 
 /**
  * WebSocket Event Handlers
  * Manages messages, connection state and error handling
+ * @TODO This is just a test, it should be improved and moved away from here
  */
-// TODO: This is just a test, it should be improved and moved away from here
-wsClient.on('message', (incomingMessage: { data: string }) => {
+wsClient.on('message', (incomingMessage: MessageEvent) => {
     const message: Message = JSON.parse(incomingMessage.data)
     // TODO: Maybe this should be a method in the printer class
     // or Switch case...

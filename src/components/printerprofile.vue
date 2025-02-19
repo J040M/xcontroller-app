@@ -8,6 +8,7 @@ export default defineComponent({
     name: 'printerProfileComponent',
     data: () => ({
         printerProfile: {
+            uuid: '',
             name: '',
             url: '',
             firmware: '',
@@ -28,7 +29,9 @@ export default defineComponent({
     },
     methods: {
         saveProfile(): void {
+            this.printerProfile.uuid = crypto.randomUUID()
             storage.saveProfile('PrinterProfiles', this.printerProfile)
+            this.printerProfile = {} as PrinterProfile
             this.visible = false
         }
     }

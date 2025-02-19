@@ -58,7 +58,8 @@ export default class WebSocketConnector extends EventEmitter {
      */
     connect(protocols?: string | string[]): void {
         // Initialize wsClient with the WebSocket instance
-        this.wsClient = new WebSocket(this._wsURL, protocols);
+        if(!this._wsURL) return
+        this.wsClient = new WebSocket(this._wsURL, protocols)
 
         // Attach events
         this.attachEventListeners()
@@ -78,10 +79,7 @@ export default class WebSocketConnector extends EventEmitter {
      * @returns {void}
      */
     sendCommand(command: Message): void {
-        if (!this.wsClient || this.wsClient.readyState !== WebSocket.OPEN) {
-            console.error('WebSocket is not connected')
-            return
-        }
+        if (!this.wsClient || this.wsClient.readyState !== WebSocket.OPEN) return
 
         this.wsClient.send(JSON.stringify(command))
     }
@@ -95,9 +93,13 @@ export default class WebSocketConnector extends EventEmitter {
     private attachEventListeners(): void {
         if (!this.wsClient) return;
 
-        this.wsClient.onopen = () => this.emit('connected', 'connected');
-        this.wsClient.onclose = () => this.emit('disconnected', 'disconnected');
-        this.wsClient.onerror = (error) => this.emit('error', error);
-        this.wsClient.onmessage = (message) => this.emit('message', message);
+        try {
+            this.wsClient.onopen = () => this.emit('connected', 'connected');
+            this.wsClient.onclose = () => this.emit('disconnected', 'disconnected');
+            this.wsClient.onerror = (error) => this.emit('error', error);
+            this.wsClient.onmessage = (message) => this.emit('message', message);
+        } catch (error) {
+            console.error(error)
+        }
     }
 }
