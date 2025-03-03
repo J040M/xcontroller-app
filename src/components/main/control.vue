@@ -1,55 +1,42 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
-import * as THREE from 'three'
 import { printer } from '../../init/client';
+import * as THREE from 'three'
+import Three3DPrinter from '../../3d-render/3dprinter.ts';
 import type { Axis } from '../../types/printer';
+
 
 export default defineComponent({
     name: 'controlComponent',
     data: () => ({
         movementValue: 10 as number,
         extruderValue: 1 as number,
-        redSphere: undefined as THREE.Mesh | undefined,
         fanValue: 0 as number,
         lastFanCommandTime: null as NodeJS.Timeout | null,
     }),
     mounted() {
         // Scene, camera, and renderer setup
         const canvasID = document.getElementById('3dprinter-animation') as HTMLCanvasElement;
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(30, 800 / 600, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ canvas: canvasID, antialias: true });
-        renderer.setSize(800, 600);
+        // TODO: CLEANUP
+        // Force dimensions
+        // canvasID.style.width = '800px';
+        // canvasID.style.height = '600px';
+        // canvasID.width = 800;  // Set internal width
+        // canvasID.height = 600; // Set internal height
+
+        const threeDP = new Three3DPrinter(canvasID)
 
         // Cube representing the 3D printer volume
-        const cubeGeometry = new THREE.BoxGeometry(2, 2, 2);
-        const cubeEdges = new THREE.EdgesGeometry(cubeGeometry);
-        const cubeMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
-        const cubeLine = new THREE.LineSegments(cubeEdges, cubeMaterial);
-        scene.add(cubeLine);
+        const cube = threeDP.initDimensions()
+        threeDP.scene.add(cube);
 
-        // Red movable sphere
-        const redSphereGeometry = new THREE.SphereGeometry(0.1, 32, 32);
-        const redSphereMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-        const redSphere = new THREE.Mesh(redSphereGeometry, redSphereMaterial);
-        scene.add(redSphere);
-        this.redSphere = redSphere; // Store reference to redSphere
+        // Red movable sphere representing the extruder
+        const extruder = threeDP.initExtruder()
+        threeDP.scene.add(extruder)
 
-        // Purple stationary sphere at (-1, -1, 1)
-        const purpleSphereGeometry = new THREE.SphereGeometry(0.1, 32, 32);
-        const purpleSphereMaterial = new THREE.MeshBasicMaterial({ color: 0x800080 });
-        const purpleSphere = new THREE.Mesh(purpleSphereGeometry, purpleSphereMaterial);
-        purpleSphere.position.set(-1, -1, 1);
-        scene.add(purpleSphere);
-
-        // Force dimensions
-        canvasID.style.width = '800px';
-        canvasID.style.height = '600px';
-        canvasID.width = 800;  // Set internal width
-        canvasID.height = 600; // Set internal height
-
-        // Camera position
-        camera.position.z = 5;
+        // Purple stationary sphere at (-1, -1, -1) representing the home position
+        const homePosition = threeDP.initHomePosition()
+        threeDP.scene.add(homePosition);
 
         // Handle mouse clicks to move the camera
         const onMouseClick = (event: MouseEvent) => {
@@ -57,20 +44,21 @@ export default defineComponent({
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
             mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
 
-            const radius = 5; // Distance from the origin
-            camera.position.x = radius * Math.sin(mouse.y * Math.PI);
-            camera.position.z = radius * Math.cos(mouse.y * Math.PI);
-            camera.position.y = radius * mouse.x;
-            camera.lookAt(0, 0, 0); // Look at the center of the scene
+            threeDP.moveCamera(mouse)
         };
 
-        renderer.domElement.addEventListener('click', onMouseClick);
+        threeDP.renderer.domElement.addEventListener('click', onMouseClick);
 
         // Animation loop
         const animate = () => {
             requestAnimationFrame(animate);
-            this.updateRedSpherePosition();
-            renderer.render(scene, camera);
+            
+            threeDP.updateExtruderPosition({
+                x: printer.axisPositions.x,
+                y: printer.axisPositions.y,
+                z: printer.axisPositions.z,
+            })
+            threeDP.render()
         };
         animate();
     },
@@ -78,21 +66,7 @@ export default defineComponent({
         return { printer };
     },
     methods: {
-        // TODO: The values from the commands must be scaled for the sphere
-        updateRedSpherePosition(): void {
-            if (this.redSphere) {
-                // Update red sphere's position using the slider values
-                // Limit the red sphere's position to stay within the cube
-                const halfSize = 1; // Half of the cube size
-                this.redSphere.position.set(
-                    THREE.MathUtils.clamp(this.printer.axisPositions.y, -halfSize + 0.1, halfSize - 0.1),
-                    THREE.MathUtils.clamp(this.printer.axisPositions.z, -halfSize + 0.1, halfSize - 0.1),
-                    THREE.MathUtils.clamp(this.printer.axisPositions.x, -halfSize + 0.1, halfSize - 0.1),
-                );
-            }
-        },
-        // TODO: This could be refactored to use the new printer method
-        sendMovementCommand(command: Axis | string): void {
+       sendMovementCommand(command: Axis | string): void {
             switch (command) {
                 case 'extrude':
                     printer.moveAxis('e0', '+', this.extruderValue);
@@ -181,14 +155,11 @@ export default defineComponent({
 
             <Panel :header="$t('control.header_motor')">
                 <div class="button-container motor-container">
-                    <Button :label="$t('control.btn_homemotor')" raised rounded
-                        @click="printer.autoHome()" />
-                    <Button :label="$t('control.btn_bedleveling')" raised rounded
-                        @click="printer.bedLeveling()" />
+                    <Button :label="$t('control.btn_homemotor')" raised rounded @click="printer.autoHome()" />
+                    <Button :label="$t('control.btn_bedleveling')" raised rounded @click="printer.bedLeveling()" />
                 </div>
                 <div class="button-container motor-container">
-                    <Button :label="$t('control.btn_unlockmotor')" raised rounded
-                        @click="printer.disableMotors()" />
+                    <Button :label="$t('control.btn_unlockmotor')" raised rounded @click="printer.disableMotors()" />
                 </div>
             </Panel>
 
