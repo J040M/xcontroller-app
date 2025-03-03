@@ -1,4 +1,5 @@
 <template>
+    <input type="file" @change="getFileContents" accept=".gcode" />
     <div class="gcode-container">
         <!-- <input type="file" @change="handleFileUpload" accept=".gcode" />
         <input type="range" v-model="zLevel" :min="0" :max="maxZ" @input="updateVisualization" /> -->
@@ -10,6 +11,7 @@
 import { defineComponent } from 'vue';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import * as THREE from 'three'
+import { parseGCode, visualizeGCode } from '../../utils/gcode'
 
 export default defineComponent({
     name: 'GcodeViewerComponent',
@@ -51,6 +53,25 @@ export default defineComponent({
                 renderer.render(scene, camera);
             };
             animate();
+        },
+        getFileContents(event: Event) {
+            const file = (event.target as HTMLInputElement).files?.[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const gcode = e.target!.result as string;
+                if (!gcode) return;
+
+                const { commands, zValue } = parseGCode(gcode);
+
+                // Update slider max and initial value based on the last Z level
+                document.getElementById('zSlider').max = lastZ;
+                document.getElementById('zSlider').value = lastZ;
+
+                visualizeGCode(commands, zValue-1, );
+            };
+            reader.readAsText(file);
         },
     }
 });

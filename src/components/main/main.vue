@@ -24,7 +24,7 @@ export default defineComponent({
                     <Tab value="0">{{ $t('main.control') }}</Tab>
                     <Tab value="1">{{ $t('main.temperature') }}</Tab>
                     <Tab value="2">{{ $t('main.terminal') }}</Tab>
-                    <!-- <Tab value="3">{{ $t('main.gcodeviewer') }}</Tab> -->
+                    <Tab value="3">{{ $t('main.gcodeviewer') }}</Tab>
                 </TabList>
             </div>
             <TabPanels>
@@ -43,11 +43,11 @@ export default defineComponent({
                         <Terminal />
                     </div>
                 </TabPanel>
-                <!-- <TabPanel value="3">
+                <TabPanel value="3">
                     <div class="printer-configs-container">
                         <GcodeViewer />
                     </div>
-                </TabPanel> -->
+                </TabPanel>
             </TabPanels>
         </Tabs>
     </div>
