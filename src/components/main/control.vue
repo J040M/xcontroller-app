@@ -17,17 +17,10 @@ export default defineComponent({
     mounted() {
         // Scene, camera, and renderer setup
         const canvasID = document.getElementById('3dprinter-animation') as HTMLCanvasElement;
-        // TODO: CLEANUP
-        // Force dimensions
-        // canvasID.style.width = '800px';
-        // canvasID.style.height = '600px';
-        // canvasID.width = 800;  // Set internal width
-        // canvasID.height = 600; // Set internal height
-
         const threeDP = new Three3DPrinter(canvasID)
 
         // Cube representing the 3D printer volume
-        const cube = threeDP.initDimensions()
+        const cube = threeDP.initDimensions(2,2,2)
         threeDP.scene.add(cube);
 
         // Red movable sphere representing the extruder
