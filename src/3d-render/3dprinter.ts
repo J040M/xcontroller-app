@@ -19,18 +19,18 @@ export default class Three3DPrinter {
         this.camera.position.z = options?.cameraPosition || 5;
     }
 
-    initDimensions(): THREE.LineSegments {
-        const cubeGeometry = new THREE.BoxGeometry(2, 2, 2);
+    initDimensions(width:number, height:number, depth:number, color?: string): THREE.LineSegments {
+        const cubeGeometry = new THREE.BoxGeometry(width, height, depth);
         const cubeEdges = new THREE.EdgesGeometry(cubeGeometry);
-        const cubeMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+        const cubeMaterial = new THREE.LineBasicMaterial({ color: color || 0xffffff });
         const cubeLine = new THREE.LineSegments(cubeEdges, cubeMaterial);
 
         return cubeLine
     }
 
-    initExtruder(): THREE.Mesh {
+    initExtruder(color?: string): THREE.Mesh {
         const redSphereGeometry = new THREE.SphereGeometry(0.1, 32, 32);
-        const redSphereMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+        const redSphereMaterial = new THREE.MeshBasicMaterial({ color: color || 0xff0000 });
 
         this.redSphere = new THREE.Mesh(redSphereGeometry, redSphereMaterial);
 
@@ -46,9 +46,9 @@ export default class Three3DPrinter {
         );
     }
 
-    initHomePosition(): THREE.Mesh {
+    initHomePosition(color?: string): THREE.Mesh {
         const homeGeometry = new THREE.SphereGeometry(0.1, 32, 32);
-        const homeSphereMaterial = new THREE.MeshBasicMaterial({ color: 0x800080 });
+        const homeSphereMaterial = new THREE.MeshBasicMaterial({ color: color || 0x800080 });
         const homePosition = new THREE.Mesh(homeGeometry, homeSphereMaterial);
         homePosition.position.set(-1, -1, -1);
 
