@@ -9,7 +9,7 @@ import Printer from "../utils/printer";
 import PrinterStorage from "../utils/storage";
 
 import { reactive } from 'vue'
-import type { Message } from "../types/messages";
+import type { MessageResponse } from "../types/messages";
 
 export const storage = new PrinterStorage()
 export const wsClient = new WebSocketConnector()
@@ -55,7 +55,7 @@ export const printer = reactive(newPrinter)
  * @TODO This is just a test, it should be improved and moved away from here
  */
 wsClient.on('message', (incomingMessage: MessageEvent) => {
-    const message: Message = JSON.parse(incomingMessage.data)
+    const message: MessageResponse = JSON.parse(incomingMessage.data)
     // TODO: Maybe this should be a method in the printer class
     // or Switch case...
     if (message.message_type === 'M114') {
