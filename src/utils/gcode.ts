@@ -34,29 +34,44 @@ export function parseGCode(gcode: string ): ParseResult {
     const lines = gcode.split('\n');
     const commands = [] as Command[];
     let lastPosition = new THREE.Vector3(0, 0, 0);
-    let zValue = 0; // Track the last Z level
+    let maxZ = 0; // Track the maximum Z level encountered
 
     lines.forEach(line => {
         const trimmed = line.trim();
         if (trimmed.startsWith('G0') || trimmed.startsWith('G1')) {
             const args = trimmed.split(' ');
             let x = lastPosition.x, y = lastPosition.y, z = lastPosition.z;
+            let foundZ = false;
 
             args.forEach(arg => {
-                if (arg.startsWith('X')) x = parseFloat(arg.substring(1));
-                if (arg.startsWith('Y')) y = parseFloat(arg.substring(1));
-                if (arg.startsWith('Z')) z = parseFloat(arg.substring(1));
+                if (arg.startsWith('X')) {
+                    const parsed = parseFloat(arg.substring(1));
+                    if (!isNaN(parsed)) x = parsed;
+                }
+                if (arg.startsWith('Y')) {
+                    const parsed = parseFloat(arg.substring(1));
+                    if (!isNaN(parsed)) y = parsed;
+                }
+                if (arg.startsWith('Z')) {
+                    const parsed = parseFloat(arg.substring(1));
+                    if (!isNaN(parsed)) {
+                        z = parsed;
+                        foundZ = true;
+                        // Update max Z value when we find a valid Z
+                        if (z > maxZ) maxZ = z;
+                    }
+                }
             });
 
             const newPosition = new THREE.Vector3(x, y, z);
             const isTravel = trimmed.startsWith('G0'); // Check if it's a travel movement
             commands.push({ start: lastPosition.clone(), end: newPosition, travel: isTravel });
             lastPosition = newPosition;
-            zValue = z; // Update the last Z value
         }
     });
 
-    return { commands, zValue };
+    // Ensure we have a valid zValue (default to 0 if no Z commands found)
+    return { commands, zValue: isNaN(maxZ) ? 0 : maxZ };
 }
 
 /**

@@ -143,9 +143,12 @@ export default defineComponent({
           const result = parseGCode(gcode);
           commands = result.commands;
           
-          console.log(`Parsed ${commands.length} G-code commands, max Z: ${result.zValue}`);
-          maxZ.value = result.zValue;
-          zLevel.value = result.zValue;
+          // Ensure we have valid Z values
+          const finalZ = isNaN(result.zValue) ? 0 : result.zValue;
+          
+          console.log(`Parsed ${commands.length} G-code commands, max Z: ${finalZ}`);
+          maxZ.value = finalZ;
+          zLevel.value = finalZ;
           
           updateVisualization();
         } catch (error) {
@@ -170,7 +173,9 @@ export default defineComponent({
       }
       
       try {
-        sceneManager.visualizeGcode(commands, zLevel.value);
+        // Ensure zLevel is always a valid number
+        const validZLevel = isNaN(zLevel.value) ? 0 : zLevel.value;
+        sceneManager.visualizeGcode(commands, validZLevel);
       } catch (error) {
         console.error("Error visualizing G-code:", error);
       }
