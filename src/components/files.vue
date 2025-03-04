@@ -2,6 +2,7 @@
 import { defineComponent } from 'vue'
 import { printer, wsClient } from '../init/client'
 import { eventBus } from '../utils/eventbus';
+import { MessageResponse } from '../types/messages';
 
 export default defineComponent({
     name: 'filesComponent',
@@ -10,8 +11,8 @@ export default defineComponent({
         loadingStatus: false as boolean,
     }),
     mounted() {
-        wsClient.on('message', (message: any) => {
-            message = JSON.parse(message.data)
+        wsClient.on('message', (incomingMessage: MessageEvent) => {
+            const message: MessageResponse = JSON.parse(incomingMessage.data)
 
             if (message.message_type === 'M20') {
                 this.loadingStatus = false
