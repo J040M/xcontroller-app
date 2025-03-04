@@ -20,6 +20,8 @@ interface ParseResult {
 
 /**
  * Parses raw G-code string into an array of 3D movement commands
+ * @param {string} gcode - The raw G-code string to parse
+ * @returns {ParseResult} Object containing parsed commands and maximum Z height
  */
 export function parseGCode(gcode: string): ParseResult {
   const lines = gcode.split('\n');
@@ -59,6 +61,9 @@ export function parseGCode(gcode: string): ParseResult {
   return { commands, zValue: maxZ };
 }
 
+/**
+ * Manages the 3D scene for visualizing G-code paths
+ */
 export class SceneManager {
   private scene: THREE.Scene;
   private camera: THREE.PerspectiveCamera;
@@ -69,6 +74,12 @@ export class SceneManager {
   private extrusionLine: THREE.LineSegments | null = null;
   private travelLine: THREE.LineSegments | null = null;
 
+  /**
+   * Creates a new SceneManager for 3D G-code visualization
+   * @param {HTMLCanvasElement} canvas - The canvas element to render on
+   * @param {number} width - Optional width for the renderer
+   * @param {number} height - Optional height for the renderer
+   */
   constructor(canvas: HTMLCanvasElement, width?: number, height?: number) {
     // Initialize scene
     this.scene = new THREE.Scene();
@@ -111,6 +122,11 @@ export class SceneManager {
     this.animate();
   }
 
+  /**
+   * Animation loop for continuous rendering
+   * @private
+   * @returns {void}
+   */
   private animate(): void {
     this.animationFrameId = requestAnimationFrame(this.animate);
     this.controls?.update();
@@ -125,6 +141,12 @@ export class SceneManager {
     }
   }
 
+  /**
+   * Updates renderer size to match canvas dimensions
+   * @param {number} width - Optional width to set
+   * @param {number} height - Optional height to set
+   * @returns {void}
+   */
   public updateSize(width?: number, height?: number): void {
     const canvas = this.renderer.domElement;
     const newWidth = width || canvas.clientWidth;
@@ -138,6 +160,12 @@ export class SceneManager {
     }
   }
 
+  /**
+   * Visualizes G-code commands in the 3D scene
+   * @param {Command[]} commands - Array of G-code commands to visualize
+   * @param {number} zLevel - Maximum Z level to display
+   * @returns {void}
+   */
   public visualizeGcode(commands: Command[], zLevel: number): void {
     // Clean up previous visualization
     this.clearVisualization();
@@ -183,7 +211,12 @@ export class SceneManager {
     }
   }
 
-  // Center camera on the model
+  /**
+   * Centers the camera on the model
+   * @private
+   * @param {number[]} vertices - Flat array of vertex coordinates
+   * @returns {void}
+   */
   private centerCameraOnModel(vertices: number[]): void {
     if (vertices.length === 0) return;
 
@@ -213,6 +246,11 @@ export class SceneManager {
     geometry.dispose();
   }
 
+  /**
+   * Clears the current visualization and disposes resources
+   * @private
+   * @returns {void}
+   */
   private clearVisualization(): void {
     // Helper function to dispose object
     const disposeObject = (obj: THREE.LineSegments | null) => {
@@ -231,6 +269,10 @@ export class SceneManager {
     this.extrusionLine = this.travelLine = null;
   }
 
+  /**
+   * Disposes all resources used by the scene manager
+   * @returns {void}
+   */
   public dispose(): void {
     // Cancel animation
     if (this.animationFrameId !== null) {
