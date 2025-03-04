@@ -73,9 +73,19 @@ export function visualizeGCode(
     scene: THREE.Scene, 
     currentLine: { extrude: THREE.LineSegments | null; travel: THREE.LineSegments | null }
 ): void {
-    // Clear previous lines
-    if (currentLine.extrude) scene.remove(currentLine.extrude);
-    if (currentLine.travel) scene.remove(currentLine.travel);
+    // Properly dispose of previous lines
+    if (currentLine.extrude) {
+        currentLine.extrude.geometry.dispose();
+        (currentLine.extrude.material as THREE.Material).dispose();
+        scene.remove(currentLine.extrude);
+        currentLine.extrude = null;
+    }
+    if (currentLine.travel) {
+        currentLine.travel.geometry.dispose();
+        (currentLine.travel.material as THREE.Material).dispose();
+        scene.remove(currentLine.travel);
+        currentLine.travel = null;
+    }
 
     // Create new materials and geometries
     const extrudeMaterial = new THREE.LineBasicMaterial({ color: 0xff0000, linewidth: 3 });
