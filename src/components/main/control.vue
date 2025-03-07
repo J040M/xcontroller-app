@@ -47,9 +47,9 @@ export default defineComponent({
             requestAnimationFrame(animate);
             
             threeDP.updateExtruderPosition({
-                x: printer.axisPositions.x,
-                y: printer.axisPositions.y,
-                z: printer.axisPositions.z,
+                x: printer.axisPositions.X,
+                y: printer.axisPositions.Y,
+                z: printer.axisPositions.Z,
             })
             threeDP.render()
         };
@@ -67,14 +67,14 @@ export default defineComponent({
                 case 'retract':
                     printer.moveAxis('e0', '-', this.extruderValue);
                     break;
-                case 'x+':
-                case 'y+':
-                case 'z+':
-                case 'x-':
-                case 'y-':
-                case 'z-':
+                case 'X+':
+                case 'Y+':
+                case 'Z+':
+                case 'X-':
+                case 'Y-':
+                case 'Z-':
                     //seperatee the axis and the direction
-                    const axis = command[0] as Axis;
+                    const axis = command[0].toUpperCase() as Axis;
                     const direction = command[1];
 
                     printer.moveAxis(axis, direction, this.movementValue);
@@ -106,9 +106,9 @@ export default defineComponent({
     <div class="axis-values">
         <Panel header="Current Position">
             <div class="axis-grid">
-                <div class="axis-item">X: {{ printer.axisPositions.x.toFixed(2) }}</div>
-                <div class="axis-item">Y: {{ printer.axisPositions.y.toFixed(2) }}</div>
-                <div class="axis-item">Z: {{ printer.axisPositions.z.toFixed(2) }}</div>
+                <div class="axis-item">X: {{ printer.axisPositions.X.toFixed(2) }}</div>
+                <div class="axis-item">Y: {{ printer.axisPositions.Y.toFixed(2) }}</div>
+                <div class="axis-item">Z: {{ printer.axisPositions.Z.toFixed(2) }}</div>
             </div>
         </Panel>
     </div>
