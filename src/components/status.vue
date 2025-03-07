@@ -1,26 +1,64 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { printer } from '../init/client'
+import { printer, wsClient } from '../init/client'
+import { MessageResponse } from '../types/messages'
 
 export default defineComponent({
     name: 'statusComponent',
     setup() {
         return { printer }
     },
+    mounted() {
+        printer.getPrintStatus()
+
+        wsClient.on('message', (incomingMessage: MessageEvent) => {
+            const message: MessageResponse = JSON.parse(incomingMessage.data)
+            // TODO: Maybe this should be a method in the printer class
+
+            if (message.message_type === 'M27' && message.message !== 'not-printing') {
+                const response = JSON.parse(message.message)
+
+                this.printer.printerInfo.printStatus.progress = parseInt(response)
+                console.log('M27 response:', response)
+            }
+        })
+    },
+    // TODO: Let's keep this here for now. remove once everything is tested
+    methods: {
+        print() {
+            printer.startPrint()
+        },
+        pause() {
+            printer.pausePrint()
+        },
+        stop() {
+            printer.stopPrint()
+        },
+        reload() {
+            printer.getPrintStatus()
+        }
+    }
 })
 </script>
 
 <template>
-    <div v-if="printer.printerInfo.printStatus">
-        <label>{{ $t('status.state') }}</label>{{ printer.printerInfo.printStatus.state }} <br>
-        <label>{{ $t('status.file') }}</label> {{ printer.printerInfo.printStatus.file.file_name }}<br>
-        <label>{{ $t('status.elapsed_time') }}</label> {{ printer.printerInfo.printStatus.elapsed_time }}<br>
-        <label>{{ $t('status.estimated_time') }}</label>{{ printer.printerInfo.printStatus.estimated_time }}<br>
-    
+    <button @click="reload">Reload</button>
+    <div v-if="printer.printerInfo.printStatus.state !== 'unknown'">
+        <label>{{ $t('status.state') }}</label>
+        {{ printer.printerInfo.printStatus.state }} <br>
+        <label>{{ $t('status.file') }}</label>
+        {{ printer.printerInfo.printStatus.file_name }}<br>
+        <label>{{ $t('status.elapsed_time') }}</label>
+        {{ printer.printerInfo.printStatus.elapsed_time }}<br>
+        <label>{{ $t('status.estimated_time') }}</label>
+        {{ printer.printerInfo.printStatus.estimated_time }}<br>
+        <label>{{ $t('status.progress') }}</label>
+        {{ printer.printerInfo.printStatus.progress }}<br>
+
         <div class="button-action-group">
-            <Button label="print" icon="pi pi-play" />
-            <Button label="pause" icon="pi pi-pause" />
-            <Button label="stop" icon="pi pi-stop" />
+            <Button @click="print" label="print" icon="pi pi-play" />
+            <Button @click="pause" label="pause" icon="pi pi-pause" />
+            <Button @click="stop" label="stop" icon="pi pi-stop" />
         </div>
     </div>
     <div v-else>
