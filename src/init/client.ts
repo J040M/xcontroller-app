@@ -24,18 +24,25 @@ const newPrinter = new Printer({
     name: '',
     url: '',
     firmware: '',
+    printStatus: {
+        state: 'unknown',
+        file_name: undefined,
+        elapsed_time: 0,
+        estimated_time: 0,
+        progress: 0
+    },
     axisPositions: {
-        x: 0,
-        y: 0,
-        z: 0,
+        X: 0,
+        Y: 0,
+        Z: 0,
         e0: 0,
         e1: 0
     },
     //Default dimensions
     dimensions: {
-        x: 200,
-        y: 200,
-        z: 200
+        X: 200,
+        Y: 200,
+        Z: 200
     },
     temperatures: {
         e0: 0,
@@ -57,13 +64,22 @@ export const printer = reactive(newPrinter)
 wsClient.on('message', (incomingMessage: MessageEvent) => {
     const message: MessageResponse = JSON.parse(incomingMessage.data)
     // TODO: Maybe this should be a method in the printer class
-    // or Switch case...
-    if (message.message_type === 'M114') {
-        const resp_axis = JSON.parse(message.message)
-        printer.axisPositions = resp_axis
-    } else if (message.message_type === 'M105') {
-        const resp_temps = JSON.parse(message.message)
-        printer.temperatures = resp_temps
+    // console.log('Received message:', message)
+
+    switch (message.message_type) {
+        case 'M114':
+            const resp_axis = JSON.parse(message.message)
+            printer.axisPositions = resp_axis
+            break
+        case 'M105':
+            const resp_temps = JSON.parse(message.message)
+            printer.temperatures = resp_temps
+            break
+        case 'MessageSenderError':
+            console.error('Error received from server')
+            break
+        default:
+            break
     }
 })
 wsClient.on('connected', () => {

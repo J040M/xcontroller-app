@@ -171,6 +171,25 @@ export default class Printer implements PrinterCommands {
     }
 
     /**
+     * Retrieves printer status
+     * @returns {void}
+     */
+    @Printer.verifyConnection
+    getPrintStatus(): void {
+        wsClient.sendCommand({
+            message_type: 'GCommand',
+            message: `M27`
+        })
+
+        wsClient.sendCommand({
+            message_type: 'GCommand',
+            message: `M27 C`
+        })
+
+
+    }
+
+    /**
      * Retrieves list of files stored on the printer
      * @returns {void}
      */
@@ -298,19 +317,16 @@ export default class Printer implements PrinterCommands {
     selectFile(file_name?: string): void {
 
         if (!file_name) {
-            delete this.printerInfo.printStatus
+            this.printerInfo.printStatus.state = 'unknown'
             return
         }
 
         this.printerInfo.printStatus = {
             state: 'idle',
-            file: {
-                file_name: file_name,
-                file_size: 0,
-                file_modified_date: '0'
-            },
+            file_name: file_name,
             elapsed_time: 0,
-            estimated_time: 0
+            estimated_time: 0,
+            progress: 0
         }
 
         wsClient.sendCommand({
@@ -359,6 +375,19 @@ export default class Printer implements PrinterCommands {
     unsafeCommand(command: string): void {
         wsClient.sendCommand({
             message_type: 'Unsafe',
+            message: command
+        })
+    }
+
+    /**
+     * Sends custom command from terminal to the printer
+     * @param {string} command 
+     * @returns {void}
+     */
+    @Printer.verifyConnection
+    terminalCommand(command: string): void {
+        wsClient.sendCommand({
+            message_type: 'Terminal',
             message: command
         })
     }
