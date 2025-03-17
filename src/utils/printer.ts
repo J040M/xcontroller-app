@@ -85,6 +85,8 @@ export default class Printer implements PrinterCommands {
      */
     @Printer.verifyConnection
     bedLeveling(): void {
+        this.printerInfo.homed = false
+
         wsClient.sendCommand({
             message_type: 'GCommand',
             message: 'G29'
@@ -207,6 +209,8 @@ export default class Printer implements PrinterCommands {
      */
     @Printer.verifyConnection
     startPrint(): void {
+        if(this.printerInfo.homed === false) this.autoHome()
+
         this.printerInfo.printStatus!.state = 'printing'
 
         wsClient.sendCommand({
@@ -231,16 +235,26 @@ export default class Printer implements PrinterCommands {
 
     /**
      * Stops current print job (M29)
+     * Resets print status
      * @returns {void}
      */
     @Printer.verifyConnection
     stopPrint(): void {
-        this.printerInfo.printStatus!.state = 'stopped'
+        this.printerInfo.printStatus!.state = 'unknown'
 
         wsClient.sendCommand({
             message_type: 'GCommand',
-            message: 'M29'
+            message: 'M524'
         })
+
+        // Reset print status
+        this.printerInfo.printStatus = {
+            state: 'idle',
+            file_name: '',
+            elapsed_time: 0,
+            estimated_time: 0,
+            progress: 0
+        }
     }
 
     /**
