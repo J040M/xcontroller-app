@@ -11,7 +11,7 @@ export default defineComponent({
         wsClient.on('message', (incomingMessage: MessageEvent) => {
             const message: MessageResponse = JSON.parse(incomingMessage.data)
             // TODO: Maybe this should be a method in the printer class
-            if(message.message === 'not-printing') {
+            if(message.message === 'not-printing' || message.message.replaceAll('"', '') === 'not-printing') {
                 this.printer.printerInfo.printStatus.state = 'unknown'
                 return
             }
