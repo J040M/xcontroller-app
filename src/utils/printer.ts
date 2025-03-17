@@ -81,6 +81,7 @@ export default class Printer implements PrinterCommands {
     /**
      * Starts automatic bed leveling procedure (G29)
      * Get the axis position after leveling
+     * Reset homed to false to avoid moving the printer without homing
      * @returns {void}
      */
     @Printer.verifyConnection
@@ -174,20 +175,26 @@ export default class Printer implements PrinterCommands {
 
     /**
      * Retrieves printer status
+     * "C" Retrieves file if one is already selected
      * @returns {void}
      */
     @Printer.verifyConnection
     getPrintStatus(): void {
-        wsClient.sendCommand({
-            message_type: 'GCommand',
-            message: `M27`
-        })
-
+        // Get the selected file
         wsClient.sendCommand({
             message_type: 'GCommand',
             message: `M27 C`
         })
-
+        // Get print completion percentage
+        wsClient.sendCommand({
+            message_type: 'GCommand',
+            message: `M27`
+        })
+        // Get print time elapsed
+        wsClient.sendCommand({
+            message_type: 'GCommand',
+            message: `M31`
+        })
 
     }
 
@@ -251,7 +258,7 @@ export default class Printer implements PrinterCommands {
         this.printerInfo.printStatus = {
             state: 'idle',
             file_name: '',
-            elapsed_time: 0,
+            elapsed_time: '',
             estimated_time: 0,
             progress: 0
         }
@@ -338,7 +345,7 @@ export default class Printer implements PrinterCommands {
         this.printerInfo.printStatus = {
             state: 'idle',
             file_name: file_name,
-            elapsed_time: 0,
+            elapsed_time: '',
             estimated_time: 0,
             progress: 0
         }

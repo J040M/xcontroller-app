@@ -11,12 +11,29 @@ export default defineComponent({
         wsClient.on('message', (incomingMessage: MessageEvent) => {
             const message: MessageResponse = JSON.parse(incomingMessage.data)
             // TODO: Maybe this should be a method in the printer class
+            if(message.message === 'not-printing') {
+                this.printer.printerInfo.printStatus.state = 'unknown'
+                return
+            }
 
             if (message.message_type === 'M27' && message.message !== 'not-printing') {
                 const response = JSON.parse(message.message)
-
+                // this.printer.printerInfo.printStatus.state = 'printing'
                 this.printer.printerInfo.printStatus.progress = parseInt(response)
-                console.log('M27 response:', response)
+            } else if (message.message_type === 'M27 C') {
+                // TODO: Backend should not send double quotes
+                message.message = message.message.replaceAll('"', '')
+                if(message.message === 'not-printing') {
+                    this.printer.printerInfo.printStatus.state = 'unknown'
+                    return
+                };
+
+                this.printer.printerInfo.printStatus.state = 'idle'
+                this.printer.printerInfo.printStatus.file_name = message.message
+            } else if (message.message_type === 'M31') {
+                // TODO: Backend should not send double quotes
+                message.message = message.message.replaceAll('"', '')
+                this.printer.printerInfo.printStatus.elapsed_time = message.message
             }
         })
     },
@@ -36,10 +53,10 @@ export default defineComponent({
         {{ printer.printerInfo.printStatus.file_name }}<br>
         <label>{{ $t('status.elapsed_time') }}</label>
         {{ printer.printerInfo.printStatus.elapsed_time }}<br>
-        <label>{{ $t('status.estimated_time') }}</label>
-        {{ printer.printerInfo.printStatus.estimated_time }}<br>
+        <!-- <label>{{ $t('status.estimated_time') }}</label>
+        {{ printer.printerInfo.printStatus.estimated_time }}<br> -->
         <label>{{ $t('status.progress') }}</label>
-        {{ printer.printerInfo.printStatus.progress }}<br>
+        {{ printer.printerInfo.printStatus.progress }} %<br>
 
         <div class="button-action-group">
             <Button @click="printer.startPrint()" label="print" icon="pi pi-play" />
