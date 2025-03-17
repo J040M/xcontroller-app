@@ -121,20 +121,20 @@ export default defineComponent({
                     <InputNumber type="number" v-model="movementValue" />
                     <div class="button-row">
                         <div class="directional-buttons">
-                            <Button icon="pi pi-arrow-up" raised rounded @click="sendMovementCommand('y+')" />
+                            <Button icon="pi pi-arrow-up" raised rounded @click="sendMovementCommand('Y+')" />
                             <div class="row">
                                 <Button icon="pi pi-arrow-left" class="button-left" raised rounded
-                                    @click="sendMovementCommand('x-')" />
+                                    @click="sendMovementCommand('X-')" />
                                 <Button icon="pi pi-arrow-right" class="button-right" raised rounded
-                                    @click="sendMovementCommand('x+')" />
+                                    @click="sendMovementCommand('X+')" />
                             </div>
-                            <Button icon="pi pi-arrow-down" raised rounded @click="sendMovementCommand('y-')" />
+                            <Button icon="pi pi-arrow-down" raised rounded @click="sendMovementCommand('Y-')" />
                         </div>
                         <div class="button-container vertical-align-middle">
                             <Button icon="pi pi-arrow-up" class="button-top" raised rounded
-                                @click="sendMovementCommand('z+')" />
+                                @click="sendMovementCommand('Z+')" />
                             <Button icon="pi pi-arrow-down" class="button-bottom" raised rounded
-                                @click="sendMovementCommand('z-')" />
+                                @click="sendMovementCommand('Z-')" />
                         </div>
                     </div>
                 </div>

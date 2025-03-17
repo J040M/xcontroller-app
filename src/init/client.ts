@@ -27,7 +27,7 @@ const newPrinter = new Printer({
     printStatus: {
         state: 'unknown',
         file_name: undefined,
-        elapsed_time: 0,
+        elapsed_time: '',
         estimated_time: 0,
         progress: 0
     },
@@ -69,7 +69,11 @@ wsClient.on('message', (incomingMessage: MessageEvent) => {
     switch (message.message_type) {
         case 'M114':
             const resp_axis = JSON.parse(message.message)
-            printer.axisPositions = resp_axis
+            console.log('POSITIONS FROM PRINTER')
+            console.log(resp_axis)
+            printer.axisPositions.X = resp_axis.x
+            printer.axisPositions.Y = resp_axis.y
+            printer.axisPositions.Z = resp_axis.z
             break
         case 'M105':
             const resp_temps = JSON.parse(message.message)
