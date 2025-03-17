@@ -5,9 +5,6 @@ import { MessageResponse } from '../types/messages'
 
 export default defineComponent({
     name: 'statusComponent',
-    setup() {
-        return { printer }
-    },
     mounted() {
         printer.getPrintStatus()
 
@@ -23,26 +20,15 @@ export default defineComponent({
             }
         })
     },
-    // TODO: Let's keep this here for now. remove once everything is tested
-    methods: {
-        print() {
-            printer.startPrint()
-        },
-        pause() {
-            printer.pausePrint()
-        },
-        stop() {
-            printer.stopPrint()
-        },
-        reload() {
-            printer.getPrintStatus()
-        }
-    }
+    setup() {
+        return { printer }
+    },
+
 })
 </script>
 
 <template>
-    <button @click="reload">Reload</button>
+    <button @click="printer.getPrintStatus()">Reload</button>
     <div v-if="printer.printerInfo.printStatus.state !== 'unknown'">
         <label>{{ $t('status.state') }}</label>
         {{ printer.printerInfo.printStatus.state }} <br>
@@ -56,9 +42,9 @@ export default defineComponent({
         {{ printer.printerInfo.printStatus.progress }}<br>
 
         <div class="button-action-group">
-            <Button @click="print" label="print" icon="pi pi-play" />
-            <Button @click="pause" label="pause" icon="pi pi-pause" />
-            <Button @click="stop" label="stop" icon="pi pi-stop" />
+            <Button @click="printer.startPrint()" label="print" icon="pi pi-play" />
+            <Button @click="printer.pausePrint()" label="pause" icon="pi pi-pause" />
+            <Button @click="printer.stopPrint()" label="stop" icon="pi pi-stop" />
         </div>
     </div>
     <div v-else>
