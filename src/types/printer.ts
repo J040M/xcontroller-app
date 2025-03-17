@@ -21,7 +21,7 @@ type State = 'idle' | 'printing' | 'paused' | 'stopped' | 'error' | 'unknown'
 interface PrintStatus {
     state: State,
     file_name: string | undefined,
-    elapsed_time: number,
+    elapsed_time: string,
     estimated_time: number,
     progress: number,
 }
