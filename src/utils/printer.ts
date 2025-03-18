@@ -81,10 +81,13 @@ export default class Printer implements PrinterCommands {
     /**
      * Starts automatic bed leveling procedure (G29)
      * Get the axis position after leveling
+     * Reset homed to false to avoid moving the printer without homing
      * @returns {void}
      */
     @Printer.verifyConnection
     bedLeveling(): void {
+        this.printerInfo.homed = false
+
         wsClient.sendCommand({
             message_type: 'GCommand',
             message: 'G29'
@@ -171,6 +174,31 @@ export default class Printer implements PrinterCommands {
     }
 
     /**
+     * Retrieves printer status
+     * "C" Retrieves file if one is already selected
+     * @returns {void}
+     */
+    @Printer.verifyConnection
+    getPrintStatus(): void {
+        // Get the selected file
+        wsClient.sendCommand({
+            message_type: 'GCommand',
+            message: `M27 C`
+        })
+        // Get print completion percentage
+        wsClient.sendCommand({
+            message_type: 'GCommand',
+            message: `M27`
+        })
+        // Get print time elapsed
+        wsClient.sendCommand({
+            message_type: 'GCommand',
+            message: `M31`
+        })
+
+    }
+
+    /**
      * Retrieves list of files stored on the printer
      * @returns {void}
      */
@@ -188,6 +216,8 @@ export default class Printer implements PrinterCommands {
      */
     @Printer.verifyConnection
     startPrint(): void {
+        if(this.printerInfo.homed === false) this.autoHome()
+
         this.printerInfo.printStatus!.state = 'printing'
 
         wsClient.sendCommand({
@@ -212,16 +242,26 @@ export default class Printer implements PrinterCommands {
 
     /**
      * Stops current print job (M29)
+     * Resets print status
      * @returns {void}
      */
     @Printer.verifyConnection
     stopPrint(): void {
-        this.printerInfo.printStatus!.state = 'stopped'
+        this.printerInfo.printStatus!.state = 'unknown'
 
         wsClient.sendCommand({
             message_type: 'GCommand',
-            message: 'M29'
+            message: 'M524'
         })
+
+        // Reset print status
+        this.printerInfo.printStatus = {
+            state: 'idle',
+            file_name: '',
+            elapsed_time: '',
+            estimated_time: 0,
+            progress: 0
+        }
     }
 
     /**
@@ -298,19 +338,16 @@ export default class Printer implements PrinterCommands {
     selectFile(file_name?: string): void {
 
         if (!file_name) {
-            delete this.printerInfo.printStatus
+            this.printerInfo.printStatus.state = 'unknown'
             return
         }
 
         this.printerInfo.printStatus = {
             state: 'idle',
-            file: {
-                file_name: file_name,
-                file_size: 0,
-                file_modified_date: '0'
-            },
-            elapsed_time: 0,
-            estimated_time: 0
+            file_name: file_name,
+            elapsed_time: '',
+            estimated_time: 0,
+            progress: 0
         }
 
         wsClient.sendCommand({
@@ -359,6 +396,19 @@ export default class Printer implements PrinterCommands {
     unsafeCommand(command: string): void {
         wsClient.sendCommand({
             message_type: 'Unsafe',
+            message: command
+        })
+    }
+
+    /**
+     * Sends custom command from terminal to the printer
+     * @param {string} command 
+     * @returns {void}
+     */
+    @Printer.verifyConnection
+    terminalCommand(command: string): void {
+        wsClient.sendCommand({
+            message_type: 'Terminal',
             message: command
         })
     }

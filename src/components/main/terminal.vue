@@ -20,8 +20,8 @@ export default defineComponent({
         wsClient.on('message', (incomingMessage: MessageEvent) => {
             const message: MessageResponse = JSON.parse(incomingMessage.data)
 
-            if (message.message_type == 'Unsafe') {
-                console.log('Message to terminals')
+            if (message.message_type == 'terminal') {
+                console.log('Message to terminal')
                 message.raw_message = message.raw_message.replace(/\r/g, ' ')
                 TerminalService.emit('response', message.raw_message)
             } 
@@ -45,7 +45,7 @@ export default defineComponent({
                     return
             }
 
-            printer.unsafeCommand(command)
+            printer.terminalCommand(command)
         }
     },
 })

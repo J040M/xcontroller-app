@@ -15,26 +15,30 @@ interface PrinterCommands {
     setFanSpeed(speed: number): void
 }
 
-type Axis = 'x' | 'y' | 'z' | 'e0' | 'e1'
-type State = 'idle' | 'printing' | 'paused' | 'stopped' | 'error'
+type Axis = 'X' | 'Y' | 'Z' | 'e0' | 'e1'
+type State = 'idle' | 'printing' | 'paused' | 'stopped' | 'error' | 'unknown'
 
 interface PrintStatus {
     state: State,
-    file: File,
-    elapsed_time: number,
+    file_name: string | undefined,
+    elapsed_time: string,
     estimated_time: number,
+    progress: number,
 }
 
+/*
+* @deprecated
+*/
 interface File {
     file_name: string,
-    file_size: number,
-    file_modified_date: string,
+    file_size?: number,
+    file_modified_date?: string,
 }
 
 interface AxisPositions {
-    x: number
-    y: number
-    z: number
+    X: number
+    Y: number
+    Z: number
     e0: number
     e1: number
 }
@@ -42,15 +46,15 @@ interface AxisPositions {
 interface PrinterProfile {
     uuid: string,
     status: boolean,
-    printStatus?: PrintStatus,
+    printStatus: PrintStatus,
     name: string,
     url: string,
     firmware?: string,
     axisPositions: AxisPositions,
     dimensions: {
-        x: number,
-        y: number,
-        z: number
+        X: number,
+        Y: number,
+        Z: number
     },
     temperatures: {
         e0: number,

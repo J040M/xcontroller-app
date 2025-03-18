@@ -18,6 +18,7 @@
             "file": "Datei:",
             "elapsed_time": "Verstrichene Zeit:",
             "estimated_time": "Geschätzte Zeit:",
+            "progress": "Fortschritt:",
             "no_status": "Keine Statusinformationen verfügbar"
         },
         "connector": {
