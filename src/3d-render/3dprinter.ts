@@ -4,7 +4,6 @@ export default class Three3DPrinter {
     public scene: THREE.Scene;
     private camera: THREE.PerspectiveCamera;
     public renderer: THREE.WebGLRenderer
-
     private redSphere!: THREE.Mesh;
 
     /**
