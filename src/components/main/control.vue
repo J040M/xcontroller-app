@@ -45,12 +45,18 @@ export default defineComponent({
         // Animation loop
         const animate = () => {
             requestAnimationFrame(animate);
-            
-            threeDP.updateExtruderPosition({
-                x: printer.axisPositions.X,
-                y: printer.axisPositions.Y,
-                z: printer.axisPositions.Z,
-            })
+
+            // Normalize axis positions from 0-200 to -1 to 1
+            const normalize = (value: number) => (value / 100) - 1;
+
+            const normalizedPositions = {
+                x: normalize(printer.axisPositions.X),
+                y: normalize(printer.axisPositions.Y),
+                z: normalize(printer.axisPositions.Z),
+            };
+
+            threeDP.updateExtruderPosition(normalizedPositions);
+
             threeDP.render()
         };
         animate();
@@ -105,7 +111,7 @@ export default defineComponent({
     </div>
     <div class="axis-values">
         <Panel header="Current Position">
-            <div class="axis-grid">
+            <div class="axis-grid">   
                 <div class="axis-item">X: {{ printer.axisPositions.X.toFixed(2) }}</div>
                 <div class="axis-item">Y: {{ printer.axisPositions.Y.toFixed(2) }}</div>
                 <div class="axis-item">Z: {{ printer.axisPositions.Z.toFixed(2) }}</div>
