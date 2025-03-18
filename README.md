@@ -5,6 +5,10 @@
 
 Desktop/Web application to communicate with [XController](https://github.com/J040M/xcontroller)
 
+## Demo
+
+![til](./screenshots/xcontroller-app-1.gif)
+
 ## Features
 
 - [x] **Movement Control**: Precisely control the movement of your printer's axes directly from the interface.
