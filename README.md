@@ -5,10 +5,6 @@
 
 Desktop/Web application to communicate with [XController](https://github.com/J040M/xcontroller)
 
-## Demo
-
-![til](./screenshots/xcontroller-app-1.gif)
-
 ## Features
 
 - [x] **Movement Control**: Precisely control the movement of your printer's axes directly from the interface.
@@ -32,5 +28,10 @@ Build Vue app (webapp)
 ```npm run build```
 Build Tauri app (native app)
 ```npm run tauri build```
+
+## Demo
+
+![til](./screenshots/xcontroller-app-1.gif)
+
 
 For more information regarding build check [Tauri](https://v2.tauri.app/distribute/)
