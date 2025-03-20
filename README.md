@@ -14,8 +14,8 @@ Desktop/Web application to communicate with [XController](https://github.com/J04
 - [x] **File Listing**: Browse and manage files stored on your 3D printer.
 - [x] **Run print jobs**: Run 3D printing job from SD card.
 - [x] **Printer Status**: Get live updates on the printer's status, including print progress, and more.
+- [x] **GCode Viewer**: Visualize your 3D printing jobs with an integrated GCode viewer.
 - [ ] **Upload files to SD**: Upload files to SD card.
-- [ ] **GCode Viewer**: Visualize your 3D printing jobs with an integrated GCode viewer.
 
 ## Development
 
@@ -24,9 +24,14 @@ Run the app locally on browser
 
 ## Build from source
 
-Build Vue app
+Build Vue app (webapp)
 ```npm run build```
-Build Tauri app
+Build Tauri app (native app)
 ```npm run tauri build```
+
+## Demo
+
+![til](./screenshots/xcontroller-app-1.gif)
+
 
 For more information regarding build check [Tauri](https://v2.tauri.app/distribute/)

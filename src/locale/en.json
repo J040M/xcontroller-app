@@ -18,6 +18,7 @@
             "file": "File:",
             "elapsed_time": "Elapsed time:",
             "estimated_time": "Estimated time:",
+            "progress": "Progress:",
             "no_status": "No status information available"
         },
         "connector": {
