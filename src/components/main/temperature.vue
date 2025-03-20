@@ -15,7 +15,7 @@ export default defineComponent({
     data: () => ({
         heatingProfiles: [] as HeatingProfile[],
         graphData: {
-            labels: ['+20sec','+15sec', '+10sec', '+5sec', 'now'],
+            labels: ['+120sec','+90sec', '+60sec', '+30sec', 'now'],
             datasets: [{
                 label: 'Extruder 1',
                 data: [0, 0, 0, 0, 0],
@@ -38,7 +38,6 @@ export default defineComponent({
         }
     }),
     mounted() {
-        console.log('Mounted temperature component');
         this.heatingProfiles = JSON.parse(localStorage.getItem('HeatingProfiles') || '[]') as HeatingProfile[]
         /**
          * Get the temperatures every 5 seconds and update the graph
@@ -56,8 +55,8 @@ export default defineComponent({
                 const bed = [...this.graphData.datasets[1].data.slice(1), printer.printerInfo.temperatures.bed];
                 this.graphData.datasets[0].data = e0;
                 this.graphData.datasets[1].data = bed;
-            }, 500);
-        }, 5000);
+            }, 1000);
+        }, 30000);
     },
     methods: {
         selectProfile(profileIndex: number): void {
