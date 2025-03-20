@@ -17,13 +17,13 @@ export default defineComponent({
         TerminalService.on("command", this.commandHandler)
 
         // Listen to messages from WS
-        wsClient.on('message', (message: any) => {
-            const data = JSON.parse(message.data) as MessageResponse
+        wsClient.on('message', (incomingMessage: MessageEvent) => {
+            const message: MessageResponse = JSON.parse(incomingMessage.data)
 
-            if (data.message_type == 'Unsafe') {
-                console.log('Message to terminals')
-                data.raw_message = data.raw_message.replace(/\r/g, ' ')
-                TerminalService.emit('response', data.raw_message)
+            if (message.message_type == 'terminal') {
+                console.log('Message to terminal')
+                message.raw_message = message.raw_message.replace(/\r/g, ' ')
+                TerminalService.emit('response', message.raw_message)
             } 
 
         })
@@ -45,7 +45,7 @@ export default defineComponent({
                     return
             }
 
-            printer.unsafeCommand(command)
+            printer.terminalCommand(command)
         }
     },
 })

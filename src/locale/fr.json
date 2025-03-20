@@ -18,6 +18,7 @@
             "file": "Fichier:" ,
             "elapsed_time": "Temps écoulé:" ,
             "estimated_time": "Temps estimé:",
+            "progress": "Progression:",
             "no_status": "Aucune information d'état disponible"
         },
         "connector": {
