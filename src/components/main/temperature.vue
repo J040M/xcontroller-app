@@ -15,17 +15,17 @@ export default defineComponent({
     data: () => ({
         heatingProfiles: [] as HeatingProfile[],
         graphData: {
-            labels: ['+90sec', '+60sec', '+30sec', 'now'],
+            labels: ['+20sec','+15sec', '+10sec', '+5sec', 'now'],
             datasets: [{
                 label: 'Extruder 1',
-                data: [0, 0, 0, 0],
+                data: [0, 0, 0, 0, 0],
                 fill: false,
                 borderColor: 'rgb(75, 192, 192)',
                 tension: 0.1
             },
             {
                 label: 'Bed',
-                data: [0, 0, 0, 0],
+                data: [0, 0, 0, 0, 0],
                 fill: false,
                 borderColor: 'rgb(255, 255, 0)',
                 tension: 0.1
@@ -38,26 +38,26 @@ export default defineComponent({
         }
     }),
     mounted() {
+        console.log('Mounted temperature component');
         this.heatingProfiles = JSON.parse(localStorage.getItem('HeatingProfiles') || '[]') as HeatingProfile[]
         /**
-         * Get the temperatures every 30 seconds and update the graph
+         * Get the temperatures every 5 seconds and update the graph
          * set a timeout of 1 second to get the temperatures and wait to update the graph
          * to avoid the graph to be updated before the temperatures are fetched
          * TODO: Probably a better approach could improve this code
          */
-        // setInterval(() => {
-        //     if (!printer.printerInfo.status) return;
-
-        //     setTimeout(() => {
-        //         printer.getTemperatures();
-        //     }, 1000);
-
-        //     const e0 = [...this.graphData.datasets[0].data.slice(1), printer.printerInfo.temperatures.e0];
-        //     const bed = [...this.graphData.datasets[0].data.slice(1), printer.printerInfo.temperatures.bed];
-
-        //     this.graphData.datasets[0].data = e0;
-        //     this.graphData.datasets[1].data = bed;
-        // }, 30000);
+        setInterval(() => {
+            if (!printer.printerInfo.status) return;
+            
+            printer.getTemperatures();
+            
+            setTimeout(() => {
+                const e0 = [...this.graphData.datasets[0].data.slice(1), printer.printerInfo.temperatures.e0];
+                const bed = [...this.graphData.datasets[1].data.slice(1), printer.printerInfo.temperatures.bed];
+                this.graphData.datasets[0].data = e0;
+                this.graphData.datasets[1].data = bed;
+            }, 500);
+        }, 5000);
     },
     methods: {
         selectProfile(profileIndex: number): void {
@@ -94,7 +94,8 @@ export default defineComponent({
         <Column field="actions" header="Actions">
             <template #body="{ index }">
                 <Button icon="pi pi-check" class="mr-2 btn-pad" @click="selectProfile(index)" />
-                <Button icon="pi pi-trash" @click="storage.deleteProfile('HeatingProfiles', heatingProfiles[index].uuid)"/>
+                <Button icon="pi pi-trash"
+                    @click="storage.deleteProfile('HeatingProfiles', heatingProfiles[index].uuid)" />
             </template>
         </Column>
     </DataTable>
