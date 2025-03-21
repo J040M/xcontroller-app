@@ -12,9 +12,9 @@ export default defineComponent({
             name: '',
             url: '',
             dimensions: {
-                x: 0,
-                y: 0,
-                z: 0,
+                X: 0,
+                Y: 0,
+                Z: 0,
             },
         } as PrinterProfile,
         visible: false,
@@ -54,11 +54,11 @@ export default defineComponent({
             <label for="printerDimensions" class="font-semibold w-24">{{ $t('printer_profile.label_dimensions')
             }}</label>
             <InputGroup>
-                <InputNumber id="xAxis" v-model="printerProfile.dimensions.x" inputId="printerDimensions" prefix="X " suffix=" mm"
+                <InputNumber id="xAxis" v-model="printerProfile.dimensions.X" inputId="printerDimensions" prefix="X " suffix=" mm"
                     fluid />
-                <InputNumber id="yAxis" v-model="printerProfile.dimensions.y" inputId="printerDimensions" prefix="Y " suffix=" mm"
+                <InputNumber id="yAxis" v-model="printerProfile.dimensions.Y" inputId="printerDimensions" prefix="Y " suffix=" mm"
                     fluid />
-                <InputNumber id="zAxis" v-model="printerProfile.dimensions.z" inputId="printerDimensions" prefix="Z " suffix=" mm"
+                <InputNumber id="zAxis" v-model="printerProfile.dimensions.Z" inputId="printerDimensions" prefix="Z " suffix=" mm"
                     fluid />
             </InputGroup>
         </div>
