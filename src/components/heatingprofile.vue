@@ -42,38 +42,42 @@ export default defineComponent({
 </script>
 
 <template>
-    <Dialog :visible="visible" modal :header="$t('heating_profile.header')" :style="{ width: '25rem' }"
-        :closable="false" optionLabel="name" optionValue="url">
-        <div class="flex items-center gap-4 mb-4 bottom-pad-10">
-            <InputGroup>
-                <InputText id="profileName" v-model="heatingProfile.name" class="flex-auto" autocomplete="off" :placeholder="$t('heating_profile.label_name')" />
-            </InputGroup>
+    <Dialog
+        :visible="visible"
+        modal
+        :header="$t('heating_profile.header')"
+        :style="{ width: '28rem' }"
+        :closable="false"
+    >
+        <div class="flex flex-col gap-4 pt-2">
+            <div class="flex flex-col gap-2">
+                <label for="profileName" class="text-[10px] font-label-caps uppercase tracking-widest text-on-surface-variant">
+                    {{ $t('heating_profile.label_name') }}
+                </label>
+                <InputText
+                    id="profileName"
+                    v-model="heatingProfile.name"
+                    autocomplete="off"
+                    class="w-full font-code-sm"
+                />
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <span class="text-[10px] font-label-caps uppercase tracking-widest text-on-surface-variant">
+                    {{ $t('heating_profile.heating_values') }}
+                </span>
+                <InputGroup>
+                    <InputNumber prefix="e0 " v-model="heatingProfile.e0" suffix=" °C" fluid />
+                    <InputNumber prefix="bed " v-model="heatingProfile.bed" suffix=" °C" fluid />
+                </InputGroup>
+            </div>
         </div>
-        <div class="flex items-center gap-4 mb-8">
-            <label for="heatingValues" class="font-semibold w-24 bottom-pad-5">{{ $t('heating_profile.heating_values')
-                }}</label>
-            <InputGroup>
-                <InputNumber prefix="e0 " placeholder="e0" id="e0Value" v-model="heatingProfile.e0" inputId="heatingE0"
-                    suffix=" °C" fluid />
-                <InputNumber prefix="bed " placeholder="bed" id="bedValue" v-model="heatingProfile.bed"
-                    inputId="heatingBed" suffix=" °C" fluid />
-            </InputGroup>
-        </div>
-        <div class="flex justify-end gap-2">
-            <Button type="button" label="Save" @click="saveProfile" />
-            <Button type="button" label="Cancel" severity="secondary" @click="visible = false"></Button>
-        </div>
+
+        <template #footer>
+            <div class="flex justify-end gap-2 pt-4">
+                <Button type="button" label="Cancel" severity="secondary" @click="visible = false" />
+                <Button type="button" label="Save" @click="saveProfile" />
+            </div>
+        </template>
     </Dialog>
 </template>
-
-<style scoped>
-button {
-    margin: 10px 10px 0 0;
-}
-.bottom-pad-10 {
-    padding-bottom: 10px;
-}
-.bottom-pad-5 {
-    padding-bottom: 5px;
-}
-</style>

@@ -39,12 +39,50 @@ export default defineComponent({
 </script>
 
 <template>
-    <Terminal class="terminal" prompt="xcontroller $ " />
+    <div class="px-margin py-margin">
+        <div class="border border-outline-variant rounded bg-black overflow-hidden tactical-border">
+            <div class="flex items-center justify-between px-4 py-2 bg-surface-container-high border-b border-outline-variant">
+                <div class="flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-primary-fixed-dim animate-pulse" />
+                    <span class="text-[10px] font-label-caps text-primary-fixed-dim uppercase tracking-[0.2em]">Console // GCode</span>
+                </div>
+                <span class="text-[10px] font-code-sm text-outline">{{ commandHistory.length }} CMDS</span>
+            </div>
+            <Terminal
+                class="terminal-tactical"
+                prompt="xcontroller >"
+            />
+        </div>
+    </div>
 </template>
 
 <style scoped>
-.terminal {
-    height: 750px;
+.terminal-tactical {
+    height: 700px;
     width: 100%;
+    background-color: #000 !important;
+    color: #dce4e4;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 16px;
+}
+
+.terminal-tactical :deep(.p-terminal-prompt) {
+    color: #00dce5;
+    font-weight: 700;
+}
+
+.terminal-tactical :deep(.p-terminal-input) {
+    color: #dce4e4;
+    background: transparent;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.terminal-tactical :deep(.p-terminal-command) {
+    color: #00f5ff;
+}
+
+.terminal-tactical :deep(.p-terminal-response) {
+    color: #b9caca;
 }
 </style>
