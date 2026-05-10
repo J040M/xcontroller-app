@@ -1,75 +1,52 @@
 <script lang="ts">
-import { defineComponent } from 'vue'
-import { printer, wsClient } from '../init/client'
+import { defineComponent, ref } from 'vue'
+import { printer } from '../init/client'
 import { eventBus } from '../utils/eventbus';
-import { MessageResponse } from '../types/messages';
+import { useListener } from '../utils/listeners';
 
 export default defineComponent({
     name: 'filesComponent',
-    data: () => ({
-        files: undefined as string[] | undefined,
-        loadingStatus: false as boolean,
-    }),
-    mounted() {
-        wsClient.on('message', (incomingMessage: MessageEvent) => {
-            const message: MessageResponse = JSON.parse(incomingMessage.data)
+    setup() {
+        const files = ref<string[] | undefined>(undefined)
+        const loadingStatus = ref(false)
 
-            if (message.message_type === 'M20') {
-                this.loadingStatus = false
-                // TODO: This will change in the future. parser20() will return an obj instead of an array
-                this.files = message.message.replace(/[\[\]"]/g, '').split(',')
-                    .map((item: string) => item.trim());
-            }
+        useListener(eventBus, 'printer:m20', (raw: string) => {
+            loadingStatus.value = false
+            // TODO: This will change in the future. parser20() will return an
+            // object instead of an array.
+            files.value = raw.replace(/[\[\]"]/g, '').split(',').map((s) => s.trim())
         })
-        eventBus.on('message', (message: string) => {
+
+        useListener(eventBus, 'message', (message: string) => {
             if (message === 'openConnectionErrorDialog') {
-                this.loadingStatus = false
+                loadingStatus.value = false
             }
         })
-    },
-    methods: {
-        /**
-         * List all files on the printer
-         * loadingStatus is set to true to show a loading spinner
-         * @return void
-         */
-        listFiles(): void {
-            this.loadingStatus = true
-            printer.listFiles()
-        },
-        /**
-         * Read the content of the gcode file
-         * Prefix the content with the filename for backend processing
-         * @param {Event} event 
-         * @return void
-         */
-        readFile(event: Event): void {
-            const input = event.target as HTMLInputElement || null;
-            if (!input || !input.files) return;
 
-            const file = input.files[0];
+        function listFiles(): void {
+            loadingStatus.value = true
+            printer.listFiles()
+        }
+
+        function readFile(event: Event): void {
+            const input = event.target as HTMLInputElement | null
+            if (!input || !input.files) return
+            const file = input.files[0]
 
             const reader = new FileReader()
-            reader.onload = function (e) {
-                let fileContent = e.target?.result as string
-                fileContent = ';' + file.name + '\n' + fileContent
-
+            reader.onload = (e) => {
+                const fileContent = ';' + file.name + '\n' + (e.target?.result as string)
                 printer.uploadFile(fileContent)
             }
             reader.readAsText(file)
-        },
-        /**
-         * Delete a file from the printer
-         * @param {string} file 
-         * @return void
-         */
-        deleteFile(file: string): void {
-            printer.deleteFile(file)
+        }
+
+        function deleteFile(name: string): void {
+            printer.deleteFile(name)
             printer.listFiles()
-        },
-    },
-    setup() {
-        return { printer }
+        }
+
+        return { printer, files, loadingStatus, listFiles, readFile, deleteFile }
     },
 })
 </script>

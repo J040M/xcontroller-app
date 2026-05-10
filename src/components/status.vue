@@ -1,46 +1,52 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { printer, wsClient } from '../init/client'
-import { MessageResponse } from '../types/messages'
+import { printer } from '../init/client'
+import { eventBus } from '../utils/eventbus'
+import { useListener } from '../utils/listeners'
 
 export default defineComponent({
     name: 'statusComponent',
-    mounted() {
-        printer.getPrintStatus()
+    setup() {
+        useListener(eventBus, 'connection:open', () => {
+            printer.getPrintStatus()
+        })
 
-        wsClient.on('message', (incomingMessage: MessageEvent) => {
-            const message: MessageResponse = JSON.parse(incomingMessage.data)
-            // TODO: Maybe this should be a method in the printer class
-            if(message.message === 'not-printing' || message.message.replaceAll('"', '') === 'not-printing') {
-                this.printer.printerInfo.printStatus.state = 'unknown'
+        useListener(eventBus, 'printer:m27', (raw: string) => {
+            const cleaned = raw.replaceAll('"', '')
+            if (cleaned === 'not-printing') {
+                printer.printerInfo.printStatus.state = 'unknown'
                 return
             }
-
-            if (message.message_type === 'M27' && message.message !== 'not-printing') {
-                const response = JSON.parse(message.message)
-                // this.printer.printerInfo.printStatus.state = 'printing'
-                this.printer.printerInfo.printStatus.progress = parseInt(response)
-            } else if (message.message_type === 'M27 C') {
-                // TODO: Backend should not send double quotes
-                message.message = message.message.replaceAll('"', '')
-                if(message.message === 'not-printing') {
-                    this.printer.printerInfo.printStatus.state = 'unknown'
-                    return
-                };
-
-                this.printer.printerInfo.printStatus.state = 'idle'
-                this.printer.printerInfo.printStatus.file_name = message.message
-            } else if (message.message_type === 'M31') {
-                // TODO: Backend should not send double quotes
-                message.message = message.message.replaceAll('"', '')
-                this.printer.printerInfo.printStatus.elapsed_time = message.message
+            try {
+                printer.printerInfo.printStatus.progress = parseInt(JSON.parse(raw))
+            } catch {
+                /* ignore unparseable progress payload */
             }
         })
-    },
-    setup() {
+
+        useListener(eventBus, 'printer:m27c', (raw: string) => {
+            const cleaned = raw.replaceAll('"', '')
+            if (cleaned === 'not-printing') {
+                printer.printerInfo.printStatus.state = 'unknown'
+                return
+            }
+            printer.printerInfo.printStatus.state = 'idle'
+            printer.printerInfo.printStatus.file_name = cleaned
+        })
+
+        useListener(eventBus, 'printer:m31', (raw: string) => {
+            printer.printerInfo.printStatus.elapsed_time = raw.replaceAll('"', '')
+        })
+
+        // If the user opens this panel after the connection is already up,
+        // fetch the current status immediately. Otherwise we wait for the
+        // 'connection:open' event so we don't fire a command pre-connect.
+        if (printer.printerInfo.status) {
+            printer.getPrintStatus()
+        }
+
         return { printer }
     },
-
 })
 </script>
 

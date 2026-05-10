@@ -1,41 +1,19 @@
 <script lang="ts">
-
-import { defineComponent } from 'vue'
-
+import { defineComponent, ref, onMounted, onBeforeUnmount } from 'vue'
 import TerminalService from 'primevue/terminalservice'
-import { wsClient, printer } from '../../init/client';
+import { printer } from '../../init/client';
+import { eventBus } from '../../utils/eventbus';
+import { useListener } from '../../utils/listeners';
 import { gcommands_list } from '../../assets/terminal_commands';
-import type { MessageResponse } from '../../types/messages';
 
 export default defineComponent({
     name: 'terminalComponent',
-    data: () => ({
-        commandHistory: [] as string[],
-    }),
-    mounted() {
-        // Listen to commands from terminal 
-        TerminalService.on("command", this.commandHandler)
+    setup() {
+        const commandHistory = ref<string[]>([])
 
-        // Listen to messages from WS
-        wsClient.on('message', (incomingMessage: MessageEvent) => {
-            const message: MessageResponse = JSON.parse(incomingMessage.data)
+        function commandHandler(command: string): void {
+            commandHistory.value.push(command)
 
-            if (message.message_type == 'terminal') {
-                console.log('Message to terminal')
-                message.raw_message = message.raw_message.replace(/\r/g, ' ')
-                TerminalService.emit('response', message.raw_message)
-            } 
-
-        })
-    },
-    beforeUnmount() {
-        TerminalService.off("command", this.commandHandler)
-    },
-    methods: {
-        commandHandler(command: string): void {
-            this.commandHistory.push(command)
-
-            // Check is a known command
             switch (command) {
                 case 'help':
                     TerminalService.emit('response', "Available commands: <help> \n <gcommands> (list of commands)")
@@ -47,6 +25,15 @@ export default defineComponent({
 
             printer.terminalCommand(command)
         }
+
+        onMounted(() => TerminalService.on('command', commandHandler))
+        onBeforeUnmount(() => TerminalService.off('command', commandHandler))
+
+        useListener(eventBus, 'terminal:line', (line: string) => {
+            TerminalService.emit('response', line)
+        })
+
+        return { commandHistory }
     },
 })
 </script>

@@ -1,6 +1,6 @@
 <script lang="ts">
 import { ChartData } from 'chart.js/auto';
-import { defineComponent } from 'vue'
+import { defineComponent, ref, onMounted, onBeforeUnmount } from 'vue'
 import { printer, storage } from '../../init/client';
 import { eventBus } from '../../utils/eventbus';
 
@@ -12,65 +12,72 @@ export default defineComponent({
     components: {
         heatingProfile
     },
-    data: () => ({
-        heatingProfiles: [] as HeatingProfile[],
-        graphData: {
-            labels: ['+120sec','+90sec', '+60sec', '+30sec', 'now'],
-            datasets: [{
-                label: 'Extruder 1',
-                data: [0, 0, 0, 0, 0],
-                fill: false,
-                borderColor: 'rgb(75, 192, 192)',
-                tension: 0.1
-            },
-            {
-                label: 'Bed',
-                data: [0, 0, 0, 0, 0],
-                fill: false,
-                borderColor: 'rgb(255, 255, 0)',
-                tension: 0.1
-            }] as ChartData['datasets'],
-            height: 200
-        },
-        graphOptions: {
+    setup() {
+        const heatingProfiles = ref<HeatingProfile[]>([])
+        const graphData = ref({
+            labels: ['+120sec', '+90sec', '+60sec', '+30sec', 'now'],
+            datasets: [
+                {
+                    label: 'Extruder 1',
+                    data: [0, 0, 0, 0, 0],
+                    fill: false,
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1,
+                },
+                {
+                    label: 'Bed',
+                    data: [0, 0, 0, 0, 0],
+                    fill: false,
+                    borderColor: 'rgb(255, 255, 0)',
+                    tension: 0.1,
+                },
+            ] as ChartData['datasets'],
+            height: 200,
+        })
+        const graphOptions = {
             responsive: true,
-            maintainAspectRatio: true
+            maintainAspectRatio: true,
         }
-    }),
-    mounted() {
-        this.heatingProfiles = JSON.parse(localStorage.getItem('HeatingProfiles') || '[]') as HeatingProfile[]
-        /**
-         * Get the temperatures every 5 seconds and update the graph
-         * set a timeout of 1 second to get the temperatures and wait to update the graph
-         * to avoid the graph to be updated before the temperatures are fetched
-         * TODO: Probably a better approach could improve this code
-         */
-        setInterval(() => {
-            if (!printer.printerInfo.status) return;
-            
-            printer.getTemperatures();
-            
-            setTimeout(() => {
-                const e0 = [...this.graphData.datasets[0].data.slice(1), printer.printerInfo.temperatures.e0];
-                const bed = [...this.graphData.datasets[1].data.slice(1), printer.printerInfo.temperatures.bed];
-                this.graphData.datasets[0].data = e0;
-                this.graphData.datasets[1].data = bed;
-            }, 1000);
-        }, 30000);
-    },
-    methods: {
-        selectProfile(profileIndex: number): void {
-            printer.setHotendTemperature(this.heatingProfiles[profileIndex].e0)
-            printer.setBedTemperature(this.heatingProfiles[profileIndex].bed)
-        },
-        shutdownHeating(): void {
+
+        let pollHandle: ReturnType<typeof setInterval> | null = null
+        let updateHandle: ReturnType<typeof setTimeout> | null = null
+
+        onMounted(() => {
+            heatingProfiles.value = JSON.parse(localStorage.getItem('HeatingProfiles') || '[]') as HeatingProfile[]
+            // Poll temperatures every 30 seconds; the printer's response
+            // arrives asynchronously, so wait 1s before sampling state.
+            pollHandle = setInterval(() => {
+                if (!printer.printerInfo.status) return
+                printer.getTemperatures()
+                updateHandle = setTimeout(() => {
+                    const ds = graphData.value.datasets!
+                    const e0 = [...(ds[0].data as number[]).slice(1), printer.printerInfo.temperatures.e0]
+                    const bed = [...(ds[1].data as number[]).slice(1), printer.printerInfo.temperatures.bed]
+                    ds[0].data = e0
+                    ds[1].data = bed
+                }, 1000)
+            }, 30000)
+        })
+
+        onBeforeUnmount(() => {
+            if (pollHandle) clearInterval(pollHandle)
+            if (updateHandle) clearTimeout(updateHandle)
+            pollHandle = null
+            updateHandle = null
+        })
+
+        function selectProfile(profileIndex: number): void {
+            printer.setHotendTemperature(heatingProfiles.value[profileIndex].e0)
+            printer.setBedTemperature(heatingProfiles.value[profileIndex].bed)
+        }
+
+        function shutdownHeating(): void {
             printer.setHotendTemperature(0)
             printer.setBedTemperature(0)
         }
+
+        return { eventBus, storage, heatingProfiles, graphData, graphOptions, selectProfile, shutdownHeating }
     },
-    setup() {
-        return { eventBus, storage }
-    }
 })
 </script>
 

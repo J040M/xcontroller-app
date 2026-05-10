@@ -1,117 +1,140 @@
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent, ref, onMounted, onBeforeUnmount } from 'vue'
 import { printer } from '../../init/client';
 import * as THREE from 'three'
 import Three3DPrinter from '../../3d-render/3dprinter.ts';
 import type { Axis } from '../../types/printer';
 
-
 export default defineComponent({
     name: 'controlComponent',
-    data: () => ({
-        movementValue: 10 as number,
-        extruderValue: 1 as number,
-        fanValue: 0 as number,
-        lastFanCommandTime: null as NodeJS.Timeout | null,
-    }),
-    mounted() {
-        // Scene, camera, and renderer setup
-        const canvasID = document.getElementById('3dprinter-animation') as HTMLCanvasElement;
-        const threeDP = new Three3DPrinter(canvasID)
-
-        // Cube representing the 3D printer volume
-        const cube = threeDP.initDimensions(2,2,2)
-        threeDP.scene.add(cube);
-
-        // Red movable sphere representing the extruder
-        const extruder = threeDP.initExtruder()
-        threeDP.scene.add(extruder)
-
-        // Purple stationary sphere at (-1, -1, -1) representing the home position
-        const homePosition = threeDP.initHomePosition()
-        threeDP.scene.add(homePosition);
-
-        // Handle mouse clicks to move the camera
-        const onMouseClick = (event: MouseEvent) => {
-            const mouse = new THREE.Vector2();
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
-
-            threeDP.moveCamera(mouse)
-        };
-
-        threeDP.renderer.domElement.addEventListener('click', onMouseClick);
-
-        // Animation loop
-        const animate = () => {
-            requestAnimationFrame(animate);
-
-            // Normalize axis positions from 0-200 to -1 to 1
-            const normalize = (value: number) => (value / 100) - 1;
-
-            const normalizedPositions = {
-                x: normalize(printer.axisPositions.X),
-                y: normalize(printer.axisPositions.Y),
-                z: normalize(printer.axisPositions.Z),
-            };
-
-            threeDP.updateExtruderPosition(normalizedPositions);
-
-            threeDP.render()
-        };
-        animate();
-    },
     setup() {
-        return { printer };
-    },
-    methods: {
-       sendMovementCommand(command: Axis | string): void {
+        const movementValue = ref(10)
+        const extruderValue = ref(1)
+        const fanValue = ref(0)
+        const canvasRef = ref<HTMLCanvasElement | null>(null)
+
+        let threeDP: Three3DPrinter | null = null
+        let rafId: number | null = null
+        let onMouseClick: ((event: MouseEvent) => void) | null = null
+        let lastFanCommandTimer: ReturnType<typeof setTimeout> | null = null
+
+        onMounted(() => {
+            const canvas = canvasRef.value
+            if (!canvas) return
+
+            threeDP = new Three3DPrinter(canvas)
+
+            const cube = threeDP.initDimensions(2, 2, 2)
+            threeDP.scene.add(cube)
+
+            const extruder = threeDP.initExtruder()
+            threeDP.scene.add(extruder)
+
+            const homePosition = threeDP.initHomePosition()
+            threeDP.scene.add(homePosition)
+
+            onMouseClick = (event: MouseEvent) => {
+                if (!threeDP) return
+                const mouse = new THREE.Vector2(
+                    (event.clientX / window.innerWidth) * 2 - 1,
+                    -(event.clientY / window.innerHeight) * 2 + 1,
+                )
+                threeDP.moveCamera(mouse)
+            }
+            threeDP.renderer.domElement.addEventListener('click', onMouseClick)
+
+            const animate = () => {
+                if (!threeDP) return
+                rafId = requestAnimationFrame(animate)
+
+                const normalize = (value: number) => (value / 100) - 1
+                threeDP.updateExtruderPosition({
+                    x: normalize(printer.axisPositions.X),
+                    y: normalize(printer.axisPositions.Y),
+                    z: normalize(printer.axisPositions.Z),
+                })
+                threeDP.render()
+            }
+            animate()
+        })
+
+        onBeforeUnmount(() => {
+            if (rafId !== null) cancelAnimationFrame(rafId)
+            rafId = null
+
+            if (lastFanCommandTimer) clearTimeout(lastFanCommandTimer)
+            lastFanCommandTimer = null
+
+            if (threeDP) {
+                if (onMouseClick) {
+                    threeDP.renderer.domElement.removeEventListener('click', onMouseClick)
+                }
+                threeDP.scene.traverse((obj) => {
+                    if (obj instanceof THREE.Mesh || obj instanceof THREE.LineSegments) {
+                        obj.geometry?.dispose()
+                        const m = obj.material
+                        if (Array.isArray(m)) {
+                            m.forEach((mat) => mat.dispose())
+                        } else if (m) {
+                            (m as THREE.Material).dispose()
+                        }
+                    }
+                })
+                threeDP.renderer.dispose()
+                threeDP = null
+            }
+            onMouseClick = null
+        })
+
+        function sendMovementCommand(command: Axis | string): void {
             switch (command) {
                 case 'extrude':
-                    printer.moveAxis('e0', '+', this.extruderValue);
-                    break;
+                    printer.moveAxis('e0', '+', extruderValue.value)
+                    break
                 case 'retract':
-                    printer.moveAxis('e0', '-', this.extruderValue);
-                    break;
+                    printer.moveAxis('e0', '-', extruderValue.value)
+                    break
                 case 'X+':
                 case 'Y+':
                 case 'Z+':
                 case 'X-':
                 case 'Y-':
-                case 'Z-':
-                    //seperatee the axis and the direction
-                    const axis = command[0].toUpperCase() as Axis;
-                    const direction = command[1];
-
-                    printer.moveAxis(axis, direction, this.movementValue);
-
-                    break;
+                case 'Z-': {
+                    const axis = command[0].toUpperCase() as Axis
+                    const direction = command[1]
+                    printer.moveAxis(axis, direction, movementValue.value)
+                    break
+                }
                 default:
                     console.error('No command found. Returning...')
-                    return
             }
-        },
-        sendFanCommand(): void {
-            if (this.lastFanCommandTime) clearTimeout(this.lastFanCommandTime);
+        }
 
-            this.lastFanCommandTime = setTimeout(() => {
-                printer.setFanSpeed(this.fanValue);
-                this.lastFanCommandTime = null
-            }, 1000);
-        },
+        function sendFanCommand(): void {
+            if (lastFanCommandTimer) clearTimeout(lastFanCommandTimer)
+            lastFanCommandTimer = setTimeout(() => {
+                printer.setFanSpeed(fanValue.value)
+                lastFanCommandTimer = null
+            }, 1000)
+        }
+
+        return {
+            printer,
+            movementValue, extruderValue, fanValue, canvasRef,
+            sendMovementCommand, sendFanCommand,
+        }
     },
-});
-
+})
 </script>
 
 <template>
 
     <div class="printer-head-animation">
-        <canvas id="3dprinter-animation" width="800" height="600"></canvas>
+        <canvas ref="canvasRef" id="3dprinter-animation" width="800" height="600"></canvas>
     </div>
     <div class="axis-values">
         <Panel header="Current Position">
-            <div class="axis-grid">   
+            <div class="axis-grid">
                 <div class="axis-item">X: {{ printer.axisPositions.X.toFixed(2) }}</div>
                 <div class="axis-item">Y: {{ printer.axisPositions.Y.toFixed(2) }}</div>
                 <div class="axis-item">Z: {{ printer.axisPositions.Z.toFixed(2) }}</div>
