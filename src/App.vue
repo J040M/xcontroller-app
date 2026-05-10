@@ -1,5 +1,5 @@
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent, ref } from 'vue'
 import Connector from './components/connector.vue';
 import Status from './components/status.vue';
 import Main from './components/main/main.vue';
@@ -7,6 +7,7 @@ import Files from './components/files.vue';
 import FooterComponent from './components/footer.vue';
 
 import { eventBus } from './utils/eventbus';
+import { useListener } from './utils/listeners';
 import { useI18n } from 'vue-i18n';
 import { changeLocale } from './utils/i18n';
 
@@ -19,20 +20,18 @@ export default defineComponent({
     Files,
     FooterComponent
   },
-  data: () => ({
-    openedAccordion: '' as string,
-    errorMessageDialog: false as boolean
-  }),
-  mounted() {
-    eventBus.on('message', (message: string) => {
+  setup() {
+    const errorMessageDialog = ref(false)
+    const openedAccordion = ref('')
+
+    useListener(eventBus, 'message', (message: string) => {
       if (message === 'openConnectionErrorDialog') {
-        this.errorMessageDialog = true
+        errorMessageDialog.value = true
       }
     })
-  },
-  setup() {
-    const { t } = useI18n() // use as global scope
-    return { t, changeLocale }
+
+    const { t } = useI18n()
+    return { t, changeLocale, errorMessageDialog, openedAccordion }
   }
 })
 </script>

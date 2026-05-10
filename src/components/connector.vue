@@ -1,7 +1,8 @@
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent, ref, onMounted } from 'vue'
 import { eventBus } from '../utils/eventbus';
-import { storage, wsClient } from '../init/client';
+import { useListener } from '../utils/listeners';
+import { storage, wsClient, printer } from '../init/client';
 import printerProfile from './printerprofile.vue';
 import type { PrinterProfile } from '../types/printer';
 
@@ -10,42 +11,46 @@ export default defineComponent({
     components: {
         printerProfile,
     },
-    data: () => ({
-        printerProfiles: [] as PrinterProfile[],
-        loadingStatus: false as boolean,
-        connectionStatus: false as boolean,
-        dialogOpen: false as boolean,
-        selectedProfile: null as string | null,
-    }),
     setup() {
-        return { wsClient, eventBus, storage }
-    },
-    mounted() {
-        this.printerProfiles = JSON.parse(localStorage.getItem('PrinterProfiles') || '[]') as PrinterProfile[]
+        const printerProfiles = ref<PrinterProfile[]>([])
+        const loadingStatus = ref(false)
+        const connectionStatus = ref(false)
+        const selectedProfile = ref<string | null>(null)
 
-        wsClient.on('connected', () => {
-            this.connectionStatus = true
-            this.loadingStatus = false
+        onMounted(() => {
+            printerProfiles.value = JSON.parse(localStorage.getItem('PrinterProfiles') || '[]') as PrinterProfile[]
         })
-        wsClient.on('disconnected', () => this.connectionStatus = false)
-        wsClient.on('error', () => {
-            this.connectionStatus = false
-            this.loadingStatus = false
+
+        useListener(wsClient, 'connected', () => {
+            connectionStatus.value = true
+            loadingStatus.value = false
+        })
+        useListener(wsClient, 'disconnected', () => {
+            connectionStatus.value = false
+        })
+        useListener(wsClient, 'error', () => {
+            connectionStatus.value = false
+            loadingStatus.value = false
             eventBus.emit('message', 'openConnectionErrorDialog')
         })
-    },
-    methods: {
-        setWSS(): void {
-            if(!this.selectedProfile) return
-            
-            const profile = this.printerProfiles.find((profile) => profile.uuid === this.selectedProfile)
-            if(!profile) return
-            
+
+        function setWSS(): void {
+            if (!selectedProfile.value) return
+            const profile = printerProfiles.value.find((p) => p.uuid === selectedProfile.value)
+            if (!profile) return
             wsClient.wsURL = profile.url
-        },
-        connectToWSS(): void {
-            this.loadingStatus = true
+            printer.bindProfile(profile)
+        }
+
+        function connectToWSS(): void {
+            loadingStatus.value = true
             wsClient.connect()
+        }
+
+        return {
+            wsClient, eventBus, storage,
+            printerProfiles, loadingStatus, connectionStatus, selectedProfile,
+            setWSS, connectToWSS,
         }
     }
 })
