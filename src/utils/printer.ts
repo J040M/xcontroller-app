@@ -28,6 +28,20 @@ export default class Printer implements PrinterCommands {
     }
 
     /**
+     * Copies user-supplied profile fields (uuid, name, url, dimensions,
+     * firmware) onto the live printer state. Called when the user picks a
+     * profile in the connector so commands respect the printer's actual
+     * dimensions instead of the placeholder defaults.
+     */
+    bindProfile(profile: PrinterProfile): void {
+        this.printerInfo.uuid = profile.uuid
+        this.printerInfo.name = profile.name
+        this.printerInfo.url = profile.url
+        if (profile.dimensions) this.printerInfo.dimensions = profile.dimensions
+        if (profile.firmware) this.printerInfo.firmware = profile.firmware
+    }
+
+    /**
      * Sets the current position for all axes
      * @param {AxisPositions} positions - Object containing positions for each axis
      * @returns {void}
@@ -425,7 +439,12 @@ export default class Printer implements PrinterCommands {
         descriptor.value = function (this: Printer, ...args: any[]) {
             if (!this.printerInfo.status) {
                 console.error('Printer is not connected');
-                eventBus.emit('message', 'openConnectionErrorDialog');
+                // Only surface the error dialog if the user has actually tried
+                // to connect. Otherwise commands that fire on component mount
+                // (e.g. status polling) would pop the dialog at app start.
+                if (wsClient.hasAttemptedConnection) {
+                    eventBus.emit('message', 'openConnectionErrorDialog');
+                }
                 return;
             }
             return originalMethod.apply(this, args);
