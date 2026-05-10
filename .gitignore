@@ -16,3 +16,7 @@ Cargo.lock
 *.pdb
 
 .vscode/
+
+# macOS Finder metadata
+.DS_Store
+**/.DS_Store
