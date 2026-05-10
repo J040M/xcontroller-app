@@ -1,7 +1,6 @@
 <script lang="ts">
-import { computed, defineComponent, ref, onMounted, onBeforeUnmount } from 'vue'
+import { computed, defineComponent, ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { printer } from '../../init/client';
-import * as THREE from 'three'
 import Three3DPrinter from '../../3d-render/3dprinter.ts';
 import type { Axis } from '../../types/printer';
 
@@ -15,78 +14,55 @@ export default defineComponent({
         /** Extrusion feed multiplier 0-100% (UI). */
         const feedPercent = ref(50)
         const canvasRef = ref<HTMLCanvasElement | null>(null)
+        const canvasContainerRef = ref<HTMLDivElement | null>(null)
 
-        let threeDP: Three3DPrinter | null = null
-        let rafId: number | null = null
-        let onMouseClick: ((event: MouseEvent) => void) | null = null
+        let viz: Three3DPrinter | null = null
+        let resizeObserver: ResizeObserver | null = null
+        let stopPositionWatch: (() => void) | null = null
+        let stopDimensionsWatch: (() => void) | null = null
         let lastFanCommandTimer: ReturnType<typeof setTimeout> | null = null
 
         onMounted(() => {
             const canvas = canvasRef.value
-            if (!canvas) return
+            const container = canvasContainerRef.value
+            if (!canvas || !container) return
 
-            threeDP = new Three3DPrinter(canvas)
+            viz = new Three3DPrinter(canvas, printer.printerInfo.dimensions)
+            viz.updatePosition(printer.axisPositions)
 
-            const cube = threeDP.initDimensions(2, 2, 2)
-            threeDP.scene.add(cube)
+            // Live position updates: react to the printer store directly so we
+            // don't have to drive a polling RAF in the component — the viz has
+            // its own render loop.
+            stopPositionWatch = watch(
+                () => [printer.axisPositions.X, printer.axisPositions.Y, printer.axisPositions.Z] as const,
+                ([X, Y, Z]) => viz?.updatePosition({ X, Y, Z }),
+            )
 
-            const extruder = threeDP.initExtruder()
-            threeDP.scene.add(extruder)
+            // Profile dimensions can change when the user picks a different
+            // printer in the connector.
+            stopDimensionsWatch = watch(
+                () => [printer.printerInfo.dimensions.X, printer.printerInfo.dimensions.Y, printer.printerInfo.dimensions.Z] as const,
+                ([X, Y, Z]) => viz?.setDimensions({ X, Y, Z }),
+            )
 
-            const homePosition = threeDP.initHomePosition()
-            threeDP.scene.add(homePosition)
-
-            onMouseClick = (event: MouseEvent) => {
-                if (!threeDP) return
-                const mouse = new THREE.Vector2(
-                    (event.clientX / window.innerWidth) * 2 - 1,
-                    -(event.clientY / window.innerHeight) * 2 + 1,
-                )
-                threeDP.moveCamera(mouse)
-            }
-            threeDP.renderer.domElement.addEventListener('click', onMouseClick)
-
-            const animate = () => {
-                if (!threeDP) return
-                rafId = requestAnimationFrame(animate)
-
-                const normalize = (value: number) => (value / 100) - 1
-                threeDP.updateExtruderPosition({
-                    x: normalize(printer.axisPositions.X),
-                    y: normalize(printer.axisPositions.Y),
-                    z: normalize(printer.axisPositions.Z),
-                })
-                threeDP.render()
-            }
-            animate()
+            resizeObserver = new ResizeObserver(() => {
+                if (!container || !viz) return
+                const rect = container.getBoundingClientRect()
+                viz.resize(rect.width, rect.height)
+            })
+            resizeObserver.observe(container)
         })
 
         onBeforeUnmount(() => {
-            if (rafId !== null) cancelAnimationFrame(rafId)
-            rafId = null
-
             if (lastFanCommandTimer) clearTimeout(lastFanCommandTimer)
             lastFanCommandTimer = null
 
-            if (threeDP) {
-                if (onMouseClick) {
-                    threeDP.renderer.domElement.removeEventListener('click', onMouseClick)
-                }
-                threeDP.scene.traverse((obj) => {
-                    if (obj instanceof THREE.Mesh || obj instanceof THREE.LineSegments) {
-                        obj.geometry?.dispose()
-                        const m = obj.material
-                        if (Array.isArray(m)) {
-                            m.forEach((mat) => mat.dispose())
-                        } else if (m) {
-                            (m as THREE.Material).dispose()
-                        }
-                    }
-                })
-                threeDP.renderer.dispose()
-                threeDP = null
-            }
-            onMouseClick = null
+            stopPositionWatch?.()
+            stopDimensionsWatch?.()
+            resizeObserver?.disconnect()
+            resizeObserver = null
+            viz?.dispose()
+            viz = null
         })
 
         function sendMovementCommand(command: Axis | string): void {
@@ -147,9 +123,23 @@ export default defineComponent({
     <div class="px-margin py-margin flex flex-col items-center gap-6">
         <!-- 3D Workspace Visualizer -->
         <div
-            class="w-full max-w-5xl aspect-video bg-surface-container-lowest border border-outline-variant/40 rounded flex items-center justify-center overflow-hidden"
+            ref="canvasContainerRef"
+            class="w-full max-w-5xl aspect-video bg-surface-container-lowest border border-outline-variant/40 rounded overflow-hidden relative"
         >
-            <canvas ref="canvasRef" id="3dprinter-animation" class="w-full h-full block" width="800" height="600" />
+            <canvas ref="canvasRef" id="3dprinter-animation" class="w-full h-full block" />
+            <!-- Decorative HUD corner brackets -->
+            <div class="pointer-events-none absolute inset-0">
+                <div class="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-primary-fixed-dim/40" />
+                <div class="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-primary-fixed-dim/40" />
+                <div class="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-primary-fixed-dim/40" />
+                <div class="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-primary-fixed-dim/40" />
+            </div>
+            <div class="pointer-events-none absolute top-3 left-3 flex items-center gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-primary-fixed-dim animate-pulse" />
+                <span class="text-[9px] font-code-sm uppercase tracking-[0.25em] text-primary-fixed-dim/80">
+                    Vol {{ printer.printerInfo.dimensions.X }}×{{ printer.printerInfo.dimensions.Y }}×{{ printer.printerInfo.dimensions.Z }} mm
+                </span>
+            </div>
         </div>
 
         <!-- Current Position Panel -->

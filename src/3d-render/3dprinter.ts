@@ -1,118 +1,463 @@
 import * as THREE from 'three'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
+import { Line2 } from 'three/examples/jsm/lines/Line2.js'
+import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
+import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js'
+
+export interface PrinterDimensions {
+    X: number
+    Y: number
+    Z: number
+}
+
+export interface PrinterPosition {
+    X: number
+    Y: number
+    Z: number
+}
+
+const DEFAULT_DIMENSIONS: PrinterDimensions = { X: 220, Y: 220, Z: 250 }
+
+const COLOR_GRID = new THREE.Color('#00dce5')
+const COLOR_FRAME = new THREE.Color('#3a494a')
+const COLOR_AXIS_X = new THREE.Color('#ffb4ab')
+const COLOR_AXIS_Y = new THREE.Color('#fd8b00')
+const COLOR_AXIS_Z = new THREE.Color('#63f7ff')
+const COLOR_EXTRUDER = new THREE.Color('#00f5ff')
+const COLOR_HOME = new THREE.Color('#ffb4ab')
+const COLOR_PROJECTION = new THREE.Color('#00dce5')
+const BACKGROUND = new THREE.Color('#081010')
+
+/**
+ * Procedural two-scale grid on a plane. Uses screen-space derivatives for
+ * analytic anti-aliasing, then radially fades from the bed centre so the
+ * grid blends into the surrounding dark space instead of cutting off hard
+ * at the build-volume frame.
+ */
+function createGridMaterial(maxRadius: number, bedCenter: THREE.Vector2): THREE.ShaderMaterial {
+    return new THREE.ShaderMaterial({
+        transparent: true,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+        uniforms: {
+            uColor: { value: COLOR_GRID },
+            uMinor: { value: 10.0 },
+            uMajor: { value: 100.0 },
+            uMaxRadius: { value: maxRadius },
+            uBedCenter: { value: bedCenter },
+        },
+        vertexShader: /* glsl */ `
+            varying vec3 vWorld;
+            void main() {
+                vec4 worldPos = modelMatrix * vec4(position, 1.0);
+                vWorld = worldPos.xyz;
+                gl_Position = projectionMatrix * viewMatrix * worldPos;
+            }
+        `,
+        fragmentShader: /* glsl */ `
+            uniform vec3 uColor;
+            uniform float uMinor;
+            uniform float uMajor;
+            uniform float uMaxRadius;
+            uniform vec2 uBedCenter;
+            varying vec3 vWorld;
+
+            float gridLine(vec2 coord, float spacing) {
+                vec2 g = abs(fract(coord / spacing - 0.5) - 0.5) / fwidth(coord / spacing);
+                float line = min(g.x, g.y);
+                return 1.0 - min(line, 1.0);
+            }
+
+            void main() {
+                vec2 c = vWorld.xz;
+                float minorMask = gridLine(c, uMinor) * 0.30;
+                float majorMask = gridLine(c, uMajor) * 0.85;
+                float mask = max(minorMask, majorMask);
+
+                float dist = length(c - uBedCenter) / uMaxRadius;
+                float fade = 1.0 - smoothstep(0.4, 0.95, dist);
+
+                if (mask < 0.001) discard;
+                gl_FragColor = vec4(uColor, mask * fade);
+            }
+        `,
+    })
+}
 
 export default class Three3DPrinter {
-    public scene: THREE.Scene;
-    private camera: THREE.PerspectiveCamera;
+    public scene: THREE.Scene
+    public camera: THREE.PerspectiveCamera
     public renderer: THREE.WebGLRenderer
-    private redSphere!: THREE.Mesh;
+    private controls: OrbitControls
+    private composer: EffectComposer
+    private bloomPass: UnrealBloomPass
 
-    /**
-     * Creates a new 3D printer visualization
-     * @param {HTMLCanvasElement} canvasID - The canvas element to render on
-     * @param {Object} options - Configuration options for the 3D renderer
-     * @param {number} options.fov - Field of view for the camera
-     * @param {Object} options.aspect - Aspect ratio dimensions
-     * @param {number} options.near - Near clipping plane
-     * @param {number} options.far - Far clipping plane
-     * @param {number} options.cameraPosition - Initial Z position of the camera
-     */
-    constructor(canvasID: HTMLCanvasElement, options?: { fov: number, aspect: { width: number, height: number }, near: number, far: number, cameraPosition: number }) {
-        this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(
-            options?.fov || 30, (options?.aspect.width || 800) / (options?.aspect.height || 600),
-            options?.near || 0.1, options?.far || 1000);
+    private dimensions: PrinterDimensions
+    private gridMesh: THREE.Mesh
+    private frameMesh: THREE.LineSegments
+    private axisLines: Line2[] = []
+    private axisMats: LineMaterial[] = []
+    private projectionLines: Line2[] = []
+    private projectionMats: LineMaterial[] = []
+    private extruderGroup: THREE.Group
+    private extruderCore: THREE.Mesh
+    private extruderHalo: THREE.Mesh
+    private homeMesh: THREE.Mesh
 
-        // alpha:true keeps the canvas transparent so the surrounding card
-        // background (set in CSS) shows through — avoids a hard color seam
-        // between the WebGL clear color and the card's surface token.
-        this.renderer = new THREE.WebGLRenderer({ canvas: canvasID, antialias: true, alpha: true });
-        this.renderer.setClearColor(0x000000, 0);
-        this.renderer.setSize((options?.aspect.width || 800), (options?.aspect.height || 600));
+    private rafId: number | null = null
+    private startTime: number = performance.now()
+    private isVisible = true
+    private onVisibilityChange: () => void
+    private projectionBuffers: Float32Array[] = []
 
-        this.camera.position.z = options?.cameraPosition || 5;
+    private static readonly EXTRUDER_RADIUS = 4
+    private static readonly HALO_RADIUS = 9
+    private static readonly HOME_RADIUS = 3
+
+    constructor(canvas: HTMLCanvasElement, dimensions: PrinterDimensions = DEFAULT_DIMENSIONS) {
+        this.dimensions = sanitizeDimensions(dimensions)
+        const width = canvas.clientWidth || canvas.width || 800
+        const height = canvas.clientHeight || canvas.height || 600
+
+        this.scene = new THREE.Scene()
+        this.scene.background = BACKGROUND
+
+        this.camera = new THREE.PerspectiveCamera(35, width / height, 1, 5000)
+        this.frameInitialView()
+
+        this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false })
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+        this.renderer.setSize(width, height, false)
+        this.renderer.setClearColor(BACKGROUND, 1)
+        this.renderer.toneMapping = THREE.ACESFilmicToneMapping
+        this.renderer.toneMappingExposure = 1.1
+
+        this.controls = new OrbitControls(this.camera, this.renderer.domElement)
+        this.controls.enableDamping = true
+        this.controls.dampingFactor = 0.08
+        this.controls.screenSpacePanning = false
+        this.controls.enablePan = false
+        this.controls.minDistance = Math.max(this.dimensions.X, this.dimensions.Y) * 0.6
+        this.controls.maxDistance = Math.max(this.dimensions.X, this.dimensions.Y, this.dimensions.Z) * 4
+        this.controls.minPolarAngle = 0.05
+        this.controls.maxPolarAngle = Math.PI / 2 - 0.02
+        this.controls.target.set(this.dimensions.X / 2, 0, this.dimensions.Y / 2)
+        this.controls.update()
+
+        // MSAA × 4 render target so bloom hits anti-aliased edges, not jaggies.
+        const renderTarget = new THREE.WebGLRenderTarget(width, height, { samples: 4 })
+        this.composer = new EffectComposer(this.renderer, renderTarget)
+        this.composer.setPixelRatio(this.renderer.getPixelRatio())
+        this.composer.setSize(width, height)
+        this.composer.addPass(new RenderPass(this.scene, this.camera))
+        this.bloomPass = new UnrealBloomPass(new THREE.Vector2(width / 2, height / 2), 0.6, 0.5, 0.0)
+        this.composer.addPass(this.bloomPass)
+        this.composer.addPass(new OutputPass())
+
+        this.gridMesh = this.buildGrid()
+        this.scene.add(this.gridMesh)
+
+        this.frameMesh = this.buildFrame()
+        this.scene.add(this.frameMesh)
+
+        this.buildAxes()
+
+        this.extruderGroup = new THREE.Group()
+        this.extruderCore = this.buildExtruderCore()
+        this.extruderHalo = this.buildExtruderHalo()
+        this.extruderGroup.add(this.extruderCore)
+        this.extruderGroup.add(this.extruderHalo)
+        this.scene.add(this.extruderGroup)
+
+        this.homeMesh = this.buildHome()
+        this.scene.add(this.homeMesh)
+
+        this.buildProjectionLines()
+
+        this.onVisibilityChange = () => {
+            this.isVisible = document.visibilityState === 'visible'
+        }
+        document.addEventListener('visibilitychange', this.onVisibilityChange)
+
+        this.updatePosition({ X: 0, Y: 0, Z: 0 })
+        this.start()
     }
 
-    /**
-     * Initializes the printer dimensions visualization
-     * @param {number} width - Width of the printer
-     * @param {number} height - Height of the printer
-     * @param {number} depth - Depth of the printer
-     * @param {string} color - Hexadecimal color value of the printer frame
-     * @returns {THREE.LineSegments} - The line segments representing the printer dimensions
-     */
-    initDimensions(width:number, height:number, depth:number, color?: string): THREE.LineSegments {
-        const cubeGeometry = new THREE.BoxGeometry(width, height, depth);
-        const cubeEdges = new THREE.EdgesGeometry(cubeGeometry);
-        const cubeMaterial = new THREE.LineBasicMaterial({ color: color || 0xffffff });
-        const cubeLine = new THREE.LineSegments(cubeEdges, cubeMaterial);
+    /** Update the live extruder marker. Coordinates are raw printer mm. */
+    updatePosition(pos: PrinterPosition): void {
+        const { X, Y, Z } = this.dimensions
+        const x = THREE.MathUtils.clamp(pos.X, 0, X)
+        const z = THREE.MathUtils.clamp(pos.Y, 0, Y)
+        const y = THREE.MathUtils.clamp(pos.Z, 0, Z)
+        this.extruderGroup.position.set(x, y, z)
 
-        return cubeLine
+        // Three projection drops onto the bed and the two back walls. Reuses
+        // pre-allocated Float32Array buffers so the update loop is alloc-free.
+        this.setProjection(0, x, y, z, x, 0, z)
+        this.setProjection(1, x, y, z, X, y, z)
+        this.setProjection(2, x, y, z, x, y, Y)
     }
 
-    /**
-     * Initializes the extruder visualization
-     * @param {string} color - Hexadecimal color value of the extruder
-     * @returns {THREE.Mesh} - The mesh representing the extruder
-     */
-    initExtruder(color?: string): THREE.Mesh {
-        const redSphereGeometry = new THREE.SphereGeometry(0.1, 32, 32);
-        const redSphereMaterial = new THREE.MeshBasicMaterial({ color: color || 0xff0000 });
-
-        this.redSphere = new THREE.Mesh(redSphereGeometry, redSphereMaterial);
-
-        return this.redSphere
+    /** Resize all three render surfaces (renderer, composer, bloom resolution). */
+    resize(width: number, height: number): void {
+        if (!width || !height) return
+        this.camera.aspect = width / height
+        this.camera.updateProjectionMatrix()
+        this.renderer.setSize(width, height, false)
+        this.composer.setSize(width, height)
+        this.bloomPass.setSize(width / 2, height / 2)
+        const res = new THREE.Vector2(width, height).multiplyScalar(this.renderer.getPixelRatio())
+        for (const m of [...this.axisMats, ...this.projectionMats]) {
+            m.resolution.copy(res)
+        }
     }
 
-    /**
-     * Updates the extruder position in the visualization
-     * @param {Object} position - The new position
-     * @param {number} position.x - X coordinate
-     * @param {number} position.y - Y coordinate
-     * @param {number} position.z - Z coordinate
-     * @returns {void}
-     */
-    updateExtruderPosition(position: { x: number, y: number, z: number }): void {
-        const halfSize = 1;
-        this.redSphere.position.set(
-            THREE.MathUtils.clamp(position.y, -halfSize + 0.1, halfSize - 0.1),
-            THREE.MathUtils.clamp(position.z, -halfSize + 0.1, halfSize - 0.1),
-            THREE.MathUtils.clamp(position.x, -halfSize + 0.1, halfSize - 0.1),
-        );
+    /** Rebuild the build volume if the active profile's dimensions change. */
+    setDimensions(dimensions: PrinterDimensions): void {
+        const next = sanitizeDimensions(dimensions)
+        if (next.X === this.dimensions.X && next.Y === this.dimensions.Y && next.Z === this.dimensions.Z) return
+        this.dimensions = next
+
+        const radius = Math.max(next.X, next.Y)
+        const bedCenter = new THREE.Vector2(next.X / 2, next.Y / 2)
+        const gridMat = this.gridMesh.material as THREE.ShaderMaterial
+        gridMat.uniforms.uMaxRadius.value = radius
+        gridMat.uniforms.uBedCenter.value = bedCenter
+        this.gridMesh.geometry.dispose()
+        this.gridMesh.geometry = new THREE.PlaneGeometry(radius * 2, radius * 2).rotateX(-Math.PI / 2)
+        this.gridMesh.position.set(next.X / 2 - radius, 0, next.Y / 2 - radius)
+
+        this.scene.remove(this.frameMesh)
+        this.frameMesh.geometry.dispose()
+        ;(this.frameMesh.material as THREE.Material).dispose()
+        this.frameMesh = this.buildFrame()
+        this.scene.add(this.frameMesh)
+
+        this.disposeAxes()
+        this.buildAxes()
+
+        this.controls.target.set(next.X / 2, 0, next.Y / 2)
+        this.controls.minDistance = Math.max(next.X, next.Y) * 0.6
+        this.controls.maxDistance = Math.max(next.X, next.Y, next.Z) * 4
+        this.controls.update()
+        this.frameInitialView()
     }
 
-    /**
-     * Initializes the home position indicator
-     * @param {string} color - Hexadecimal color value of the home position indicator
-     * @returns {THREE.Mesh} - The mesh representing the home position
-     */
-    initHomePosition(color?: string): THREE.Mesh {
-        const homeGeometry = new THREE.SphereGeometry(0.1, 32, 32);
-        const homeSphereMaterial = new THREE.MeshBasicMaterial({ color: color || 0x800080 });
-        const homePosition = new THREE.Mesh(homeGeometry, homeSphereMaterial);
-        homePosition.position.set(-1, -1, -1);
+    /** Dispose every GPU resource and stop the animation loop. */
+    dispose(): void {
+        this.stop()
+        document.removeEventListener('visibilitychange', this.onVisibilityChange)
 
-        return homePosition
+        this.scene.traverse((obj) => {
+            const anyObj = obj as unknown as { geometry?: { dispose?: () => void }, material?: THREE.Material | THREE.Material[] }
+            anyObj.geometry?.dispose?.()
+            const m = anyObj.material
+            if (Array.isArray(m)) m.forEach((mm) => mm.dispose())
+            else m?.dispose?.()
+        })
+        this.composer.dispose()
+        this.renderer.dispose()
     }
 
-    /**
-     * Moves the camera around the scene
-     * @param {THREE.Vector2} position - The rotation position for the camera
-     * @returns {void}
-     */
-    moveCamera(position: THREE.Vector2): void {
-        const radius = 5; // Distance from the origin
-        this.camera.position.x = radius * Math.sin(position.y * Math.PI);
-        this.camera.position.z = radius * Math.cos(position.y * Math.PI);
-        this.camera.position.y = radius * position.x;
-        this.camera.lookAt(0, 0, 0); // Look at the center of the scene
+    // ---- internals ------------------------------------------------------
+
+    private start(): void {
+        const tick = () => {
+            this.rafId = requestAnimationFrame(tick)
+            if (!this.isVisible) return
+            this.controls.update()
+            const t = (performance.now() - this.startTime) / 1000
+            // Pulse home + extruder emissive intensity on a sin wave (cheap —
+            // mutating a uniform value on an existing material, no recompile).
+            ;(this.homeMesh.material as THREE.MeshStandardMaterial).emissiveIntensity = 1.5 + Math.sin(t * 2.4) * 0.8
+            ;(this.extruderCore.material as THREE.MeshStandardMaterial).emissiveIntensity = 2.5 + Math.sin(t * 3.0) * 0.5
+            this.composer.render()
+        }
+        tick()
     }
 
-    /**
-     * Renders the scene
-     * @returns {void}
-     */
-    render(): void {
-        this.renderer.render(this.scene, this.camera);
+    private stop(): void {
+        if (this.rafId !== null) cancelAnimationFrame(this.rafId)
+        this.rafId = null
     }
 
+    private frameInitialView(): void {
+        const { X, Y, Z } = this.dimensions
+        const span = Math.max(X, Y, Z)
+        this.camera.position.set(X / 2 + span * 1.1, span * 0.95, Y / 2 + span * 1.1)
+        this.camera.up.set(0, 1, 0)
+        this.camera.lookAt(X / 2, Z / 3, Y / 2)
+    }
+
+    private buildGrid(): THREE.Mesh {
+        const radius = Math.max(this.dimensions.X, this.dimensions.Y)
+        const geom = new THREE.PlaneGeometry(radius * 2, radius * 2).rotateX(-Math.PI / 2)
+        const bedCenter = new THREE.Vector2(this.dimensions.X / 2, this.dimensions.Y / 2)
+        const mat = createGridMaterial(radius, bedCenter)
+        const mesh = new THREE.Mesh(geom, mat)
+        mesh.position.set(this.dimensions.X / 2 - radius, 0, this.dimensions.Y / 2 - radius)
+        return mesh
+    }
+
+    private buildFrame(): THREE.LineSegments {
+        const positions = boxEdgePositions(this.dimensions)
+        const geom = new THREE.BufferGeometry()
+        geom.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+        const mat = new THREE.LineBasicMaterial({
+            color: COLOR_FRAME,
+            transparent: true,
+            opacity: 0.7,
+        })
+        return new THREE.LineSegments(geom, mat)
+    }
+
+    private buildAxes(): void {
+        const len = Math.min(this.dimensions.X, this.dimensions.Y, this.dimensions.Z) * 0.4
+        const axes: Array<{ end: [number, number, number]; color: THREE.Color }> = [
+            { end: [len, 0, 0], color: COLOR_AXIS_X },
+            { end: [0, 0, len], color: COLOR_AXIS_Y },
+            { end: [0, len, 0], color: COLOR_AXIS_Z },
+        ]
+        for (const a of axes) {
+            const geom = new LineGeometry()
+            geom.setPositions([0, 0, 0, ...a.end])
+            const mat = new LineMaterial({
+                color: a.color.getHex(),
+                linewidth: 3,
+                transparent: true,
+                opacity: 0.9,
+            })
+            mat.resolution.set(this.renderer.domElement.clientWidth, this.renderer.domElement.clientHeight)
+            const line = new Line2(geom, mat)
+            line.computeLineDistances()
+            this.scene.add(line)
+            this.axisLines.push(line)
+            this.axisMats.push(mat)
+        }
+    }
+
+    private disposeAxes(): void {
+        for (const l of this.axisLines) {
+            this.scene.remove(l)
+            l.geometry.dispose()
+        }
+        for (const m of this.axisMats) m.dispose()
+        this.axisLines = []
+        this.axisMats = []
+    }
+
+    private buildExtruderCore(): THREE.Mesh {
+        const geom = new THREE.SphereGeometry(Three3DPrinter.EXTRUDER_RADIUS, 24, 24)
+        const mat = new THREE.MeshStandardMaterial({
+            color: COLOR_EXTRUDER,
+            emissive: COLOR_EXTRUDER,
+            emissiveIntensity: 2.5,
+            roughness: 0.2,
+            metalness: 0.1,
+            toneMapped: false,
+        })
+        return new THREE.Mesh(geom, mat)
+    }
+
+    private buildExtruderHalo(): THREE.Mesh {
+        const geom = new THREE.SphereGeometry(Three3DPrinter.HALO_RADIUS, 24, 24)
+        const mat = new THREE.MeshBasicMaterial({
+            color: COLOR_EXTRUDER,
+            transparent: true,
+            opacity: 0.18,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+            toneMapped: false,
+        })
+        return new THREE.Mesh(geom, mat)
+    }
+
+    private buildHome(): THREE.Mesh {
+        const geom = new THREE.SphereGeometry(Three3DPrinter.HOME_RADIUS, 16, 16)
+        const mat = new THREE.MeshStandardMaterial({
+            color: COLOR_HOME,
+            emissive: COLOR_HOME,
+            emissiveIntensity: 1.5,
+            roughness: 0.4,
+            toneMapped: false,
+        })
+        const mesh = new THREE.Mesh(geom, mat)
+        mesh.position.set(0, 0, 0)
+        return mesh
+    }
+
+    private buildProjectionLines(): void {
+        for (let i = 0; i < 3; i++) {
+            const buf = new Float32Array(6)
+            this.projectionBuffers.push(buf)
+            const geom = new LineGeometry()
+            geom.setPositions(Array.from(buf))
+            const mat = new LineMaterial({
+                color: COLOR_PROJECTION.getHex(),
+                linewidth: 1.5,
+                transparent: true,
+                opacity: 0.55,
+                dashed: true,
+                dashSize: 4,
+                gapSize: 4,
+            })
+            mat.defines = { ...(mat.defines || {}), USE_DASH: '' }
+            mat.needsUpdate = true
+            mat.resolution.set(this.renderer.domElement.clientWidth, this.renderer.domElement.clientHeight)
+            const line = new Line2(geom, mat)
+            line.computeLineDistances()
+            this.scene.add(line)
+            this.projectionLines.push(line)
+            this.projectionMats.push(mat)
+        }
+    }
+
+    private setProjection(idx: number, ax: number, ay: number, az: number, bx: number, by: number, bz: number): void {
+        const buf = this.projectionBuffers[idx]
+        buf[0] = ax; buf[1] = ay; buf[2] = az
+        buf[3] = bx; buf[4] = by; buf[5] = bz
+        const geom = this.projectionLines[idx].geometry as LineGeometry
+        geom.setPositions(Array.from(buf))
+        this.projectionLines[idx].computeLineDistances()
+    }
+}
+
+function sanitizeDimensions(d: PrinterDimensions): PrinterDimensions {
+    return {
+        X: d.X > 0 ? d.X : DEFAULT_DIMENSIONS.X,
+        Y: d.Y > 0 ? d.Y : DEFAULT_DIMENSIONS.Y,
+        Z: d.Z > 0 ? d.Z : DEFAULT_DIMENSIONS.Z,
+    }
+}
+
+/**
+ * Returns a flat Float32Array of 12 line segments (24 vertices) describing
+ * a box's wireframe edges, with corner (0,0,0) at the origin and corner
+ * (X, Z, Y) at the opposite end. Used for the build-volume frame as
+ * gl.LINES (vertex-pair) topology.
+ */
+function boxEdgePositions(d: PrinterDimensions): Float32Array {
+    const x = d.X, y = d.Z, z = d.Y
+    const edges: number[] = [
+        // bottom rectangle
+        0, 0, 0,  x, 0, 0,
+        x, 0, 0,  x, 0, z,
+        x, 0, z,  0, 0, z,
+        0, 0, z,  0, 0, 0,
+        // top rectangle
+        0, y, 0,  x, y, 0,
+        x, y, 0,  x, y, z,
+        x, y, z,  0, y, z,
+        0, y, z,  0, y, 0,
+        // vertical struts
+        0, 0, 0,  0, y, 0,
+        x, 0, 0,  x, y, 0,
+        x, 0, z,  x, y, z,
+        0, 0, z,  0, y, z,
+    ]
+    return new Float32Array(edges)
 }
