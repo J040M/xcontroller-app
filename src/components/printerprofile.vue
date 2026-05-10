@@ -1,38 +1,51 @@
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent, ref } from 'vue'
 import { eventBus } from '../utils/eventbus';
+import { useListener } from '../utils/listeners';
 import { storage } from '../init/client';
 import type { PrinterProfile } from '../types/printer';
 
+function defaultProfile(): PrinterProfile {
+    return {
+        uuid: '',
+        status: false,
+        name: '',
+        url: '',
+        printStatus: {
+            state: 'unknown',
+            file_name: undefined,
+            elapsed_time: '',
+            estimated_time: 0,
+            progress: 0,
+        },
+        axisPositions: { X: 0, Y: 0, Z: 0, e0: 0, e1: 0 },
+        dimensions: { X: 0, Y: 0, Z: 0 },
+        temperatures: { e0: 0, e0_set: 0, e1: 0, e1_set: 0, bed: 0, bed_set: 0 },
+        homed: false,
+    }
+}
+
 export default defineComponent({
     name: 'printerProfileComponent',
-    data: () => ({
-        printerProfile: {
-            uuid: '',
-            name: '',
-            url: '',
-            dimensions: {
-                X: 0,
-                Y: 0,
-                Z: 0,
-            },
-        } as PrinterProfile,
-        visible: false,
-    }),
-    mounted() {
-        eventBus.on('message', (message: string) => {
+    setup() {
+        const printerProfile = ref<PrinterProfile>(defaultProfile())
+        const visible = ref(false)
+
+        useListener(eventBus, 'message', (message: string) => {
             if (message === 'openProfileDialog') {
-                this.visible = true
+                printerProfile.value = defaultProfile()
+                visible.value = true
             }
         })
-    },
-    methods: {
-        saveProfile(): void {
-            this.printerProfile.uuid = crypto.randomUUID()
-            storage.saveProfile('PrinterProfiles', this.printerProfile)
-            this.printerProfile = {} as PrinterProfile
-            this.visible = false
+
+        function saveProfile(): void {
+            printerProfile.value.uuid = crypto.randomUUID()
+            storage.saveProfile('PrinterProfiles', printerProfile.value)
+            printerProfile.value = defaultProfile()
+            visible.value = false
         }
+
+        return { printerProfile, visible, saveProfile }
     }
 })
 </script>
