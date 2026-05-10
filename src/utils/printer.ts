@@ -274,7 +274,10 @@ export default class Printer implements PrinterCommands {
             file_name: '',
             elapsed_time: '',
             estimated_time: 0,
-            progress: 0
+            remaining_time: null,
+            progress: 0,
+            current_layer: null,
+            total_layers: null,
         }
     }
 
@@ -361,7 +364,10 @@ export default class Printer implements PrinterCommands {
             file_name: file_name,
             elapsed_time: '',
             estimated_time: 0,
-            progress: 0
+            remaining_time: null,
+            progress: 0,
+            current_layer: null,
+            total_layers: null,
         }
 
         wsClient.sendCommand({

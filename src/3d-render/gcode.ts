@@ -99,7 +99,8 @@ export class SceneManager {
       alpha: true
     });
     this.renderer.setSize(canvasWidth, canvasHeight, false);
-    this.renderer.setClearColor(0x111111);
+    // Transparent clear — the gcode-canvas-frame CSS supplies the background.
+    this.renderer.setClearColor(0x000000, 0);
 
     // Initialize controls
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
@@ -267,6 +268,54 @@ export class SceneManager {
     disposeObject(this.extrusionLine);
     disposeObject(this.travelLine);
     this.extrusionLine = this.travelLine = null;
+  }
+
+  /** Reset camera to the default oblique angle. */
+  public resetView(): void {
+    this.camera.position.set(0, -150, 200);
+    this.camera.up.set(0, 0, 1);
+    this.camera.lookAt(0, 0, 0);
+    this.controls.target.set(0, 0, 0);
+    this.controls.update();
+  }
+
+  /** Look straight down (Z-axis from above). */
+  public topView(): void {
+    this.camera.position.set(0, 0, 250);
+    this.camera.up.set(0, 1, 0);
+    this.camera.lookAt(0, 0, 0);
+    this.controls.target.set(0, 0, 0);
+    this.controls.update();
+  }
+
+  /** Side profile view (looking down the Y-axis). */
+  public sideView(): void {
+    this.camera.position.set(0, -250, 50);
+    this.camera.up.set(0, 0, 1);
+    this.camera.lookAt(0, 0, 50);
+    this.controls.target.set(0, 0, 50);
+    this.controls.update();
+  }
+
+  /** Frame the rendered geometry inside the current viewport. */
+  public zoomToFit(): void {
+    const box = new THREE.Box3();
+    if (this.extrusionLine) box.expandByObject(this.extrusionLine);
+    if (this.travelLine) box.expandByObject(this.travelLine);
+    if (box.isEmpty()) {
+      this.resetView();
+      return;
+    }
+    const size = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+    const maxDim = Math.max(size.x, size.y, size.z) || 100;
+    const fov = (this.camera.fov * Math.PI) / 180;
+    const distance = (maxDim / 2) / Math.tan(fov / 2) * 1.5;
+    this.camera.position.set(center.x, center.y - distance, center.z + distance / 2);
+    this.camera.up.set(0, 0, 1);
+    this.camera.lookAt(center);
+    this.controls.target.copy(center);
+    this.controls.update();
   }
 
   /**

@@ -30,11 +30,15 @@ const newPrinter = new Printer({
         file_name: undefined,
         elapsed_time: '',
         estimated_time: 0,
-        progress: 0
+        remaining_time: null,
+        progress: 0,
+        current_layer: null,
+        total_layers: null,
     },
     axisPositions: { X: 0, Y: 0, Z: 0, e0: 0, e1: 0 },
     dimensions: { X: 200, Y: 200, Z: 200 },
-    temperatures: { e0: 0, e0_set: 0, e1: 0, e1_set: 0, bed: 0, bed_set: 0 },
+    temperatures: { e0: 0, e0_set: 0, e1: 0, e1_set: 0, bed: 0, bed_set: 0, ambient: null },
+    telemetry: { fan_speed: null, power_draw: null, safety_state: 'unknown' },
     homed: false,
 })
 export const printer = reactive(newPrinter)
@@ -61,7 +65,10 @@ wsClient.on('message', (incomingMessage: MessageEvent) => {
             break
         case 'M105':
             try {
-                printer.temperatures = JSON.parse(message.message)
+                // Firmware reports e0/e0_set/e1/e1_set/bed/bed_set; merge so
+                // we don't drop fields the firmware doesn't surface (ambient).
+                const temps = JSON.parse(message.message)
+                printer.temperatures = { ...printer.temperatures, ...temps }
             } catch (e) {
                 console.error('M105 parse failed', e)
             }

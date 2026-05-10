@@ -22,7 +22,11 @@ export default class Three3DPrinter {
             options?.fov || 30, (options?.aspect.width || 800) / (options?.aspect.height || 600),
             options?.near || 0.1, options?.far || 1000);
 
-        this.renderer = new THREE.WebGLRenderer({ canvas: canvasID, antialias: true });
+        // alpha:true keeps the canvas transparent so the surrounding card
+        // background (set in CSS) shows through — avoids a hard color seam
+        // between the WebGL clear color and the card's surface token.
+        this.renderer = new THREE.WebGLRenderer({ canvas: canvasID, antialias: true, alpha: true });
+        this.renderer.setClearColor(0x000000, 0);
         this.renderer.setSize((options?.aspect.width || 800), (options?.aspect.height || 600));
 
         this.camera.position.z = options?.cameraPosition || 5;
