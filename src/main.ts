@@ -9,32 +9,63 @@ import "./styles.css";
  */
 import PrimeVue from 'primevue/config';
 import Aura from '@primevue/themes/aura';
+import { definePreset } from '@primevue/themes';
+
+/**
+ * Tactical preset: re-skins Aura to the Industrial Cyberpunk tokens so that
+ * stock PrimeVue components (Button, Dialog, Select, DataTable, Knob, Chart,
+ * Terminal) render with the new palette without per-component overrides.
+ * Per-component PassThrough refinements land in later PRs.
+ */
+const TacticalAura = definePreset(Aura, {
+    semantic: {
+        primary: {
+            50: '#e9feff',
+            100: '#d6fbfd',
+            200: '#a8f5fa',
+            300: '#63f7ff',
+            400: '#00f5ff',
+            500: '#00dce5',
+            600: '#00b8c0',
+            700: '#00696e',
+            800: '#004f53',
+            900: '#003739',
+            950: '#002021',
+        },
+        colorScheme: {
+            dark: {
+                surface: {
+                    0: '#dce4e4',
+                    50: '#b9caca',
+                    100: '#849495',
+                    200: '#3a494a',
+                    300: '#2e3637',
+                    400: '#232b2c',
+                    500: '#192121',
+                    600: '#151d1d',
+                    700: '#0d1515',
+                    800: '#081010',
+                    900: '#040808',
+                    950: '#000000',
+                },
+            },
+        },
+    },
+});
 
 import Button from "primevue/button";
 import InputNumber from 'primevue/inputnumber';
 import InputGroup from "primevue/inputgroup";
 import InputText from "primevue/inputtext";
 import Terminal from 'primevue/terminal';
-import AutoComplete from 'primevue/autocomplete';
-
-import Accordion from 'primevue/accordion';
-import AccordionPanel from 'primevue/accordionpanel';
-import AccordionHeader from 'primevue/accordionheader';
-import AccordionContent from 'primevue/accordioncontent';
 
 import Tabs from 'primevue/tabs';
 import TabList from 'primevue/tablist';
 import Tab from 'primevue/tab';
 import TabPanels from 'primevue/tabpanels';
 import TabPanel from 'primevue/tabpanel';
-import Divider from 'primevue/divider';
-import Panel from 'primevue/panel';
-import Knob from 'primevue/knob';
-import Toolbar from 'primevue/toolbar';
 import Dialog from 'primevue/dialog';
 import Select from 'primevue/select';
-import DataTable from "primevue/datatable";
-import Column from 'primevue/column';
 
 /**
  * Chart.js Components
@@ -56,8 +87,12 @@ const app = createApp(App);
 app.use(i18n)
 app.use(PrimeVue, {
     theme: {
-        preset: Aura
-    }
+        preset: TacticalAura,
+        options: {
+            darkModeSelector: '.dark',
+        },
+    },
+    ripple: false,
 })
 
 // Register PrimeVue components
@@ -66,12 +101,6 @@ app.use(PrimeVue, {
     .component('InputGroup', InputGroup)
     .component('InputText', InputText)
     .component('Terminal', Terminal)
-    .component('AutoComplete', AutoComplete)
-
-    .component('Accordion', Accordion)
-    .component('AccordionPanel', AccordionPanel)
-    .component('AccordionHeader', AccordionHeader)
-    .component('AccordionContent', AccordionContent)
 
     .component('Tab', Tab)
     .component('Tabs', Tabs)
@@ -79,15 +108,8 @@ app.use(PrimeVue, {
     .component('TabPanel', TabPanel)
     .component('TabPanels', TabPanels)
 
-    .component('Divider', Divider)
-    .component('Panel', Panel)
-    .component('Knob', Knob)
     .component('Dialog', Dialog)
     .component('Select', Select)
-    .component('Toolbar', Toolbar)
-
-    .component('DataTable', DataTable)
-    .component('Column', Column)
 
     .component('Chart', Chart)
 
