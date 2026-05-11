@@ -27,7 +27,7 @@ const COLOR_FRAME = new THREE.Color('#3a494a')
 const COLOR_AXIS_X = new THREE.Color('#ffb4ab')
 const COLOR_AXIS_Y = new THREE.Color('#fd8b00')
 const COLOR_AXIS_Z = new THREE.Color('#63f7ff')
-const COLOR_EXTRUDER = new THREE.Color('#00f5ff')
+const COLOR_EXTRUDER = new THREE.Color('#ff3a3a')
 const COLOR_HOME = new THREE.Color('#ffb4ab')
 const COLOR_PROJECTION = new THREE.Color('#00dce5')
 const BACKGROUND = new THREE.Color('#081010')
@@ -38,7 +38,7 @@ const BACKGROUND = new THREE.Color('#081010')
  * grid blends into the surrounding dark space instead of cutting off hard
  * at the build-volume frame.
  */
-function createGridMaterial(maxRadius: number, bedCenter: THREE.Vector2): THREE.ShaderMaterial {
+function createGridMaterial(): THREE.ShaderMaterial {
     return new THREE.ShaderMaterial({
         transparent: true,
         depthWrite: false,
@@ -47,8 +47,6 @@ function createGridMaterial(maxRadius: number, bedCenter: THREE.Vector2): THREE.
             uColor: { value: COLOR_GRID },
             uMinor: { value: 10.0 },
             uMajor: { value: 100.0 },
-            uMaxRadius: { value: maxRadius },
-            uBedCenter: { value: bedCenter },
         },
         vertexShader: /* glsl */ `
             varying vec3 vWorld;
@@ -62,8 +60,6 @@ function createGridMaterial(maxRadius: number, bedCenter: THREE.Vector2): THREE.
             uniform vec3 uColor;
             uniform float uMinor;
             uniform float uMajor;
-            uniform float uMaxRadius;
-            uniform vec2 uBedCenter;
             varying vec3 vWorld;
 
             float gridLine(vec2 coord, float spacing) {
@@ -78,11 +74,8 @@ function createGridMaterial(maxRadius: number, bedCenter: THREE.Vector2): THREE.
                 float majorMask = gridLine(c, uMajor) * 0.85;
                 float mask = max(minorMask, majorMask);
 
-                float dist = length(c - uBedCenter) / uMaxRadius;
-                float fade = 1.0 - smoothstep(0.4, 0.95, dist);
-
                 if (mask < 0.001) discard;
-                gl_FragColor = vec4(uColor, mask * fade);
+                gl_FragColor = vec4(uColor, mask);
             }
         `,
     })
@@ -98,6 +91,7 @@ export default class Three3DPrinter {
 
     private dimensions: PrinterDimensions
     private gridMesh: THREE.Mesh
+    private bedOutline: THREE.LineSegments
     private frameMesh: THREE.LineSegments
     private axisLines: Line2[] = []
     private axisMats: LineMaterial[] = []
@@ -127,7 +121,6 @@ export default class Three3DPrinter {
         this.scene.background = BACKGROUND
 
         this.camera = new THREE.PerspectiveCamera(35, width / height, 1, 5000)
-        this.frameInitialView()
 
         this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false })
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
@@ -141,11 +134,11 @@ export default class Three3DPrinter {
         this.controls.dampingFactor = 0.08
         this.controls.screenSpacePanning = false
         this.controls.enablePan = false
-        this.controls.minDistance = Math.max(this.dimensions.X, this.dimensions.Y) * 0.6
-        this.controls.maxDistance = Math.max(this.dimensions.X, this.dimensions.Y, this.dimensions.Z) * 4
+        this.controls.minDistance = Math.max(this.dimensions.X, this.dimensions.Y, this.dimensions.Z) * 0.8
+        this.controls.maxDistance = Math.max(this.dimensions.X, this.dimensions.Y, this.dimensions.Z) * 6
         this.controls.minPolarAngle = 0.05
         this.controls.maxPolarAngle = Math.PI / 2 - 0.02
-        this.controls.target.set(this.dimensions.X / 2, 0, this.dimensions.Y / 2)
+        this.frameInitialView()
         this.controls.update()
 
         // MSAA × 4 render target so bloom hits anti-aliased edges, not jaggies.
@@ -160,6 +153,9 @@ export default class Three3DPrinter {
 
         this.gridMesh = this.buildGrid()
         this.scene.add(this.gridMesh)
+
+        this.bedOutline = this.buildBedOutline()
+        this.scene.add(this.bedOutline)
 
         this.frameMesh = this.buildFrame()
         this.scene.add(this.frameMesh)
@@ -222,14 +218,9 @@ export default class Three3DPrinter {
         if (next.X === this.dimensions.X && next.Y === this.dimensions.Y && next.Z === this.dimensions.Z) return
         this.dimensions = next
 
-        const radius = Math.max(next.X, next.Y)
-        const bedCenter = new THREE.Vector2(next.X / 2, next.Y / 2)
-        const gridMat = this.gridMesh.material as THREE.ShaderMaterial
-        gridMat.uniforms.uMaxRadius.value = radius
-        gridMat.uniforms.uBedCenter.value = bedCenter
         this.gridMesh.geometry.dispose()
-        this.gridMesh.geometry = new THREE.PlaneGeometry(radius * 2, radius * 2).rotateX(-Math.PI / 2)
-        this.gridMesh.position.set(next.X / 2 - radius, 0, next.Y / 2 - radius)
+        this.gridMesh.geometry = new THREE.PlaneGeometry(next.X, next.Y).rotateX(-Math.PI / 2)
+        this.gridMesh.position.set(next.X / 2, 0, next.Y / 2)
 
         this.scene.remove(this.frameMesh)
         this.frameMesh.geometry.dispose()
@@ -237,14 +228,19 @@ export default class Three3DPrinter {
         this.frameMesh = this.buildFrame()
         this.scene.add(this.frameMesh)
 
+        this.scene.remove(this.bedOutline)
+        this.bedOutline.geometry.dispose()
+        ;(this.bedOutline.material as THREE.Material).dispose()
+        this.bedOutline = this.buildBedOutline()
+        this.scene.add(this.bedOutline)
+
         this.disposeAxes()
         this.buildAxes()
 
-        this.controls.target.set(next.X / 2, 0, next.Y / 2)
-        this.controls.minDistance = Math.max(next.X, next.Y) * 0.6
-        this.controls.maxDistance = Math.max(next.X, next.Y, next.Z) * 4
-        this.controls.update()
+        this.controls.minDistance = Math.max(next.X, next.Y, next.Z) * 0.8
+        this.controls.maxDistance = Math.max(next.X, next.Y, next.Z) * 6
         this.frameInitialView()
+        this.controls.update()
     }
 
     /** Dispose every GPU resource and stop the animation loop. */
@@ -288,18 +284,44 @@ export default class Three3DPrinter {
     private frameInitialView(): void {
         const { X, Y, Z } = this.dimensions
         const span = Math.max(X, Y, Z)
-        this.camera.position.set(X / 2 + span * 1.1, span * 0.95, Y / 2 + span * 1.1)
+        // 135° azimuth so the bed origin (0,0,0) lands on the left of the
+        // view (camera sits in the +X / −Z quadrant relative to the volume
+        // centre, looking back toward −X / +Z). 30° elevation for a 3/4
+        // perspective, sat back ~2.8× span so the volume fits comfortably.
+        const dist = span * 2.8
+        const cosE = Math.cos(Math.PI / 6)
+        const sinE = Math.sin(Math.PI / 6)
+        const cosA = Math.cos(Math.PI * 3 / 2)
+        const sinA = Math.sin(Math.PI * 3 / 2)
+
+        const vx = X / 2, vy = Z / 2, vz = Y / 2
+        const cx = dist * cosE * sinA
+        const cy = dist * sinE
+        const cz = dist * cosE * cosA
+
+        // Pan the orbit target along −view_right (i.e. screen-left in world
+        // coords) so the volume renders in the right portion of the canvas,
+        // leaving room for the left-side X/Y/Z overlay.
+        const viewDir = new THREE.Vector3(-cx, -cy, -cz).normalize()
+        const viewRight = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), viewDir).normalize()
+        const pan = viewRight.multiplyScalar(-(span * 0.25 - 60))
+
+        const tx = vx + pan.x
+        const ty = vy + pan.y
+        const tz = vz + pan.z
+
+        this.camera.position.set(tx + cx, ty + cy, tz + cz)
         this.camera.up.set(0, 1, 0)
-        this.camera.lookAt(X / 2, Z / 3, Y / 2)
+        this.camera.lookAt(tx, ty, tz)
+        if (this.controls) this.controls.target.set(tx, ty, tz)
     }
 
     private buildGrid(): THREE.Mesh {
-        const radius = Math.max(this.dimensions.X, this.dimensions.Y)
-        const geom = new THREE.PlaneGeometry(radius * 2, radius * 2).rotateX(-Math.PI / 2)
-        const bedCenter = new THREE.Vector2(this.dimensions.X / 2, this.dimensions.Y / 2)
-        const mat = createGridMaterial(radius, bedCenter)
-        const mesh = new THREE.Mesh(geom, mat)
-        mesh.position.set(this.dimensions.X / 2 - radius, 0, this.dimensions.Y / 2 - radius)
+        const { X, Y } = this.dimensions
+        // Plane is exactly bed-sized so the grid stops at the build-plate edge.
+        const geom = new THREE.PlaneGeometry(X, Y).rotateX(-Math.PI / 2)
+        const mesh = new THREE.Mesh(geom, createGridMaterial())
+        mesh.position.set(X / 2, 0, Y / 2)
         return mesh
     }
 
@@ -311,6 +333,27 @@ export default class Three3DPrinter {
             color: COLOR_FRAME,
             transparent: true,
             opacity: 0.7,
+        })
+        return new THREE.LineSegments(geom, mat)
+    }
+
+    /** Bright bed-perimeter outline so it reads as "this is the build plate"
+     *  rather than blending into the dim gantry frame. */
+    private buildBedOutline(): THREE.LineSegments {
+        const { X, Y } = this.dimensions
+        const positions = new Float32Array([
+            0, 0, 0,   X, 0, 0,
+            X, 0, 0,   X, 0, Y,
+            X, 0, Y,   0, 0, Y,
+            0, 0, Y,   0, 0, 0,
+        ])
+        const geom = new THREE.BufferGeometry()
+        geom.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+        const mat = new THREE.LineBasicMaterial({
+            color: COLOR_GRID,
+            transparent: true,
+            opacity: 0.95,
+            toneMapped: false,
         })
         return new THREE.LineSegments(geom, mat)
     }
@@ -358,6 +401,8 @@ export default class Three3DPrinter {
             emissiveIntensity: 2.5,
             roughness: 0.2,
             metalness: 0.1,
+            transparent: true,
+            opacity: 0.7,
             toneMapped: false,
         })
         return new THREE.Mesh(geom, mat)

@@ -112,7 +112,7 @@ export default defineComponent({
         return {
             printer,
             movementValue, extruderValue, fanPercent, feedPercent,
-            fanSegments, feedSegments, canvasRef,
+            fanSegments, feedSegments, canvasRef, canvasContainerRef,
             sendMovementCommand, setFanFromSegment, setFeedFromSegment,
         }
     },
@@ -140,38 +140,27 @@ export default defineComponent({
                     Vol {{ printer.printerInfo.dimensions.X }}×{{ printer.printerInfo.dimensions.Y }}×{{ printer.printerInfo.dimensions.Z }} mm
                 </span>
             </div>
-        </div>
 
-        <!-- Current Position Panel -->
-        <div class="w-full max-w-5xl border border-outline-variant rounded p-6 bg-surface-container/30">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="font-headline-md flex items-center gap-2 text-on-surface">
-                    <span class="w-2 h-6 bg-primary-fixed-dim" />
-                    CURRENT POSITION
-                </h3>
-                <div class="px-3 py-1 bg-surface-container-highest rounded text-[10px] font-label-caps text-on-surface-variant border border-outline-variant/30">
-                    UNIT: MILLIMETERS (mm)
-                </div>
-            </div>
-            <div class="grid grid-cols-3 gap-6">
-                <div class="relative overflow-hidden bg-surface-container-lowest border-l-2 border-primary-fixed-dim rounded-r p-4">
+            <!-- X/Y/Z position vertical overlay on the left of the viewport -->
+            <div class="pointer-events-none absolute top-12 left-4 bottom-12 flex flex-col gap-3 w-44">
+                <div class="pointer-events-auto relative overflow-hidden bg-surface-container-lowest/85 backdrop-blur-md border-l-2 border-primary-fixed-dim rounded-r p-3">
                     <div class="text-[10px] font-label-caps text-on-surface-variant mb-1">X COORDINATE</div>
                     <div class="flex items-baseline gap-2">
-                        <span class="font-code-lg text-3xl text-primary-fixed-dim tracking-tighter">{{ printer.axisPositions.X.toFixed(2) }}</span>
+                        <span class="font-code-lg text-2xl text-primary-fixed-dim tracking-tighter">{{ printer.axisPositions.X.toFixed(2) }}</span>
                         <span class="text-[10px] font-code-sm text-outline">MM</span>
                     </div>
                 </div>
-                <div class="relative overflow-hidden bg-surface-container-lowest border-l-2 border-secondary-container rounded-r p-4">
+                <div class="pointer-events-auto relative overflow-hidden bg-surface-container-lowest/85 backdrop-blur-md border-l-2 border-secondary-container rounded-r p-3">
                     <div class="text-[10px] font-label-caps text-on-surface-variant mb-1">Y COORDINATE</div>
                     <div class="flex items-baseline gap-2">
-                        <span class="font-code-lg text-3xl text-secondary-container tracking-tighter">{{ printer.axisPositions.Y.toFixed(2) }}</span>
+                        <span class="font-code-lg text-2xl text-secondary-container tracking-tighter">{{ printer.axisPositions.Y.toFixed(2) }}</span>
                         <span class="text-[10px] font-code-sm text-outline">MM</span>
                     </div>
                 </div>
-                <div class="relative overflow-hidden bg-surface-container-lowest border-l-2 border-tertiary-container rounded-r p-4">
+                <div class="pointer-events-auto relative overflow-hidden bg-surface-container-lowest/85 backdrop-blur-md border-l-2 border-tertiary-container rounded-r p-3">
                     <div class="text-[10px] font-label-caps text-on-surface-variant mb-1">Z COORDINATE</div>
                     <div class="flex items-baseline gap-2">
-                        <span class="font-code-lg text-3xl text-tertiary-container tracking-tighter">{{ printer.axisPositions.Z.toFixed(2) }}</span>
+                        <span class="font-code-lg text-2xl text-tertiary-container tracking-tighter">{{ printer.axisPositions.Z.toFixed(2) }}</span>
                         <span class="text-[10px] font-code-sm text-outline">MM</span>
                     </div>
                 </div>
