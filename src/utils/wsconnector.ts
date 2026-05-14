@@ -3,17 +3,30 @@ import type { Message } from "../types/messages"
 
 /**
  * WebSocket connection manager that extends EventEmitter
- * Handles connection lifecycle and message sending.
- * Emits: 'connected', 'disconnected', 'error', 'message'
+ * Handles connection lifecycle, the optional auth handshake, and message
+ * sending.
+ * Emits: 'connected', 'disconnected', 'error', 'authfailed', 'message'
  */
 export default class WebSocketConnector extends EventEmitter {
     private wsClient: WebSocket | null = null
     private _wsURL: string = ''
     private _connectionStatus: boolean = false
     private _hasAttemptedConnection: boolean = false
+    private _authToken: string = ''
+    private _authPending: boolean = false
 
     set wsURL(value: string | undefined) {
         if (value) this._wsURL = value
+    }
+
+    /**
+     * Shared secret for the WebSocket auth handshake. Set from the selected
+     * printer profile before `connect()`. An empty/whitespace value means
+     * "no auth" — the handshake is skipped and the server is expected to be
+     * running without XCONTROLLER_AUTH_TOKEN.
+     */
+    set authToken(value: string | undefined) {
+        this._authToken = value?.trim() ?? ''
     }
 
     get connectionStatus(): boolean {
@@ -46,6 +59,7 @@ export default class WebSocketConnector extends EventEmitter {
         }
 
         this._hasAttemptedConnection = true
+        this._authPending = false
         this.wsClient = new WebSocket(this._wsURL, protocols)
         this.attachEventListeners()
     }
@@ -62,14 +76,54 @@ export default class WebSocketConnector extends EventEmitter {
     private attachEventListeners(): void {
         if (!this.wsClient) return
         this.wsClient.onopen = () => {
+            // With a token configured the socket isn't "connected" in the
+            // application sense until the server accepts the handshake. Send
+            // the Auth message as the very first frame and withhold the
+            // 'connected' event until the reply lands.
+            if (this._authToken) {
+                this._authPending = true
+                this.wsClient!.send(JSON.stringify({
+                    message_type: 'Auth',
+                    message: this._authToken,
+                }))
+                return
+            }
             this._connectionStatus = true
             this.emit('connected', 'connected')
         }
         this.wsClient.onclose = () => {
             this._connectionStatus = false
+            this._authPending = false
             this.emit('disconnected', 'disconnected')
         }
         this.wsClient.onerror = (error) => this.emit('error', error)
-        this.wsClient.onmessage = (message) => this.emit('message', message)
+        this.wsClient.onmessage = (message) => {
+            // While the handshake is outstanding the only frame we expect is
+            // the server's Auth reply. Intercept it here so the rest of the
+            // app (the client.ts dispatcher) never sees it.
+            if (this._authPending) {
+                this._authPending = false
+                let ok = false
+                try {
+                    const parsed = JSON.parse(message.data)
+                    ok = parsed?.message_type === 'Auth' && parsed?.message === 'ok'
+                } catch {
+                    ok = false
+                }
+                if (ok) {
+                    this._connectionStatus = true
+                    this.emit('connected', 'connected')
+                } else {
+                    // The server drops the socket on a failed handshake;
+                    // close proactively too so we never leak a half-open
+                    // connection, and surface a distinct event so the UI can
+                    // tell "wrong token" apart from a generic link failure.
+                    this.emit('authfailed', 'authfailed')
+                    this.wsClient?.close()
+                }
+                return
+            }
+            this.emit('message', message)
+        }
     }
 }

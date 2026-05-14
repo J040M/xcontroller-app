@@ -63,7 +63,9 @@
             "label_name": "Nome da impressora",
             "label_url": "ws://myprinter.local:9002",
             "label_firmware": "Firmware",
-            "label_dimensions": "Dimensões"
+            "label_dimensions": "Dimensões",
+            "label_auth_token": "Token de autenticação (opcional)",
+            "placeholder_auth_token": "Deixe vazio se o servidor não tiver token"
         },
         "heating_profile": {
             "header": "Perfil de aquecimento",
@@ -74,7 +76,8 @@
         },
         "error_message": {
             "header": "Alerta erro!",
-            "connection_error": "Sem ligação a impressora. Verifique a ligação e tente novamente."
+            "connection_error": "Sem ligação a impressora. Verifique a ligação e tente novamente.",
+            "auth_error": "Falha na autenticação. Verifique o token de autenticação no perfil da impressora."
         }
     }
 }

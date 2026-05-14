@@ -33,12 +33,17 @@ export default defineComponent({
             loadingStatus.value = false
             eventBus.emit('message', 'openConnectionErrorDialog')
         })
+        useListener(wsClient, 'authfailed', () => {
+            connectionStatus.value = false
+            loadingStatus.value = false
+        })
 
         function setWSS(): void {
             if (!selectedProfile.value) return
             const profile = printerProfiles.value.find((p) => p.uuid === selectedProfile.value)
             if (!profile) return
             wsClient.wsURL = profile.url
+            wsClient.authToken = profile.authToken
             printer.bindProfile(profile)
         }
 

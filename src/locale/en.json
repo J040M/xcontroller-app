@@ -64,7 +64,9 @@
             "label_name": "Printer name",
             "label_url": "ws://myprinter.local:9002",
             "label_firmware": "Firmware",
-            "label_dimensions": "Dimensions"
+            "label_dimensions": "Dimensions",
+            "label_auth_token": "Auth token (optional)",
+            "placeholder_auth_token": "Leave empty if the server has no token"
         },
         "heating_profile": {
             "header": "Heating profile",
@@ -75,7 +77,8 @@
         },
         "error_message": {
             "header": "Error alert!",
-            "connection_error": "No connection to printer! Verify the connection."
+            "connection_error": "No connection to printer! Verify the connection.",
+            "auth_error": "Authentication failed. Check the auth token in the printer profile."
         }
     }
 }

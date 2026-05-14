@@ -11,6 +11,7 @@ function defaultProfile(): PrinterProfile {
         status: false,
         name: '',
         url: '',
+        authToken: '',
         printStatus: {
             state: 'unknown',
             file_name: undefined,
@@ -81,6 +82,20 @@ export default defineComponent({
                     id="url"
                     v-model="printerProfile.url"
                     :placeholder="$t('printer_profile.label_url')"
+                    autocomplete="off"
+                    class="w-full font-code-sm"
+                />
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label for="authToken" class="text-[10px] font-label-caps uppercase tracking-widest text-on-surface-variant">
+                    {{ $t('printer_profile.label_auth_token') }}
+                </label>
+                <InputText
+                    id="authToken"
+                    v-model="printerProfile.authToken"
+                    type="password"
+                    :placeholder="$t('printer_profile.placeholder_auth_token')"
                     autocomplete="off"
                     class="w-full font-code-sm"
                 />

@@ -63,7 +63,9 @@
             "label_name": "Nom de l'imprimante",
             "label_url": "ws://myprinter.local:9002",
             "label_firmware": "Firmware",
-            "label_dimensions": "Dimensions"
+            "label_dimensions": "Dimensions",
+            "label_auth_token": "Jeton d'authentification (optionnel)",
+            "placeholder_auth_token": "Laisser vide si le serveur n'a pas de jeton"
         },
         "heating_profile": {
             "header": "Profil de chauffage",
@@ -74,7 +76,8 @@
         },
         "error_message": {
             "header": "Alert error",
-            "connection_error": "Erreur de connexion! Vérifiez la connexion et réessayez."
+            "connection_error": "Erreur de connexion! Vérifiez la connexion et réessayez.",
+            "auth_error": "Échec de l'authentification. Vérifiez le jeton d'authentification dans le profil de l'imprimante."
         }
     }
 }

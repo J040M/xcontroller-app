@@ -84,6 +84,12 @@ interface PrinterProfile {
     printStatus: PrintStatus,
     name: string,
     url: string,
+    /**
+     * Shared secret for the WebSocket auth handshake. Optional — only set
+     * when the xcontroller server is started with XCONTROLLER_AUTH_TOKEN.
+     * When present, the connector sends it as the first message on connect.
+     */
+    authToken?: string,
     firmware?: string,
     axisPositions: AxisPositions,
     dimensions: {

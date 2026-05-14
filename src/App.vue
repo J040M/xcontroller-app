@@ -23,6 +23,13 @@ export default defineComponent({
   setup() {
     const errorMessageDialog = ref(false)
     /**
+     * Which `error_message.*` string the dialog shows. A failed auth
+     * handshake is a distinct failure mode from a dropped/refused link, so
+     * the dialog body switches between the two instead of always blaming
+     * the connection.
+     */
+    const errorMessageKey = ref<'connection_error' | 'auth_error'>('connection_error')
+    /**
      * The Connector panel auto-collapses on a successful connection (the
      * printer list isn't useful while connected) and auto-opens again when
      * the link drops, so the user can reconnect without hunting for it.
@@ -31,6 +38,7 @@ export default defineComponent({
 
     useListener(eventBus, 'message', (message: string) => {
       if (message === 'openConnectionErrorDialog') {
+        errorMessageKey.value = 'connection_error'
         errorMessageDialog.value = true
       }
     })
@@ -44,9 +52,14 @@ export default defineComponent({
     useListener(wsClient, 'error', () => {
       connectorOpen.value = true
     })
+    useListener(wsClient, 'authfailed', () => {
+      connectorOpen.value = true
+      errorMessageKey.value = 'auth_error'
+      errorMessageDialog.value = true
+    })
 
     const { t } = useI18n()
-    return { t, errorMessageDialog, connectorOpen }
+    return { t, errorMessageDialog, errorMessageKey, connectorOpen }
   }
 })
 </script>
@@ -59,7 +72,7 @@ export default defineComponent({
     :style="{ width: '25rem' }"
     :closable="false"
   >
-    <p class="font-code-sm text-on-surface">{{ $t('error_message.connection_error') }}</p>
+    <p class="font-code-sm text-on-surface">{{ $t('error_message.' + errorMessageKey) }}</p>
     <template #footer>
       <Button type="button" label="Cancel" severity="secondary" @click="errorMessageDialog = false" />
     </template>
