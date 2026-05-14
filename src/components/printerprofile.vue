@@ -17,15 +17,11 @@ function defaultProfile(): PrinterProfile {
             file_name: undefined,
             elapsed_time: '',
             estimated_time: 0,
-            remaining_time: null,
             progress: 0,
-            current_layer: null,
-            total_layers: null,
         },
         axisPositions: { X: 0, Y: 0, Z: 0, e0: 0, e1: 0 },
         dimensions: { X: 0, Y: 0, Z: 0 },
-        temperatures: { e0: 0, e0_set: 0, e1: 0, e1_set: 0, bed: 0, bed_set: 0, ambient: null },
-        telemetry: { fan_speed: null, power_draw: null, safety_state: 'unknown' },
+        temperatures: { e0: 0, e0_set: 0, e1: 0, e1_set: 0, bed: 0, bed_set: 0 },
         homed: false,
     }
 }

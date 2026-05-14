@@ -1,6 +1,6 @@
 <script lang="ts">
 import { ChartData } from 'chart.js/auto';
-import { defineComponent, ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { defineComponent, ref, onMounted, onBeforeUnmount } from 'vue'
 import { printer, storage } from '../../init/client';
 import { eventBus } from '../../utils/eventbus';
 
@@ -102,17 +102,11 @@ export default defineComponent({
         const e0Segments = (target: number) => Math.min(8, Math.max(0, Math.round((target / 280) * 8)))
         const bedSegments = (target: number) => Math.min(8, Math.max(0, Math.round((target / 110) * 8)))
 
-        const ambient = computed(() => printer.printerInfo.temperatures.ambient)
-        const fanSpeed = computed(() => printer.printerInfo.telemetry.fan_speed)
-        const powerDraw = computed(() => printer.printerInfo.telemetry.power_draw)
-        const safetyState = computed(() => printer.printerInfo.telemetry.safety_state)
-
         return {
             eventBus, printer, heatingProfiles, activeProfileId,
             graphData, graphOptions,
             selectProfile, shutdownHeating, deleteProfile,
             e0Segments, bedSegments,
-            ambient, fanSpeed, powerDraw, safetyState,
         }
     },
 })
@@ -272,24 +266,5 @@ export default defineComponent({
             </div>
         </div>
 
-        <!-- Footer stat strip -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="bg-surface-container-low/50 border border-outline-variant/30 p-3 flex flex-col items-center">
-                <span class="text-[8px] font-label-caps text-outline uppercase">Ambient_Temp</span>
-                <span class="font-code-sm text-on-surface">{{ ambient !== null ? `${ambient}°C` : '—' }}</span>
-            </div>
-            <div class="bg-surface-container-low/50 border border-outline-variant/30 p-3 flex flex-col items-center">
-                <span class="text-[8px] font-label-caps text-outline uppercase">Fan_Speed</span>
-                <span class="font-code-sm text-on-surface">{{ fanSpeed !== null ? `${fanSpeed}%` : '—' }}</span>
-            </div>
-            <div class="bg-surface-container-low/50 border border-outline-variant/30 p-3 flex flex-col items-center">
-                <span class="text-[8px] font-label-caps text-outline uppercase">Power_Draw</span>
-                <span class="font-code-sm text-on-surface">{{ powerDraw !== null ? `${powerDraw}W` : '—' }}</span>
-            </div>
-            <div class="bg-surface-container-low/50 border border-outline-variant/30 p-3 flex flex-col items-center">
-                <span class="text-[8px] font-label-caps text-outline uppercase">Safety_Status</span>
-                <span class="font-code-sm text-[10px] uppercase tracking-tighter" :class="safetyState === 'secure' ? 'text-primary-fixed-dim' : safetyState === 'fault' ? 'text-error' : 'text-outline'">{{ safetyState }}</span>
-            </div>
-        </div>
     </div>
 </template>

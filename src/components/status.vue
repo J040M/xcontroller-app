@@ -116,15 +116,9 @@ export default defineComponent({
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <div class="font-label-caps text-on-surface-variant uppercase mb-1">{{ $t('status.elapsed_time') }}</div>
-                    <div class="font-code-sm text-on-surface">{{ printer.printerInfo.printStatus.elapsed_time || '—' }}</div>
-                </div>
-                <div>
-                    <div class="font-label-caps text-on-surface-variant uppercase mb-1">Remaining</div>
-                    <div class="font-code-sm text-on-surface">{{ printer.printerInfo.printStatus.remaining_time || '—' }}</div>
-                </div>
+            <div class="flex flex-col gap-1">
+                <span class="font-label-caps text-on-surface-variant uppercase">{{ $t('status.elapsed_time') }}</span>
+                <span class="font-code-sm text-on-surface">{{ printer.printerInfo.printStatus.elapsed_time || '—' }}</span>
             </div>
 
             <div class="grid grid-cols-3 gap-2 pt-3 border-t border-outline-variant/40">
