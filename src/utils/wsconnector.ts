@@ -4,7 +4,7 @@ import type { Message } from "../types/messages"
 /**
  * WebSocket connection manager that extends EventEmitter
  * Handles connection lifecycle, the optional auth handshake, and message
- * sending.
+ * sending (both JSON text commands and raw binary upload frames).
  * Emits: 'connected', 'disconnected', 'error', 'authfailed', 'message'
  */
 export default class WebSocketConnector extends EventEmitter {
@@ -43,6 +43,15 @@ export default class WebSocketConnector extends EventEmitter {
     }
 
     /**
+     * Bytes still buffered by the socket and not yet handed to the network.
+     * Used by the upload manager to apply backpressure while streaming
+     * binary frames so we don't grow an unbounded send buffer.
+     */
+    get bufferedAmount(): number {
+        return this.wsClient?.bufferedAmount ?? 0
+    }
+
+    /**
      * Establishes a WebSocket connection. If a prior socket is still open,
      * its handlers are detached and it is closed first to prevent stale
      * events from a previous session leaking through.
@@ -61,6 +70,7 @@ export default class WebSocketConnector extends EventEmitter {
         this._hasAttemptedConnection = true
         this._authPending = false
         this.wsClient = new WebSocket(this._wsURL, protocols)
+        this.wsClient.binaryType = 'arraybuffer'
         this.attachEventListeners()
     }
 
@@ -71,6 +81,17 @@ export default class WebSocketConnector extends EventEmitter {
     sendCommand(command: Message): void {
         if (!this.wsClient || this.wsClient.readyState !== WebSocket.OPEN) return
         this.wsClient.send(JSON.stringify(command))
+    }
+
+    /**
+     * Sends a raw binary frame. Used by the upload manager to stream the
+     * file body after an `UploadBegin`/`UploadAck` exchange. Returns false
+     * when the socket isn't open so the caller can abort the transfer.
+     */
+    sendBinary(data: ArrayBuffer | ArrayBufferView): boolean {
+        if (!this.wsClient || this.wsClient.readyState !== WebSocket.OPEN) return false
+        this.wsClient.send(data)
+        return true
     }
 
     private attachEventListeners(): void {

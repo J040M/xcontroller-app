@@ -3,12 +3,21 @@ import { defineComponent, ref } from 'vue'
 import { printer } from '../init/client'
 import { eventBus } from '../utils/eventbus';
 import { useListener } from '../utils/listeners';
+import { uploadFile } from '../utils/upload';
 
 export default defineComponent({
     name: 'filesComponent',
     setup() {
         const files = ref<string[] | undefined>(undefined)
         const loadingStatus = ref(false)
+
+        // Binary upload state. `uploading` gates the UI; `uploadPercent`
+        // tracks server-reported progress against the source file size.
+        const fileInput = ref<HTMLInputElement | null>(null)
+        const uploading = ref(false)
+        const uploadPercent = ref(0)
+        const uploadFilename = ref('')
+        const uploadError = ref<string | null>(null)
 
         useListener(eventBus, 'printer:m20', (raw: string) => {
             loadingStatus.value = false
@@ -26,17 +35,40 @@ export default defineComponent({
             printer.listFiles()
         }
 
-        function readFile(event: Event): void {
-            const input = event.target as HTMLInputElement | null
-            if (!input || !input.files) return
-            const file = input.files[0]
+        function triggerFilePicker(): void {
+            uploadError.value = null
+            fileInput.value?.click()
+        }
 
-            const reader = new FileReader()
-            reader.onload = (e) => {
-                const fileContent = ';' + file.name + '\n' + (e.target?.result as string)
-                printer.uploadFile(fileContent)
+        async function readFile(event: Event): Promise<void> {
+            const input = event.target as HTMLInputElement | null
+            const file = input?.files?.[0]
+            // Clear the input so picking the same file again still fires change.
+            if (input) input.value = ''
+            if (!file) return
+
+            uploadError.value = null
+            uploadFilename.value = file.name
+            uploadPercent.value = 0
+            uploading.value = true
+
+            const total = file.size
+            try {
+                await uploadFile(file, {
+                    onProgress: (progress) => {
+                        uploadPercent.value = total > 0
+                            ? Math.min(100, Math.round((progress.source_bytes / total) * 100))
+                            : 0
+                    },
+                })
+                uploadPercent.value = 100
+                // Refresh the listing so the freshly uploaded file shows up.
+                printer.listFiles()
+            } catch (e) {
+                uploadError.value = e instanceof Error ? e.message : String(e)
+            } finally {
+                uploading.value = false
             }
-            reader.readAsText(file)
         }
 
         function deleteFile(name: string): void {
@@ -44,7 +76,11 @@ export default defineComponent({
             printer.listFiles()
         }
 
-        return { printer, files, loadingStatus, listFiles, readFile, deleteFile }
+        return {
+            printer, files, loadingStatus,
+            fileInput, uploading, uploadPercent, uploadFilename, uploadError,
+            listFiles, triggerFilePicker, readFile, deleteFile,
+        }
     },
 })
 </script>
@@ -60,6 +96,42 @@ export default defineComponent({
                 <span class="material-symbols-outlined" :class="{ 'animate-spin': loadingStatus }">refresh</span>
             </button>
             <span class="text-[10px] font-label-caps text-on-surface-variant uppercase tracking-wider">Local Storage</span>
+        </div>
+
+        <!-- Upload to SD card -->
+        <div class="flex flex-col gap-2">
+            <input
+                ref="fileInput"
+                type="file"
+                accept=".gco,.gcode,.g"
+                class="hidden"
+                @change="readFile"
+            />
+            <button
+                @click="triggerFilePicker()"
+                :disabled="uploading || !printer.printerInfo.status"
+                class="flex items-center justify-center gap-2 h-8 rounded border border-primary-fixed-dim text-primary-fixed-dim text-[10px] font-label-caps uppercase tracking-wider transition-colors hover:bg-primary-fixed-dim/10 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+                <span class="material-symbols-outlined text-[18px]" :class="{ 'animate-spin': uploading }">
+                    {{ uploading ? 'progress_activity' : 'upload' }}
+                </span>
+                <span>{{ $t('files.upload') }}</span>
+            </button>
+
+            <div v-if="uploading" class="flex flex-col gap-1">
+                <div class="flex justify-between items-center text-[10px] font-label-caps text-on-surface-variant">
+                    <span class="truncate pr-2" :title="uploadFilename">{{ uploadFilename }}</span>
+                    <span class="shrink-0">{{ uploadPercent }}%</span>
+                </div>
+                <div class="h-1.5 bg-surface-container rounded overflow-hidden">
+                    <div
+                        class="h-full bg-primary-fixed-dim transition-all duration-150"
+                        :style="{ width: uploadPercent + '%' }"
+                    />
+                </div>
+            </div>
+
+            <p v-if="uploadError" class="text-[10px] font-code-sm text-error">{{ uploadError }}</p>
         </div>
 
         <div v-if="files && files.length" class="flex flex-col gap-2 max-h-[400px] overflow-y-auto pr-1">

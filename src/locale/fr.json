@@ -11,7 +11,8 @@
             "filename": "Fichier: ",
             "file_modified_date": "Modifié: ",
             "filesize": "Taille: ",
-            "no_files": "Aucun fichier"
+            "no_files": "Aucun fichier",
+            "upload": "Téléverser vers la SD"
         },
         "status": {
             "state": "État:" ,

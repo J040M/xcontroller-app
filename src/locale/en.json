@@ -11,7 +11,8 @@
             "filename": "Filename: ",
             "file_modified_date": "Modified: ",
             "filesize": "Size: ",
-            "no_files": "No files"
+            "no_files": "No files",
+            "upload": "Upload to SD"
         },
         "status": {
             "state": "State:",

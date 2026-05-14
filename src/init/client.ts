@@ -88,6 +88,20 @@ wsClient.on('message', (incomingMessage: MessageEvent) => {
         case 'terminal':
             eventBus.emit('terminal:line', message.raw_message.replace(/\r/g, ' '))
             break
+        // Binary upload protocol replies — re-emitted for the upload manager
+        // (utils/upload.ts), which owns the UploadBegin/Ack/payload state.
+        case 'UploadAck':
+            eventBus.emit('upload:ack', message.message)
+            break
+        case 'UploadProgress':
+            eventBus.emit('upload:progress', message.message)
+            break
+        case 'UploadDone':
+            eventBus.emit('upload:done', message.message)
+            break
+        case 'UploadError':
+            eventBus.emit('upload:error', message.message)
+            break
         case 'MessageSenderError':
             console.error('Error received from server')
             break

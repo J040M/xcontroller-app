@@ -15,7 +15,7 @@ Desktop/Web application to communicate with [XController](https://github.com/J04
 - [x] **Run print jobs**: Run 3D printing job from SD card.
 - [x] **Printer Status**: Get live updates on the printer's status, including print progress, and more.
 - [x] **GCode Viewer**: Visualize your 3D printing jobs with an integrated GCode viewer.
-- [ ] **Upload files to SD**: Upload files to SD card.
+- [x] **Upload files to SD**: Stream G-code files to the printer's SD card over the binary upload protocol.
 
 ## Development
 
