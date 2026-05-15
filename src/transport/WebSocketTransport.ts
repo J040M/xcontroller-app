@@ -1,13 +1,15 @@
 import { EventEmitter } from '../utils/eventemitter';
 import type { Message } from "../types/messages"
+import type { PrinterProfile } from "../types/printer"
+import type { ITransport } from "./ITransport"
 
 /**
- * WebSocket connection manager that extends EventEmitter
+ * WebSocket transport — talks to the xcontroller backend over a WebSocket.
  * Handles connection lifecycle, the optional auth handshake, and message
  * sending (both JSON text commands and raw binary upload frames).
  * Emits: 'connected', 'disconnected', 'error', 'authfailed', 'message'
  */
-export default class WebSocketConnector extends EventEmitter {
+export default class WebSocketTransport extends EventEmitter implements ITransport {
     private wsClient: WebSocket | null = null
     private _wsURL: string = ''
     private _connectionStatus: boolean = false
@@ -27,6 +29,16 @@ export default class WebSocketConnector extends EventEmitter {
      */
     set authToken(value: string | undefined) {
         this._authToken = value?.trim() ?? ''
+    }
+
+    /**
+     * Apply a printer profile's connection settings. Called by the connector
+     * before `connect()`. The profile's `url`/`authToken` are the WebSocket
+     * link parameters; USB-only fields are ignored here.
+     */
+    configure(profile: PrinterProfile): void {
+        this.wsURL = profile.url
+        this.authToken = profile.authToken
     }
 
     get connectionStatus(): boolean {

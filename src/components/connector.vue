@@ -2,7 +2,8 @@
 import { defineComponent, ref, onMounted } from 'vue'
 import { eventBus } from '../utils/eventbus';
 import { useListener } from '../utils/listeners';
-import { storage, wsClient, printer } from '../init/client';
+import { storage, getTransport, setActiveTransport, printer } from '../init/client';
+import { createTransport } from '../transport';
 import printerProfile from './printerprofile.vue';
 import type { PrinterProfile } from '../types/printer';
 
@@ -21,41 +22,47 @@ export default defineComponent({
             printerProfiles.value = JSON.parse(localStorage.getItem('PrinterProfiles') || '[]') as PrinterProfile[]
         })
 
-        useListener(wsClient, 'connected', () => {
+        useListener(eventBus, 'connection:open', () => {
             connectionStatus.value = true
             loadingStatus.value = false
         })
-        useListener(wsClient, 'disconnected', () => {
+        useListener(eventBus, 'connection:close', () => {
             connectionStatus.value = false
         })
-        useListener(wsClient, 'error', () => {
+        useListener(eventBus, 'connection:error', () => {
             connectionStatus.value = false
             loadingStatus.value = false
             eventBus.emit('message', 'openConnectionErrorDialog')
         })
-        useListener(wsClient, 'authfailed', () => {
+        useListener(eventBus, 'connection:authfailed', () => {
             connectionStatus.value = false
             loadingStatus.value = false
         })
 
-        function setWSS(): void {
+        function setProfile(): void {
             if (!selectedProfile.value) return
             const profile = printerProfiles.value.find((p) => p.uuid === selectedProfile.value)
             if (!profile) return
-            wsClient.wsURL = profile.url
-            wsClient.authToken = profile.authToken
+            // Build the transport for this profile's link type (WebSocket or
+            // USB) and make it the active one — `client.ts`'s dispatcher
+            // re-binds to it, so the rest of the app is unaffected.
+            setActiveTransport(createTransport(profile))
             printer.bindProfile(profile)
         }
 
-        function connectToWSS(): void {
+        function connectToPrinter(): void {
             loadingStatus.value = true
-            wsClient.connect()
+            getTransport().connect()
+        }
+
+        function disconnect(): void {
+            getTransport().disconnect()
         }
 
         return {
-            wsClient, eventBus, storage,
+            eventBus, storage,
             printerProfiles, loadingStatus, connectionStatus, selectedProfile,
-            setWSS, connectToWSS,
+            setProfile, connectToPrinter, disconnect,
         }
     }
 })
@@ -68,7 +75,7 @@ export default defineComponent({
         <Select
             class="w-full"
             v-model="selectedProfile"
-            @value-change="setWSS"
+            @value-change="setProfile"
             :options="printerProfiles"
             optionLabel="name"
             optionValue="uuid"
@@ -84,7 +91,7 @@ export default defineComponent({
             <button
                 v-if="!connectionStatus"
                 :disabled="!selectedProfile || loadingStatus"
-                @click="connectToWSS"
+                @click="connectToPrinter"
                 class="w-10 h-10 rounded border border-primary-fixed-dim text-primary-fixed-dim flex items-center justify-center transition-colors hover:bg-primary-fixed-dim/10 disabled:opacity-40 disabled:cursor-not-allowed"
                 :title="$t('app.connector')"
             >
@@ -93,7 +100,7 @@ export default defineComponent({
             </button>
             <button
                 v-else
-                @click="wsClient.disconnect()"
+                @click="disconnect"
                 class="w-10 h-10 rounded border border-error text-error flex items-center justify-center transition-colors hover:bg-error/10"
             >
                 <span class="material-symbols-outlined">power_off</span>

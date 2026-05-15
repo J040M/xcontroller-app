@@ -7,7 +7,6 @@ import Files from './components/files.vue';
 import FooterComponent from './components/footer.vue';
 
 import { eventBus } from './utils/eventbus';
-import { wsClient } from './init/client';
 import { useListener } from './utils/listeners';
 import { useI18n } from 'vue-i18n';
 
@@ -43,16 +42,16 @@ export default defineComponent({
       }
     })
 
-    useListener(wsClient, 'connected', () => {
+    useListener(eventBus, 'connection:open', () => {
       connectorOpen.value = false
     })
-    useListener(wsClient, 'disconnected', () => {
+    useListener(eventBus, 'connection:close', () => {
       connectorOpen.value = true
     })
-    useListener(wsClient, 'error', () => {
+    useListener(eventBus, 'connection:error', () => {
       connectorOpen.value = true
     })
-    useListener(wsClient, 'authfailed', () => {
+    useListener(eventBus, 'connection:authfailed', () => {
       connectorOpen.value = true
       errorMessageKey.value = 'auth_error'
       errorMessageDialog.value = true

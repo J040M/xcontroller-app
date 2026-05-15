@@ -67,7 +67,14 @@
             "label_firmware": "Firmware",
             "label_dimensions": "Dimensions",
             "label_auth_token": "Auth token (optional)",
-            "placeholder_auth_token": "Leave empty if the server has no token"
+            "placeholder_auth_token": "Leave empty if the server has no token",
+            "label_transport": "Connection type",
+            "transport_websocket": "WebSocket (network)",
+            "transport_usb": "USB (serial)",
+            "label_serial_port": "Serial port",
+            "placeholder_serial_port": "Select a serial port",
+            "label_baud_rate": "Baud rate",
+            "btn_refresh_ports": "Refresh ports"
         },
         "heating_profile": {
             "header": "Heating profile",

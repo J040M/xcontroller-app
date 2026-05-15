@@ -1,16 +1,21 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-// #[tauri::command]
-// fn greet(name: &str) -> String {
-//     format!("Hello, {}! You've been greeted from Rust!", name)
-// }
+mod printer_core;
+mod serial;
 
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
-        // .invoke_handler(tauri::generate_handler![greet])
+        .plugin(tauri_plugin_dialog::init())
+        .manage(serial::SerialState::default())
+        .invoke_handler(tauri::generate_handler![
+            serial::list_serial_ports,
+            serial::serial_connect,
+            serial::serial_disconnect,
+            serial::serial_send_command,
+            serial::usb_upload,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

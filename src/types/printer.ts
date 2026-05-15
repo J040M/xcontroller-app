@@ -18,6 +18,13 @@ interface PrinterCommands {
 type Axis = 'X' | 'Y' | 'Z' | 'e0' | 'e1'
 type State = 'idle' | 'printing' | 'paused' | 'stopped' | 'error' | 'unknown'
 
+/**
+ * Which link a printer profile uses. `'usb'` is only selectable in the
+ * native (Tauri) app. Profiles created before USB support have no
+ * `transportType` — those are treated as `'websocket'` everywhere it's read.
+ */
+type TransportType = 'websocket' | 'usb'
+
 interface PrintStatus {
     state: State,
     file_name: string | undefined,
@@ -68,6 +75,12 @@ interface PrinterProfile {
      * When present, the connector sends it as the first message on connect.
      */
     authToken?: string,
+    /** Link type. Absent ⇒ `'websocket'` (back-compat with saved profiles). */
+    transportType?: TransportType,
+    /** Serial device for `transportType: 'usb'` (e.g. /dev/cu.usbserial-x, COM3). */
+    serialPort?: string,
+    /** Serial baud rate for `transportType: 'usb'`. Defaults to 115200. */
+    baudRate?: number,
     firmware?: string,
     axisPositions: AxisPositions,
     dimensions: {
@@ -95,6 +108,7 @@ export type {
     Axis,
     AxisPositions,
     Temperatures,
+    TransportType,
     PrinterProfile,
     PrinterCommands,
     HeatingProfile,

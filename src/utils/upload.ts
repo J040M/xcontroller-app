@@ -2,15 +2,20 @@
  * @file upload.ts
  * Binary SD-card upload manager.
  *
- * Owns the client side of xcontroller's binary upload protocol: it sends the
- * `UploadBegin` request, waits for the server's `UploadAck`, streams the file
- * body as chunked WebSocket binary frames with backpressure, forwards
- * `UploadProgress` frames to the caller, and settles on `UploadDone` /
- * `UploadError`. The Upload* server replies are surfaced on the shared
- * `eventBus` by the dispatcher in `init/client.ts`.
+ * Owns the client side of xcontroller's binary upload protocol. Two entry
+ * points, one per transport:
+ *  - `uploadFile` (WebSocket): sends `UploadBegin`, waits for `UploadAck`,
+ *    streams the file body as chunked binary frames with backpressure.
+ *  - `uploadFileFromPath` (USB): hands a filesystem path to the Rust side,
+ *    which owns the Marlin binary transfer.
+ * Both settle on the same `upload:*` `eventBus` events — the Rust USB worker
+ * and the WebSocket backend emit the identical `Upload*` message types, which
+ * `init/client.ts`'s dispatcher bridges onto the bus.
  */
 
-import { wsClient } from '../init/client'
+import { getTransport } from '../init/client'
+import WebSocketTransport from '../transport/WebSocketTransport'
+import UsbTransport from '../transport/UsbTransport'
 import { eventBus } from './eventbus'
 import type {
     UploadRequest,
@@ -91,7 +96,14 @@ export async function uploadFile(
     if (inFlight) {
         throw new Error('An upload is already in progress')
     }
-    if (!wsClient.connectionStatus) {
+    const transport = getTransport()
+    if (!(transport instanceof WebSocketTransport)) {
+        // The chunked binary-frame protocol below is WebSocket-specific. USB
+        // profiles upload via `uploadFileFromPath`, which hands the work to
+        // the Rust side instead of streaming frames from the browser.
+        throw new Error('File upload is not supported on this transport')
+    }
+    if (!transport.connectionStatus) {
         throw new Error('Not connected to a printer')
     }
     if (!isValidDestFilename(file.name)) {
@@ -113,7 +125,7 @@ export async function uploadFile(
 
     inFlight = true
     try {
-        return await runUpload(buffer, file.name, size, handlers, options)
+        return await runUpload(transport, buffer, file.name, size, handlers, options)
     } finally {
         inFlight = false
     }
@@ -121,10 +133,11 @@ export async function uploadFile(
 
 /**
  * Drives a single upload exchange once the payload has been read into memory.
- * Wires up the `eventBus` / `wsClient` listeners, sends `UploadBegin`, and
+ * Wires up the `eventBus` / `transport` listeners, sends `UploadBegin`, and
  * resolves or rejects as the protocol plays out.
  */
 function runUpload(
+    transport: WebSocketTransport,
     buffer: ArrayBuffer,
     destFilename: string,
     size: number,
@@ -139,7 +152,7 @@ function runUpload(
             eventBus.off('upload:progress', onProgress)
             eventBus.off('upload:done', onDone)
             eventBus.off('upload:error', onError)
-            wsClient.off('disconnected', onDisconnected)
+            transport.off('disconnected', onDisconnected)
         }
         const succeed = (result: UploadResult) => {
             if (settled) return
@@ -161,11 +174,11 @@ function runUpload(
             while (offset < size) {
                 if (settled) return // a server error arrived mid-stream
                 const end = Math.min(offset + CHUNK_SIZE, size)
-                if (!wsClient.sendBinary(buffer.slice(offset, end))) {
+                if (!transport.sendBinary(buffer.slice(offset, end))) {
                     throw new Error('Socket closed before the upload finished')
                 }
                 offset = end
-                while (wsClient.bufferedAmount > BACKPRESSURE_LIMIT) {
+                while (transport.bufferedAmount > BACKPRESSURE_LIMIT) {
                     await delay(20)
                     if (settled) return
                 }
@@ -201,7 +214,7 @@ function runUpload(
         eventBus.on('upload:progress', onProgress)
         eventBus.on('upload:done', onDone)
         eventBus.on('upload:error', onError)
-        wsClient.on('disconnected', onDisconnected)
+        transport.on('disconnected', onDisconnected)
 
         const request: UploadRequest = {
             dest_filename: destFilename,
@@ -210,9 +223,104 @@ function runUpload(
         }
         if (options.dummy) request.dummy = true
 
-        wsClient.sendCommand({
+        transport.sendCommand({
             message_type: 'UploadBegin',
             message: JSON.stringify(request),
         })
     })
+}
+
+/**
+ * Streams a local file (by filesystem path) to the printer's SD card over the
+ * USB transport. Unlike `uploadFile`, the Rust side owns the Marlin binary
+ * transfer — here we just kick it off via `UsbTransport.startUpload` and
+ * settle on the same `upload:*` `eventBus` events the WebSocket path uses.
+ * Resolves with the `UploadResult`; rejects with an Error. Only one upload
+ * may run at a time.
+ *
+ * @param path - Absolute filesystem path to the g-code file.
+ * @param destFilename - Filename to write on the printer's SD card.
+ * @param handlers - Optional progress callback.
+ * @param options - Optional compression / dummy-mode settings.
+ */
+export async function uploadFileFromPath(
+    path: string,
+    destFilename: string,
+    handlers: UploadHandlers = {},
+    options: UploadOptions = {},
+): Promise<UploadResult> {
+    if (inFlight) {
+        throw new Error('An upload is already in progress')
+    }
+    const transport = getTransport()
+    if (!(transport instanceof UsbTransport)) {
+        throw new Error('Path-based upload is only available on the USB transport')
+    }
+    if (!transport.connectionStatus) {
+        throw new Error('Not connected to a printer')
+    }
+    if (!isValidDestFilename(destFilename)) {
+        throw new Error(
+            'Invalid filename: must be 63 characters or fewer, contain no "/", and end in .gco, .gcode or .g',
+        )
+    }
+
+    inFlight = true
+    try {
+        return await new Promise<UploadResult>((resolve, reject) => {
+            let settled = false
+
+            const cleanup = () => {
+                eventBus.off('upload:progress', onProgress)
+                eventBus.off('upload:done', onDone)
+                eventBus.off('upload:error', onError)
+                transport.off('disconnected', onDisconnected)
+            }
+            const succeed = (result: UploadResult) => {
+                if (settled) return
+                settled = true
+                cleanup()
+                resolve(result)
+            }
+            const fail = (reason: string) => {
+                if (settled) return
+                settled = true
+                cleanup()
+                reject(new Error(reason))
+            }
+            const onProgress = (raw: string) => {
+                try {
+                    handlers.onProgress?.(JSON.parse(raw) as UploadProgress)
+                } catch {
+                    /* ignore malformed progress frames — they're advisory only */
+                }
+            }
+            const onDone = (raw: string) => {
+                try {
+                    succeed(JSON.parse(raw) as UploadResult)
+                } catch {
+                    fail('Upload finished but the result payload was malformed')
+                }
+            }
+            const onError = (raw: string) => fail(raw || 'Upload failed')
+            const onDisconnected = () => fail('Connection lost during upload')
+
+            eventBus.on('upload:progress', onProgress)
+            eventBus.on('upload:done', onDone)
+            eventBus.on('upload:error', onError)
+            transport.on('disconnected', onDisconnected)
+
+            // The Rust worker emits UploadAck/Progress/Done/Error as it runs
+            // the transfer — there's no `upload:ack` action to take here,
+            // unlike the WebSocket path which streams the body on ack.
+            transport
+                .startUpload(path, destFilename, {
+                    compression: options.compression,
+                    dummy: options.dummy,
+                })
+                .catch((e) => fail(e instanceof Error ? e.message : String(e)))
+        })
+    } finally {
+        inFlight = false
+    }
 }

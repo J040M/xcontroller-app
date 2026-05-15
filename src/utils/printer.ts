@@ -5,7 +5,7 @@
  * Using the verifyConnection() decorator to verify the connection
  */
 
-import { wsClient } from "../init/client";
+import { getTransport } from "../init/client";
 import { Axis, AxisPositions, PrinterProfile, PrinterCommands } from "../types/printer";
 import { eventBus } from "./eventbus";
 
@@ -82,7 +82,7 @@ export default class Printer implements PrinterCommands {
      */
     @Printer.verifyConnection
     autoHome(): void {
-        wsClient.sendCommand({
+        getTransport().sendCommand({
             message_type: 'GCommand',
             message: 'G28'
         })
@@ -102,7 +102,7 @@ export default class Printer implements PrinterCommands {
     bedLeveling(): void {
         this.printerInfo.homed = false
 
-        wsClient.sendCommand({
+        getTransport().sendCommand({
             message_type: 'GCommand',
             message: 'G29'
         })
@@ -149,7 +149,7 @@ export default class Printer implements PrinterCommands {
             return
         }
 
-        wsClient.sendCommand({
+        getTransport().sendCommand({
             message_type: 'GCommand',
             message: `G1 ${axis}${new_position}`.toUpperCase()
         })
@@ -169,7 +169,7 @@ export default class Printer implements PrinterCommands {
             return
         }
 
-        wsClient.sendCommand({
+        getTransport().sendCommand({
             message_type: 'GCommand',
             message: `M114`
         })
@@ -181,7 +181,7 @@ export default class Printer implements PrinterCommands {
      */
     @Printer.verifyConnection
     getTemperatures(): void {
-        wsClient.sendCommand({
+        getTransport().sendCommand({
             message_type: 'GCommand',
             message: `M105`
         })
@@ -195,17 +195,17 @@ export default class Printer implements PrinterCommands {
     @Printer.verifyConnection
     getPrintStatus(): void {
         // Get the selected file
-        wsClient.sendCommand({
+        getTransport().sendCommand({
             message_type: 'GCommand',
             message: `M27 C`
         })
         // Get print completion percentage
-        wsClient.sendCommand({
+        getTransport().sendCommand({
             message_type: 'GCommand',
             message: `M27`
         })
         // Get print time elapsed
-        wsClient.sendCommand({
+        getTransport().sendCommand({
             message_type: 'GCommand',
             message: `M31`
         })
@@ -218,7 +218,7 @@ export default class Printer implements PrinterCommands {
      */
     @Printer.verifyConnection
     listFiles(): void {
-        wsClient.sendCommand({
+        getTransport().sendCommand({
             message_type: 'GCommand',
             message: 'M20'
         })
@@ -234,7 +234,7 @@ export default class Printer implements PrinterCommands {
 
         this.printerInfo.printStatus!.state = 'printing'
 
-        wsClient.sendCommand({
+        getTransport().sendCommand({
             message_type: 'GCommand',
             message: 'M24'
         })
@@ -248,7 +248,7 @@ export default class Printer implements PrinterCommands {
     pausePrint(): void {
         this.printerInfo.printStatus!.state = 'paused'
 
-        wsClient.sendCommand({
+        getTransport().sendCommand({
             message_type: 'GCommand',
             message: 'M25'
         })
@@ -263,7 +263,7 @@ export default class Printer implements PrinterCommands {
     stopPrint(): void {
         this.printerInfo.printStatus!.state = 'unknown'
 
-        wsClient.sendCommand({
+        getTransport().sendCommand({
             message_type: 'GCommand',
             message: 'M524'
         })
@@ -285,7 +285,7 @@ export default class Printer implements PrinterCommands {
      */
     @Printer.verifyConnection
     setHotendTemperature(temp: number): void {
-        wsClient.sendCommand({
+        getTransport().sendCommand({
             message_type: 'GCommand',
             message: `M104 S${temp}`
         })
@@ -298,7 +298,7 @@ export default class Printer implements PrinterCommands {
      */
     @Printer.verifyConnection
     setBedTemperature(temp: number): void {
-        wsClient.sendCommand({
+        getTransport().sendCommand({
             message_type: 'GCommand',
             message: `M140 S${temp}`
         })
@@ -321,7 +321,7 @@ export default class Printer implements PrinterCommands {
 
         if (axe) message.message += ` ${axe}`
 
-        wsClient.sendCommand(message)
+        getTransport().sendCommand(message)
     }
 
     /**
@@ -336,7 +336,7 @@ export default class Printer implements PrinterCommands {
             return
         }
 
-        wsClient.sendCommand({
+        getTransport().sendCommand({
             message_type: 'GCommand',
             message: `M106 S${speed}`
         })
@@ -364,7 +364,7 @@ export default class Printer implements PrinterCommands {
             progress: 0,
         }
 
-        wsClient.sendCommand({
+        getTransport().sendCommand({
             message_type: 'GCommand',
             message: `M23 ${file_name}`
         })
@@ -377,7 +377,7 @@ export default class Printer implements PrinterCommands {
      */
     @Printer.verifyConnection
     deleteFile(file_name: string): void {
-        wsClient.sendCommand({
+        getTransport().sendCommand({
             message_type: 'GCommand',
             message: `M30 ${file_name}`
         })
@@ -391,7 +391,7 @@ export default class Printer implements PrinterCommands {
      */
     @Printer.verifyConnection
     unsafeCommand(command: string): void {
-        wsClient.sendCommand({
+        getTransport().sendCommand({
             message_type: 'Unsafe',
             message: command
         })
@@ -404,7 +404,7 @@ export default class Printer implements PrinterCommands {
      */
     @Printer.verifyConnection
     terminalCommand(command: string): void {
-        wsClient.sendCommand({
+        getTransport().sendCommand({
             message_type: 'Terminal',
             message: command
         })
@@ -425,7 +425,7 @@ export default class Printer implements PrinterCommands {
                 // Only surface the error dialog if the user has actually tried
                 // to connect. Otherwise commands that fire on component mount
                 // (e.g. status polling) would pop the dialog at app start.
-                if (wsClient.hasAttemptedConnection) {
+                if (getTransport().hasAttemptedConnection) {
                     eventBus.emit('message', 'openConnectionErrorDialog');
                 }
                 return;

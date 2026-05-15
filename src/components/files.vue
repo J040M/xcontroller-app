@@ -1,9 +1,11 @@
 <script lang="ts">
 import { defineComponent, ref } from 'vue'
-import { printer } from '../init/client'
+import { open } from '@tauri-apps/plugin-dialog'
+import { printer, getTransport } from '../init/client'
 import { eventBus } from '../utils/eventbus';
 import { useListener } from '../utils/listeners';
-import { uploadFile } from '../utils/upload';
+import UsbTransport from '../transport/UsbTransport';
+import { uploadFile, uploadFileFromPath } from '../utils/upload';
 
 export default defineComponent({
     name: 'filesComponent',
@@ -18,6 +20,9 @@ export default defineComponent({
         const uploadPercent = ref(0)
         const uploadFilename = ref('')
         const uploadError = ref<string | null>(null)
+        // USB uploads can't compute a percentage (the file's total size isn't
+        // known to the webview), so they show an indeterminate bar instead.
+        const uploadIndeterminate = ref(false)
 
         useListener(eventBus, 'printer:m20', (raw: string) => {
             loadingStatus.value = false
@@ -35,9 +40,42 @@ export default defineComponent({
             printer.listFiles()
         }
 
-        function triggerFilePicker(): void {
+        async function triggerFilePicker(): Promise<void> {
             uploadError.value = null
+            const transport = getTransport()
+            if (transport instanceof UsbTransport) {
+                // Native app over USB: pick a real file path and hand it to
+                // the Rust side, which owns the binary transfer. The browser
+                // <input> never exposes a filesystem path, so it can't be used.
+                const selected = await open({
+                    multiple: false,
+                    filters: [{ name: 'G-code', extensions: ['gco', 'gcode', 'g'] }],
+                })
+                if (typeof selected !== 'string') return
+                const name = selected.split(/[\\/]/).pop() ?? selected
+                await runUsbUpload(selected, name)
+                return
+            }
+            // Web build / WebSocket link: the hidden <input> streams a File.
             fileInput.value?.click()
+        }
+
+        async function runUsbUpload(path: string, name: string): Promise<void> {
+            uploadFilename.value = name
+            uploadPercent.value = 0
+            uploadIndeterminate.value = true
+            uploading.value = true
+            try {
+                await uploadFileFromPath(path, name)
+                uploadPercent.value = 100
+                // Refresh the listing so the freshly uploaded file shows up.
+                printer.listFiles()
+            } catch (e) {
+                uploadError.value = e instanceof Error ? e.message : String(e)
+            } finally {
+                uploading.value = false
+                uploadIndeterminate.value = false
+            }
         }
 
         async function readFile(event: Event): Promise<void> {
@@ -78,7 +116,7 @@ export default defineComponent({
 
         return {
             printer, files, loadingStatus,
-            fileInput, uploading, uploadPercent, uploadFilename, uploadError,
+            fileInput, uploading, uploadPercent, uploadFilename, uploadError, uploadIndeterminate,
             listFiles, triggerFilePicker, readFile, deleteFile,
         }
     },
@@ -121,10 +159,15 @@ export default defineComponent({
             <div v-if="uploading" class="flex flex-col gap-1">
                 <div class="flex justify-between items-center text-[10px] font-label-caps text-on-surface-variant">
                     <span class="truncate pr-2" :title="uploadFilename">{{ uploadFilename }}</span>
-                    <span class="shrink-0">{{ uploadPercent }}%</span>
+                    <span v-if="!uploadIndeterminate" class="shrink-0">{{ uploadPercent }}%</span>
                 </div>
                 <div class="h-1.5 bg-surface-container rounded overflow-hidden">
                     <div
+                        v-if="uploadIndeterminate"
+                        class="h-full w-1/3 bg-primary-fixed-dim animate-pulse"
+                    />
+                    <div
+                        v-else
                         class="h-full bg-primary-fixed-dim transition-all duration-150"
                         :style="{ width: uploadPercent + '%' }"
                     />
