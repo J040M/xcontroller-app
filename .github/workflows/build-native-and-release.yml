@@ -1,0 +1,121 @@
+name: build-native-and-release
+
+# Native desktop builds (macOS / Linux / Windows, x86_64 + aarch64).
+# This is ADDITIVE — the web build/publish in build-web-and-release.yml is
+# independent and untouched. Native releases fire on the dedicated
+# `native-releases` branch (or manually via workflow_dispatch).
+on:
+  push:
+    branches: [ native-releases ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test
+
+  publish-tauri:
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # macOS — one universal binary covers Intel + Apple Silicon.
+          # macos-15 is the current GA Apple Silicon runner.
+          - platform: 'macos-15'
+            args: '--target universal-apple-darwin'
+            rust-targets: 'aarch64-apple-darwin,x86_64-apple-darwin'
+          # Linux x86_64 — native runner.
+          - platform: 'ubuntu-22.04'
+            args: ''
+            rust-targets: ''
+          # Linux aarch64 — native ARM runner (avoids cross-compiling webkit2gtk).
+          # `ubuntu-*-arm` is currently public-preview and FREE for PUBLIC repos
+          # only — if this repo is ever made private, this leg will fail and
+          # the matrix entry needs to switch to cross-compilation or paid
+          # larger ARM runners. See: https://github.blog/changelog/2025-01-16-linux-arm64-hosted-runners-now-available-for-free-in-public-repositories-public-preview/
+          - platform: 'ubuntu-22.04-arm'
+            args: ''
+            rust-targets: ''
+          # Windows x86_64 — native runner.
+          - platform: 'windows-latest'
+            args: ''
+            rust-targets: ''
+          # Windows aarch64 — cross-compiled on the x86_64 runner (MSVC does
+          # this cleanly; serialport uses the Win32 API, no native ARM lib).
+          # Unsigned and lightly tested until the signing phase lands.
+          - platform: 'windows-latest'
+            args: '--target aarch64-pc-windows-msvc'
+            rust-targets: 'aarch64-pc-windows-msvc'
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust-targets }}
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          key: ${{ matrix.platform }}-${{ matrix.args }}
+
+      - name: Install Linux dependencies
+        if: startsWith(matrix.platform, 'ubuntu')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libudev-dev
+
+      - name: Install frontend dependencies
+        run: npm install
+
+      - name: Build and release Tauri app
+        uses: tauri-apps/tauri-action@v0.6.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: app-v__VERSION__
+          releaseName: 'xcontroller-app v__VERSION__'
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}
