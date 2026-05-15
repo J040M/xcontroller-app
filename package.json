@@ -15,8 +15,9 @@
     "@fontsource/inter": "^5.2.8",
     "@fontsource/jetbrains-mono": "^5.2.8",
     "@primevue/themes": "^4.1.0",
-    "@tauri-apps/api": "^2.1.1",
-    "@tauri-apps/plugin-shell": "^2.2.0",
+    "@tauri-apps/api": "^2.11.0",
+    "@tauri-apps/plugin-dialog": "^2.7.1",
+    "@tauri-apps/plugin-shell": "^2.3.5",
     "chart.js": "^4.4.4",
     "material-symbols": "^0.44.6",
     "primeicons": "^7.0.0",
@@ -26,7 +27,7 @@
     "vue-i18n": "^10.0.4"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2.1.0",
+    "@tauri-apps/cli": "^2.11.1",
     "@tauri-apps/tauricon": "github:tauri-apps/tauricon",
     "@types/three": "^0.171.0",
     "@vitejs/plugin-vue": "^5.0.4",
