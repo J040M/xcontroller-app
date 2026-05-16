@@ -11,7 +11,8 @@
             "filename": "Nome: ",
             "file_modified_date": "Modificado: ",
             "filesize": "Tamanho: ",
-            "no_files": "Sem ficheiros"
+            "no_files": "Sem ficheiros",
+            "upload": "Carregar para o SD"
         },
         "status": {
             "state": "Estado:",
@@ -63,7 +64,16 @@
             "label_name": "Nome da impressora",
             "label_url": "ws://myprinter.local:9002",
             "label_firmware": "Firmware",
-            "label_dimensions": "Dimensões"
+            "label_dimensions": "Dimensões",
+            "label_auth_token": "Token de autenticação (opcional)",
+            "placeholder_auth_token": "Deixe vazio se o servidor não tiver token",
+            "label_transport": "Tipo de ligação",
+            "transport_websocket": "WebSocket (rede)",
+            "transport_usb": "USB (série)",
+            "label_serial_port": "Porta série",
+            "placeholder_serial_port": "Selecionar uma porta série",
+            "label_baud_rate": "Taxa de transmissão",
+            "btn_refresh_ports": "Atualizar portas"
         },
         "heating_profile": {
             "header": "Perfil de aquecimento",
@@ -74,7 +84,8 @@
         },
         "error_message": {
             "header": "Alerta erro!",
-            "connection_error": "Sem ligação a impressora. Verifique a ligação e tente novamente."
+            "connection_error": "Sem ligação a impressora. Verifique a ligação e tente novamente.",
+            "auth_error": "Falha na autenticação. Verifique o token de autenticação no perfil da impressora."
         }
     }
 }

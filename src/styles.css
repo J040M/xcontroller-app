@@ -1,0 +1,287 @@
+/* Self-hosted fonts (bundled by Vite from node_modules) */
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
+@import '@fontsource/jetbrains-mono/700.css';
+@import 'material-symbols/outlined.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body, #app {
+    height: 100%;
+  }
+  body {
+    @apply bg-surface text-on-surface font-sans text-body-sm;
+    @apply selection:bg-primary-container selection:text-on-primary;
+  }
+  /* Material Symbols sizing helper — inherit ambient text size */
+  .material-symbols-outlined {
+    font-size: inherit;
+    vertical-align: middle;
+    line-height: 1;
+  }
+  /* Cyan-tinted scrollbars to match the new tokens */
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  *::-webkit-scrollbar-track {
+    background: theme('colors.surface-container-lowest');
+  }
+  *::-webkit-scrollbar-thumb {
+    background: theme('colors.outline-variant');
+    border-radius: 4px;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background: theme('colors.primary-fixed-dim');
+  }
+}
+
+@layer components {
+  /* Tactical bracketed border — corner accents on a 1px frame */
+  .tactical-border {
+    @apply relative border border-outline-variant;
+  }
+  .tactical-border::before,
+  .tactical-border::after {
+    content: '';
+    @apply absolute w-2.5 h-2.5 pointer-events-none;
+  }
+  .tactical-border::before {
+    top: -1px;
+    left: -1px;
+    border-top: 2px solid theme('colors.primary-fixed-dim');
+    border-left: 2px solid theme('colors.primary-fixed-dim');
+  }
+  .tactical-border::after {
+    bottom: -1px;
+    right: -1px;
+    border-bottom: 2px solid theme('colors.primary-fixed-dim');
+    border-right: 2px solid theme('colors.primary-fixed-dim');
+  }
+
+  /* Segmented LED bars used for fan / extruder / temperature presets */
+  .segmented-bar {
+    @apply flex gap-0.5;
+  }
+  .segment {
+    @apply flex-1 h-1.5 bg-surface-container;
+  }
+  .segment.active-primary {
+    background-color: theme('colors.primary-fixed-dim');
+  }
+  .segment.active-secondary {
+    background-color: theme('colors.secondary-container');
+  }
+  .segment.active-tertiary {
+    background-color: theme('colors.tertiary-container');
+  }
+
+  /* Hazard chevron stripes for warning/destructive surfaces */
+  .hazard-stripe {
+    background: repeating-linear-gradient(
+      45deg,
+      theme('colors.secondary-container'),
+      theme('colors.secondary-container') 10px,
+      theme('colors.surface') 10px,
+      theme('colors.surface') 20px
+    );
+  }
+
+  /* Inset frame around the gcode 3D canvas */
+  .gcode-canvas-frame {
+    @apply border border-outline-variant;
+    box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.9);
+  }
+
+  /* CRT scanline + chroma-shift overlay (decorative; non-interactive) */
+  .scanline-overlay {
+    @apply pointer-events-none absolute inset-0;
+    background-image:
+      linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%),
+      linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+    background-size: 100% 4px, 3px 100%;
+  }
+
+  /* Soft radial-grid background used on tactical command deck panels */
+  .grid-overlay {
+    @apply pointer-events-none absolute inset-0 opacity-20;
+    background-image: radial-gradient(theme('colors.outline-variant') 1px, transparent 1px);
+    background-size: 16px 16px;
+  }
+
+  /*
+   * PrimeVue surface alignment.
+   * Target component classes directly so every Select / InputText /
+   * InputNumber / Button / Dialog picks up the tactical palette without
+   * per-component PassThrough props.
+   */
+  .p-select,
+  .p-inputtext,
+  .p-inputnumber-input,
+  .p-textarea {
+    background: theme('colors.surface-container-lowest') !important;
+    border: 1px solid theme('colors.outline-variant') !important;
+    color: theme('colors.on-surface') !important;
+    border-radius: 0.25rem !important;
+    transition: border-color 0.15s, box-shadow 0.15s !important;
+  }
+
+  .p-select:not(.p-disabled):hover,
+  .p-inputtext:not(.p-disabled):hover,
+  .p-inputnumber-input:not(.p-disabled):hover {
+    border-color: theme('colors.outline') !important;
+  }
+
+  .p-select:not(.p-disabled).p-focus,
+  .p-inputtext:not(.p-disabled):focus,
+  .p-inputnumber-input:not(.p-disabled):focus {
+    border-color: theme('colors.primary-fixed-dim') !important;
+    box-shadow: 0 0 0 1px theme('colors.primary-fixed-dim') !important;
+    outline: none !important;
+  }
+
+  .p-select-label,
+  .p-select-option,
+  .p-select-empty-message {
+    color: theme('colors.on-surface') !important;
+  }
+
+  .p-select-overlay,
+  .p-select-list {
+    background: theme('colors.surface-container-high') !important;
+    border: 1px solid theme('colors.outline-variant') !important;
+    color: theme('colors.on-surface') !important;
+  }
+
+  .p-select-option:hover,
+  .p-select-option-selected {
+    background: theme('colors.surface-container-highest') !important;
+    color: theme('colors.primary-fixed-dim') !important;
+  }
+
+  .p-inputnumber-button {
+    background: theme('colors.surface-container-high') !important;
+    border-color: theme('colors.outline-variant') !important;
+    color: theme('colors.on-surface') !important;
+  }
+
+  .p-inputnumber-button:hover {
+    background: theme('colors.surface-container-highest') !important;
+    color: theme('colors.primary-fixed-dim') !important;
+  }
+
+  /* Stock PrimeVue Buttons (used in dialogs) */
+  .p-button {
+    border-radius: 0.25rem !important;
+    font-weight: 600 !important;
+    transition: filter 0.15s, background-color 0.15s, border-color 0.15s !important;
+  }
+
+  .p-button:not(.p-button-secondary):not(.p-button-text):not(.p-button-outlined) {
+    background: theme('colors.primary-fixed-dim') !important;
+    color: theme('colors.on-primary-fixed') !important;
+    border-color: theme('colors.primary-fixed-dim') !important;
+    box-shadow: 0 0 10px rgba(0, 220, 229, 0.25) !important;
+  }
+
+  .p-button:not(.p-button-secondary):not(.p-button-text):not(.p-button-outlined):hover {
+    filter: brightness(1.1);
+  }
+
+  .p-button-secondary {
+    background: transparent !important;
+    color: theme('colors.on-surface-variant') !important;
+    border: 1px solid theme('colors.outline-variant') !important;
+  }
+
+  .p-button-secondary:hover {
+    background: theme('colors.surface-container-high') !important;
+    color: theme('colors.on-surface') !important;
+    border-color: theme('colors.outline') !important;
+  }
+
+  /* Dialog chrome */
+  .p-dialog {
+    background: theme('colors.surface-container') !important;
+    border: 1px solid theme('colors.outline-variant') !important;
+    border-radius: 0.5rem !important;
+    color: theme('colors.on-surface') !important;
+  }
+
+  .p-dialog-header {
+    background: theme('colors.surface-container-high') !important;
+    border-bottom: 1px solid theme('colors.outline-variant') !important;
+    color: theme('colors.on-surface') !important;
+    padding: 1rem 1.25rem !important;
+  }
+
+  .p-dialog-title {
+    font-family: 'Inter', sans-serif !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.02em !important;
+  }
+
+  .p-dialog-content {
+    background: theme('colors.surface-container') !important;
+    color: theme('colors.on-surface') !important;
+    padding: 1.25rem !important;
+  }
+
+  .p-dialog-footer {
+    background: theme('colors.surface-container') !important;
+    border-top: 1px solid theme('colors.outline-variant') !important;
+    padding: 1rem 1.25rem !important;
+  }
+
+  .p-dialog-mask {
+    background: rgba(0, 0, 0, 0.6) !important;
+    backdrop-filter: blur(2px);
+  }
+
+  /* Segmented track + thumb for the tactical Z-height slider */
+  .power-bar-bg {
+    background: repeating-linear-gradient(
+      to right,
+      rgba(58, 73, 74, 0.3) 0%,
+      rgba(58, 73, 74, 0.3) 4px,
+      transparent 4px,
+      transparent 6px
+    );
+  }
+  .segmented-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    height: 16px;
+    width: 100%;
+  }
+  .segmented-slider::-webkit-slider-runnable-track {
+    height: 8px;
+    background: repeating-linear-gradient(
+      to right,
+      theme('colors.primary-fixed-dim') 0%,
+      theme('colors.primary-fixed-dim') 4px,
+      transparent 4px,
+      transparent 6px
+    );
+  }
+  .segmented-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 20px;
+    width: 12px;
+    background: theme('colors.tertiary-container');
+    border: 1px solid #000;
+    border-radius: 0;
+    margin-top: -6px;
+    box-shadow: 0 0 10px rgba(255, 219, 64, 0.8);
+  }
+}

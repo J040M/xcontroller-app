@@ -40,7 +40,7 @@ export class EventEmitter {
      * @param {string} event - The event name to emit
      * @param {...any} args - Optional arguments to pass to listeners
      */
-    emit(event: string, ...args: Event[] | MessageEvent<string>[] | string[]): void {
+    emit(event: string, ...args: any[]): void {
         if (this.events[event]) {
             this.events[event].forEach((listener) => listener(...args));
         }

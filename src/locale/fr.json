@@ -11,7 +11,8 @@
             "filename": "Fichier: ",
             "file_modified_date": "Modifié: ",
             "filesize": "Taille: ",
-            "no_files": "Aucun fichier"
+            "no_files": "Aucun fichier",
+            "upload": "Téléverser vers la SD"
         },
         "status": {
             "state": "État:" ,
@@ -63,7 +64,16 @@
             "label_name": "Nom de l'imprimante",
             "label_url": "ws://myprinter.local:9002",
             "label_firmware": "Firmware",
-            "label_dimensions": "Dimensions"
+            "label_dimensions": "Dimensions",
+            "label_auth_token": "Jeton d'authentification (optionnel)",
+            "placeholder_auth_token": "Laisser vide si le serveur n'a pas de jeton",
+            "label_transport": "Type de connexion",
+            "transport_websocket": "WebSocket (réseau)",
+            "transport_usb": "USB (série)",
+            "label_serial_port": "Port série",
+            "placeholder_serial_port": "Sélectionner un port série",
+            "label_baud_rate": "Débit en bauds",
+            "btn_refresh_ports": "Actualiser les ports"
         },
         "heating_profile": {
             "header": "Profil de chauffage",
@@ -74,7 +84,8 @@
         },
         "error_message": {
             "header": "Alert error",
-            "connection_error": "Erreur de connexion! Vérifiez la connexion et réessayez."
+            "connection_error": "Erreur de connexion! Vérifiez la connexion et réessayez.",
+            "auth_error": "Échec de l'authentification. Vérifiez le jeton d'authentification dans le profil de l'imprimante."
         }
     }
 }

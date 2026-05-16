@@ -9,7 +9,6 @@ import FooterComponent from './components/footer.vue';
 import { eventBus } from './utils/eventbus';
 import { useListener } from './utils/listeners';
 import { useI18n } from 'vue-i18n';
-import { changeLocale } from './utils/i18n';
 
 export default defineComponent({
   name: 'Root',
@@ -22,96 +21,104 @@ export default defineComponent({
   },
   setup() {
     const errorMessageDialog = ref(false)
-    const openedAccordion = ref('')
+    /**
+     * Which `error_message.*` string the dialog shows. A failed auth
+     * handshake is a distinct failure mode from a dropped/refused link, so
+     * the dialog body switches between the two instead of always blaming
+     * the connection.
+     */
+    const errorMessageKey = ref<'connection_error' | 'auth_error'>('connection_error')
+    /**
+     * The Connector panel auto-collapses on a successful connection (the
+     * printer list isn't useful while connected) and auto-opens again when
+     * the link drops, so the user can reconnect without hunting for it.
+     */
+    const connectorOpen = ref(true)
 
     useListener(eventBus, 'message', (message: string) => {
       if (message === 'openConnectionErrorDialog') {
+        errorMessageKey.value = 'connection_error'
         errorMessageDialog.value = true
       }
     })
 
+    useListener(eventBus, 'connection:open', () => {
+      connectorOpen.value = false
+    })
+    useListener(eventBus, 'connection:close', () => {
+      connectorOpen.value = true
+    })
+    useListener(eventBus, 'connection:error', () => {
+      connectorOpen.value = true
+    })
+    useListener(eventBus, 'connection:authfailed', () => {
+      connectorOpen.value = true
+      errorMessageKey.value = 'auth_error'
+      errorMessageDialog.value = true
+    })
+
     const { t } = useI18n()
-    return { t, changeLocale, errorMessageDialog, openedAccordion }
+    return { t, errorMessageDialog, errorMessageKey, connectorOpen }
   }
 })
 </script>
 
 <template>
-  <Dialog :visible="errorMessageDialog" modal :header="$t('error_message.header')" :style="{ width: '25rem' }" :closable="false"
-    optionLabel="name" optionValue="url">
-    <p class="mb-0">{{ $t('error_message.connection_error') }}</p>
-    <div class="flex justify-end gap-2">
-            <Button type="button" label="Cancel" severity="secondary" @click="errorMessageDialog = false"></Button>
-        </div>
+  <Dialog
+    :visible="errorMessageDialog"
+    modal
+    :header="$t('error_message.header')"
+    :style="{ width: '25rem' }"
+    :closable="false"
+  >
+    <p class="font-code-sm text-on-surface">{{ $t('error_message.' + errorMessageKey) }}</p>
+    <template #footer>
+      <Button type="button" label="Cancel" severity="secondary" @click="errorMessageDialog = false" />
+    </template>
   </Dialog>
-  <div class="main-container">
-    <div class="content-wrapper">
-      <div class="left-container">
-        <Accordion :value="openedAccordion" multiple>
-          <AccordionPanel value="0">
-            <AccordionHeader> {{ $t('app.connector') }} </AccordionHeader>
-            <AccordionContent>
-              <div class="left-container-1">
-                <Connector />
-              </div>
-            </AccordionContent>
-          </AccordionPanel>
 
-          <AccordionPanel value="1">
-            <AccordionHeader> {{ $t('app.status') }} </AccordionHeader>
-            <AccordionContent>
-              <div class="left-container-2">
-                <Status />
-              </div>
-            </AccordionContent>
-          </AccordionPanel>
+  <div class="flex flex-col h-screen bg-surface text-on-surface">
+    <div class="flex flex-1 min-h-0">
+      <aside class="w-[300px] shrink-0 border-r border-outline-variant bg-surface-container-lowest overflow-y-auto flex flex-col">
+        <section class="border-b border-outline-variant">
+          <button
+            type="button"
+            class="w-full flex items-center px-5 py-4 text-left transition-colors hover:bg-surface-container-low focus:outline-none focus-visible:bg-surface-container-low"
+            :aria-expanded="connectorOpen"
+            @click="connectorOpen = !connectorOpen"
+          >
+            <span class="material-symbols-outlined text-primary-fixed-dim mr-2">cable</span>
+            <h2 class="font-headline-md tracking-wide text-on-surface flex-1">{{ $t('app.connector') }}</h2>
+            <span
+              class="material-symbols-outlined text-on-surface-variant transition-transform"
+              :class="{ 'rotate-180': connectorOpen }"
+            >expand_more</span>
+          </button>
+          <Connector v-show="connectorOpen" />
+        </section>
 
-          <AccordionPanel value="2">
-            <AccordionHeader> {{ $t('app.files') }} </AccordionHeader>
-            <AccordionContent>
-              <div class="left-container-3">
-                <Files />
-              </div>
-            </AccordionContent>
-          </AccordionPanel>
-        </Accordion>
-      </div>
+        <section class="border-b border-outline-variant">
+          <header class="flex items-center px-5 py-4">
+            <span class="material-symbols-outlined text-primary-fixed-dim mr-2">monitor_heart</span>
+            <h2 class="font-headline-md tracking-wide text-on-surface">{{ $t('app.status') }}</h2>
+          </header>
+          <Status />
+        </section>
 
-      <Divider layout="vertical" />
-      <div class="right-container">
+        <section class="border-b border-outline-variant">
+          <header class="flex items-center px-5 py-4">
+            <span class="material-symbols-outlined text-primary-fixed-dim mr-2">folder</span>
+            <h2 class="font-headline-md tracking-wide text-on-surface">{{ $t('app.files') }}</h2>
+          </header>
+          <Files />
+        </section>
+      </aside>
+
+      <main class="flex-1 min-w-0 overflow-y-auto bg-surface">
         <Main />
-      </div>
+      </main>
     </div>
 
     <FooterComponent />
   </div>
 </template>
-
-<style scoped>
-.main-container {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-}
-
-.content-wrapper {
-  display: flex;
-  flex-direction: row;
-  flex: 1;
-  overflow: hidden;
-}
-
-.left-container {
-  flex: 0 0 300px;
-  overflow-y: auto;
-}
-
-.right-container {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.footer {
-  flex: 0 0 auto;
-}
-</style>

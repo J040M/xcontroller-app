@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>3D Printer Control Screen</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-fixed-dim": "#e9c400",
+                    "on-surface": "#dce4e4",
+                    "primary": "#e9feff",
+                    "on-tertiary": "#3a3000",
+                    "on-primary-fixed-variant": "#004f53",
+                    "on-secondary-container": "#603100",
+                    "secondary": "#ffb77d",
+                    "surface-container-lowest": "#081010",
+                    "secondary-container": "#fd8b00",
+                    "surface-tint": "#00dce5",
+                    "surface-container-low": "#151d1d",
+                    "inverse-surface": "#dce4e4",
+                    "secondary-fixed-dim": "#ffb77d",
+                    "background": "#0d1515",
+                    "tertiary-container": "#ffdb40",
+                    "on-secondary-fixed-variant": "#6e3900",
+                    "primary-container": "#00f5ff",
+                    "error-container": "#93000a",
+                    "on-tertiary-container": "#736000",
+                    "on-secondary-fixed": "#2f1500",
+                    "on-error": "#690005",
+                    "on-surface-variant": "#b9caca",
+                    "on-primary": "#003739",
+                    "tertiary-fixed": "#ffe16d",
+                    "surface-bright": "#323b3b",
+                    "on-tertiary-fixed": "#221b00",
+                    "primary-fixed-dim": "#00dce5",
+                    "outline-variant": "#3a494a",
+                    "on-secondary": "#4d2600",
+                    "surface-dim": "#0d1515",
+                    "surface-container": "#192121",
+                    "secondary-fixed": "#ffdcc3",
+                    "tertiary": "#fff9f0",
+                    "surface-container-highest": "#2e3637",
+                    "on-primary-container": "#006c71",
+                    "surface-variant": "#2e3637",
+                    "inverse-primary": "#00696e",
+                    "error": "#ffb4ab",
+                    "on-background": "#dce4e4",
+                    "outline": "#849495",
+                    "on-tertiary-fixed-variant": "#544600",
+                    "on-error-container": "#ffdad6",
+                    "primary-fixed": "#63f7ff",
+                    "inverse-on-surface": "#2a3232",
+                    "surface-container-high": "#232b2c",
+                    "surface": "#0d1515",
+                    "on-primary-fixed": "#002021"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "unit": "4px",
+                    "gutter": "16px",
+                    "margin": "24px",
+                    "container-padding": "20px"
+            },
+            "fontFamily": {
+                    "code-sm": [
+                            "JetBrains Mono"
+                    ],
+                    "code-lg": [
+                            "JetBrains Mono"
+                    ],
+                    "label-caps": [
+                            "Inter"
+                    ],
+                    "body-sm": [
+                            "Inter"
+                    ],
+                    "headline-md": [
+                            "Inter"
+                    ],
+                    "headline-lg": [
+                            "Inter"
+                    ],
+                    "body-lg": [
+                            "Inter"
+                    ]
+            },
+            "fontSize": {
+                    "code-sm": [
+                            "13px",
+                            {
+                                    "lineHeight": "1.2",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "code-lg": [
+                            "16px",
+                            {
+                                    "lineHeight": "1.2",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "label-caps": [
+                            "12px",
+                            {
+                                    "lineHeight": "1.1",
+                                    "letterSpacing": "0.05em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "body-sm": [
+                            "14px",
+                            {
+                                    "lineHeight": "1.4",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "headline-md": [
+                            "24px",
+                            {
+                                    "lineHeight": "1.3",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-lg": [
+                            "32px",
+                            {
+                                    "lineHeight": "1.2",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "body-lg": [
+                            "16px",
+                            {
+                                    "lineHeight": "1.5",
+                                    "fontWeight": "400"
+                            }
+                    ]
+            }
+        },
+        },
+      }
+    </script>
+</head>
+<body class="bg-surface-container text-on-surface font-body-sm flex flex-col selection:bg-primary selection:text-on-primary">
+<!-- BEGIN: Main Layout container -->
+<div class="flex flex-1">
+<!-- BEGIN: Left Sidebar -->
+<aside class="w-[300px] border-r border-outline-variant flex flex-col bg-surface-container shrink-0 overflow-y-auto sticky top-0 h-screen">
+<!-- Connector Section -->
+<div class="p-6 border-b border-outline-variant">
+<div class="flex justify-between items-center mb-4 cursor-pointer">
+<h2 class="font-headline-md tracking-wide">Connector</h2>
+<svg class="w-5 h-5 text-on-surface-variant" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<div class="space-y-4">
+<!-- Dropdown -->
+<div class="relative">
+<select class="w-full bg-surface-container-lowest border border-outline-variant rounded text-on-surface px-3 py-2 appearance-none focus:outline-none focus:border-on-surface cursor-pointer font-body-sm">
+<option></option>
+</select>
+<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-on-surface-variant">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="flex space-x-3">
+<button class="w-10 h-10 rounded border border-primary flex items-center justify-center hover:bg-primary/10 transition-colors">
+<svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</button>
+<button class="w-10 h-10 rounded bg-primary flex items-center justify-center hover:bg-primary/80 transition-colors">
+<svg class="w-6 h-6 text-on-primary" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</button>
+</div>
+</div>
+</div>
+<!-- Status Section -->
+<div class="p-6 border-b border-outline-variant">
+<div class="flex justify-between items-center mb-4 cursor-pointer">
+<h2 class="font-headline-md tracking-wide">Status</h2>
+<svg class="w-5 h-5 text-on-surface-variant" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<div class="space-y-5">
+<!-- Status -->
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-on-surface-variant uppercase">State</span>
+<span class="font-code-sm text-primary font-bold">Printing</span>
+</div>
+<!-- File -->
+<div class="flex flex-col space-y-1">
+<span class="font-label-caps text-on-surface-variant uppercase">File</span>
+<span class="font-code-sm text-on-surface truncate">industrial_gearbox_p1.gcode</span>
+</div>
+<!-- Progress -->
+<div class="space-y-2">
+<div class="flex justify-between items-end">
+<span class="font-label-caps text-on-surface-variant uppercase">Progress</span>
+<span class="font-code-lg text-primary">68%</span>
+</div>
+<div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 68%"></div>
+</div>
+</div>
+<!-- Temperature -->
+<div class="grid grid-cols-2 gap-3">
+<div class="bg-surface-container-low p-3 border border-outline-variant rounded">
+<div class="font-label-caps text-on-surface-variant mb-1 uppercase">Extruder</div>
+<div class="font-code-lg text-secondary">215°C <span class="text-on-surface-variant text-xs">/ 215</span></div>
+</div>
+<div class="bg-surface-container-low p-3 border border-outline-variant rounded">
+<div class="font-label-caps text-on-surface-variant mb-1 uppercase">Bed</div>
+<div class="font-code-lg text-secondary">60°C <span class="text-on-surface-variant text-xs">/ 60</span></div>
+</div>
+</div>
+<!-- Time -->
+<div class="grid grid-cols-2 gap-3 pt-2">
+<div>
+<div class="font-label-caps text-on-surface-variant uppercase mb-1">Elapsed</div>
+<div class="font-code-sm text-on-surface">03:42:15</div>
+</div>
+<div>
+<div class="font-label-caps text-on-surface-variant uppercase mb-1">Remaining</div>
+<div class="font-code-sm text-on-surface">01:15:30</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Files Section -->
+<div class="p-6 border-b border-outline-variant">
+<div class="flex justify-between items-center mb-4 cursor-pointer">
+<h2 class="font-headline-md tracking-wide">Files</h2>
+<svg class="w-5 h-5 text-on-surface-variant" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<div class="space-y-4"><div class="flex items-center justify-between mb-4">
+<button class="w-8 h-8 rounded bg-primary flex items-center justify-center hover:bg-primary/80 transition-colors shadow-[0_0_10px_rgba(0,245,255,0.3)]">
+<svg class="w-4 h-4 text-on-primary" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</button>
+<span class="text-[10px] font-label-caps text-on-surface-variant uppercase tracking-wider">Local Storage</span>
+</div>
+<div class="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+<!-- File Entry 1 -->
+<div class="group bg-surface-container-low border border-outline-variant/30 p-3 rounded hover:border-primary/50 transition-all cursor-pointer">
+<div class="flex justify-between items-start mb-2">
+<span class="font-code-sm text-on-surface truncate pr-2" title="benchy_v3.gcode">benchy_v3.gcode</span>
+<button class="text-primary hover:text-primary-container">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</button>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-[10px] font-label-caps text-on-surface-variant">2.4 MB</span>
+<span class="text-[10px] font-label-caps text-on-surface-variant/50">2023-10-24</span>
+</div>
+</div>
+<!-- File Entry 2 -->
+<div class="group bg-surface-container-low border border-outline-variant/30 p-3 rounded hover:border-primary/50 transition-all cursor-pointer">
+<div class="flex justify-between items-start mb-2">
+<span class="font-code-sm text-on-surface truncate pr-2" title="gear_housing.gcode">gear_housing.gcode</span>
+<button class="text-primary hover:text-primary-container">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</button>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-[10px] font-label-caps text-on-surface-variant">15.8 MB</span>
+<span class="text-[10px] font-label-caps text-on-surface-variant/50">2023-10-22</span>
+</div>
+</div>
+<!-- File Entry 3 -->
+<div class="group bg-surface-container-low border border-outline-variant/30 p-3 rounded hover:border-primary/50 transition-all cursor-pointer">
+<div class="flex justify-between items-start mb-2">
+<span class="font-code-sm text-on-surface truncate pr-2" title="turbine_blade_fix.gcode">turbine_blade_fix.gcode</span>
+<button class="text-primary hover:text-primary-container">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</button>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-[10px] font-label-caps text-on-surface-variant">8.2 MB</span>
+<span class="text-[10px] font-label-caps text-on-surface-variant/50">2023-10-20</span>
+</div>
+</div>
+</div></div>
+</div>
+</aside>
+<!-- END: Left Sidebar -->
+<!-- BEGIN: Main Content Area -->
+<main class="flex-1 flex flex-col bg-surface min-w-0 relative">
+<!-- Top Navigation Tabs -->
+<nav class="flex px-6 border-b border-outline-variant bg-surface sticky top-0 z-10">
+<button class="py-4 px-2 mr-6 text-primary border-b-2 border-primary font-medium text-sm">Control</button>
+<button class="py-4 px-2 mr-6 text-on-surface-variant hover:text-on-surface transition-colors text-sm font-medium">Temperature</button>
+<button class="py-4 px-2 mr-6 text-on-surface-variant hover:text-on-surface transition-colors text-sm font-medium">Terminal</button>
+<button class="py-4 px-2 text-on-surface-variant hover:text-on-surface transition-colors text-sm font-medium">Gcode viewer</button>
+</nav>
+<!-- Content Scrollable Area -->
+<div class="flex-1 p-6 flex flex-col items-center">
+<!-- 3D Workspace Visualizer -->
+<div class="w-full max-w-5xl bg-surface-container-lowest rounded mb-6 flex items-center justify-center p-8 aspect-video border border-outline-variant/30"><svg class="w-full h-full" preserveaspectratio="xMidYMid meet" viewbox="0 0 1000 600">
+<!-- Grid Floor (Build Plate) -->
+<g opacity="0.2">
+<path d="M200 450 L800 450 L950 350 L350 350 Z" fill="#192121" stroke="#849495" stroke-width="1"></path>
+<path d="M260 450 L410 350 M320 450 L470 350 M380 450 L530 350 M440 450 L590 350 M500 450 L650 350 M560 450 L710 350 M620 450 L770 350 M680 450 L830 350 M740 450 L890 350" stroke="#849495" stroke-width="0.5"></path>
+<path d="M230 430 L830 430 M260 410 L860 410 M290 390 L890 390 M320 370 L920 370" stroke="#849495" stroke-width="0.5"></path>
+</g>
+<!-- Build Volume Wireframe -->
+<g fill="none" opacity="0.6" stroke="#3a494a" stroke-width="1">
+<rect height="350" width="600" x="200" y="100"></rect>
+<path d="M200 100 L350 0 L950 0 L800 100 M950 0 L950 350 L800 450 M350 0 L350 350 L200 450"></path>
+</g>
+<!-- Coordinate Axes -->
+<g opacity="0.8">
+<!-- X Axis (Red) -->
+<line stroke="#ffb4ab" stroke-linecap="round" stroke-width="3" x1="200" x2="350" y1="450" y2="450"></line>
+<!-- Y Axis (Green) -->
+<line opacity="0.5" stroke="#00f5ff" stroke-linecap="round" stroke-width="3" x1="200" x2="150" y1="450" y2="483"></line>
+<!-- Z Axis (Blue) -->
+<line opacity="0.5" stroke="#63f7ff" stroke-linecap="round" stroke-width="3" x1="200" x2="200" y1="450" y2="300"></line>
+</g>
+<!-- Home Point (0,0,0) -->
+<circle cx="200" cy="450" fill="#93000a" r="6"></circle>
+<circle cx="200" cy="450" fill="none" opacity="0.5" r="12" stroke="#93000a" stroke-width="1">
+<animate attributename="r" dur="2s" from="6" repeatcount="indefinite" to="15"></animate>
+<animate attributename="opacity" dur="2s" from="0.5" repeatcount="indefinite" to="0"></animate>
+</circle>
+<!-- Hotend Current Position (Cyan Sphere) -->
+<g>
+<defs>
+<radialgradient cx="30%" cy="30%" id="sphereGrad" r="50%">
+<stop offset="0%" stop-color="#e9feff"></stop>
+<stop offset="100%" stop-color="#00dce5"></stop>
+</radialgradient>
+</defs>
+<circle cx="550" cy="280" fill="url(#sphereGrad)" filter="drop-shadow(0 0 10px #00dce5)" r="20"></circle>
+<!-- Projected lines to axes -->
+<path d="M550 280 L550 400 M550 280 L400 280" opacity="0.4" stroke="#00dce5" stroke-dasharray="4,4" stroke-width="1"></path>
+</g>
+<!-- Axis Labels -->
+<text fill="#849495" font-family="Inter" font-size="12" font-weight="bold" x="360" y="465">X-AXIS</text>
+<text fill="#849495" font-family="Inter" font-size="12" font-weight="bold" x="160" y="290">Z-AXIS</text>
+</svg></div>
+<!-- Current Position Panel -->
+<div class="w-full max-w-5xl border border-outline-variant rounded p-6 bg-surface-container/30"><div class="flex justify-between items-center mb-6">
+<h3 class="font-headline-md flex items-center gap-2">
+<span class="w-2 h-6 bg-primary"></span>
+    CURRENT POSITION
+  </h3>
+<div class="px-3 py-1 bg-surface-container-highest rounded text-[10px] font-label-caps text-on-surface-variant border border-outline-variant/30">
+    UNIT: MILLIMETERS (mm)
+  </div>
+</div>
+<div class="grid grid-cols-3 gap-6">
+<!-- X Axis -->
+<div class="relative overflow-hidden bg-surface-container-lowest border-l-2 border-primary rounded-r p-4 group">
+<div class="absolute top-0 right-0 p-1 opacity-20">
+<svg class="w-8 h-8" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M8 7h8m0 0l-4-4m4 4l-4 4m0 6H8m0 0l4-4m-4 4l4 4" stroke-width="1"></path></svg>
+</div>
+<div class="text-[10px] font-label-caps text-on-surface-variant mb-1">X COORDINATE</div>
+<div class="flex items-baseline gap-2">
+<span class="font-code-lg text-3xl text-primary tracking-tighter">124.50</span>
+<span class="text-[10px] font-code-sm text-outline">MM</span>
+</div>
+</div>
+<!-- Y Axis -->
+<div class="relative overflow-hidden bg-surface-container-lowest border-l-2 border-secondary rounded-r p-4">
+<div class="absolute top-0 right-0 p-1 opacity-20">
+<svg class="w-8 h-8" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M7 8h10M7 8l4 4m-4-4l4-4m6 12H7m10 0l-4-4m4 4l-4 4" stroke-width="1"></path></svg>
+</div>
+<div class="text-[10px] font-label-caps text-on-surface-variant mb-1">Y COORDINATE</div>
+<div class="flex items-baseline gap-2">
+<span class="font-code-lg text-3xl text-secondary tracking-tighter">88.20</span>
+<span class="text-[10px] font-code-sm text-outline">MM</span>
+</div>
+</div>
+<!-- Z Axis -->
+<div class="relative overflow-hidden bg-surface-container-lowest border-l-2 border-surface-tint rounded-r p-4">
+<div class="absolute top-0 right-0 p-1 opacity-20">
+<svg class="w-8 h-8" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 5v14m0-14l-4 4m4-4l4 4m0 6l-4 4m4-4l4-4" stroke-width="1"></path></svg>
+</div>
+<div class="text-[10px] font-label-caps text-on-surface-variant mb-1">Z COORDINATE</div>
+<div class="flex items-baseline gap-2">
+<span class="font-code-lg text-3xl text-surface-tint tracking-tighter">12.05</span>
+<span class="text-[10px] font-code-sm text-outline">MM</span>
+</div>
+</div>
+</div></div>
+<!-- REDESIGNED MANUAL CONTROL DECK -->
+<div class="w-full max-w-5xl border border-outline-variant/60 rounded-xl p-8 bg-surface-container-lowest mt-6 relative overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+<!-- Cyberpunk Decorative Overlays -->
+<div class="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none bg-[radial-gradient(#00dce5_1px,transparent_1px)] [background-size:16px_16px]"></div>
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-[80px]"></div>
+<div class="absolute bottom-0 left-0 w-48 h-48 bg-secondary/5 blur-[100px]"></div>
+<!-- Header Section -->
+<div class="flex justify-between items-end mb-10 relative">
+<div class="flex flex-col">
+<div class="flex items-center gap-3 mb-1">
+<div class="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></div>
+<span class="text-[10px] font-code-sm text-primary/80 uppercase tracking-[0.3em]">Module-04 // Subsystem</span>
+</div>
+<h3 class="font-headline-lg text-primary tracking-tighter flex items-baseline gap-4">
+                CONTROL DECK <span class="text-sm font-code-sm text-outline opacity-50 uppercase">v2.4.X</span>
+</h3>
+</div>
+<div class="flex flex-col items-end gap-2">
+<div class="px-3 py-1 bg-primary/10 border border-primary/20 rounded text-[10px] font-label-caps text-primary">MANUAL OVERRIDE: ACTIVE</div>
+<div class="h-[1px] w-48 bg-gradient-to-r from-transparent via-outline-variant to-transparent"></div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-10 relative">
+<!-- Axis Navigation: Crosshair Tactical Array (5 cols) -->
+<div class="lg:col-span-5 flex flex-col justify-center">
+<div class="relative w-72 h-72 mx-auto flex items-center justify-center"><div class="absolute -left-16 h-full flex flex-col justify-center gap-4">
+<button class="w-12 h-20 bg-surface-container-high border border-surface-tint/50 hover:bg-surface-tint/20 rounded-lg flex flex-col items-center justify-center group transition-all cursor-pointer">
+<span class="text-[9px] font-code-sm text-surface-tint mb-1">Z+</span>
+<span class="material-symbols-outlined text-surface-tint">expand_less</span>
+</button>
+<button class="w-12 h-20 bg-surface-container-high border border-surface-tint/50 hover:bg-surface-tint/20 rounded-lg flex flex-col items-center justify-center group transition-all cursor-pointer">
+<span class="material-symbols-outlined text-surface-tint">expand_more</span>
+<span class="text-[9px] font-code-sm text-surface-tint mt-1">Z-</span>
+</button>
+</div>
+<!-- Outer Ring & Crosshair -->
+<div class="absolute inset-0 border border-outline-variant/30 rounded-full"></div>
+<div class="absolute w-[110%] h-[1px] bg-outline-variant/20"></div>
+<div class="absolute h-[110%] w-[1px] bg-outline-variant/20"></div>
+<!-- Buttons Area -->
+<div class="relative w-full h-full p-8 flex flex-col items-center justify-between">
+<!-- Y+ -->
+<button class="w-16 h-12 bg-surface-container-high border border-outline-variant/50 hover:bg-primary/20 hover:border-primary transition-all rounded-t-xl flex flex-col items-center justify-center group">
+<span class="text-[9px] font-code-sm text-on-surface-variant group-hover:text-primary mb-0.5">Y+</span>
+<span class="material-symbols-outlined text-primary scale-110">keyboard_arrow_up</span>
+</button>
+<div class="flex justify-between w-full items-center">
+<!-- X- -->
+<button class="w-12 h-16 bg-surface-container-high border border-outline-variant/50 hover:bg-primary/20 hover:border-primary transition-all rounded-l-xl flex flex-col items-center justify-center group">
+<span class="text-[9px] font-code-sm text-on-surface-variant group-hover:text-primary mb-0.5">X-</span>
+<span class="material-symbols-outlined text-primary scale-110">keyboard_arrow_left</span>
+</button>
+<!-- CENTRAL HOME BUTTON -->
+<div class="p-2 bg-surface-container-lowest rounded-full border border-outline-variant/20 shadow-2xl relative">
+<button class="w-20 h-20 rounded-full bg-surface-variant/40 border-2 border-primary shadow-[0_0_20px_rgba(0,220,229,0.2)] hover:shadow-[0_0_30px_rgba(0,220,229,0.4)] hover:bg-primary/10 transition-all flex flex-col items-center justify-center group">
+<span class="material-symbols-outlined text-3xl text-primary mb-1">home_pin</span>
+<span class="text-[9px] font-label-caps text-primary font-bold">HOME</span>
+</button>
+<!-- Decorative bits -->
+<div class="absolute -top-1 -left-1 w-3 h-3 border-t border-l border-primary/50"></div>
+<div class="absolute -bottom-1 -right-1 w-3 h-3 border-b border-r border-primary/50"></div>
+</div>
+<!-- X+ -->
+<button class="w-12 h-16 bg-surface-container-high border border-outline-variant/50 hover:bg-primary/20 hover:border-primary transition-all rounded-r-xl flex flex-col items-center justify-center group">
+<span class="text-[9px] font-code-sm text-on-surface-variant group-hover:text-primary mb-0.5">X+</span>
+<span class="material-symbols-outlined text-primary scale-110">keyboard_arrow_right</span>
+</button>
+</div>
+<!-- Y- -->
+<button class="w-16 h-12 bg-surface-container-high border border-outline-variant/50 hover:bg-primary/20 hover:border-primary transition-all rounded-b-xl flex flex-col items-center justify-center group">
+<span class="material-symbols-outlined text-primary scale-110">keyboard_arrow_down</span>
+<span class="text-[9px] font-code-sm text-on-surface-variant group-hover:text-primary mt-0.5">Y-</span>
+</button>
+</div>
+<!-- Z-AXIS SIDEBAR -->
+</div>
+</div>
+<!-- Power Bars: LED Segmented Sliders (4 cols) -->
+<div class="lg:col-span-4 flex flex-col gap-8 justify-center">
+<!-- Fan Power -->
+<div class="flex flex-col gap-3">
+<div class="flex justify-between items-baseline px-1">
+<span class="text-[10px] font-label-caps text-on-surface-variant tracking-widest">COOLING FAN / SPEED</span>
+<span class="font-code-lg text-primary">50%</span>
+</div>
+<div class="flex gap-1 h-12 items-end cursor-pointer group/fan">
+<!-- Segmented Bar Graph -->
+<div class="flex-1 h-full bg-primary/40 border border-primary/20 shadow-[0_0_10px_rgba(0,220,229,0.3)] hover:brightness-125 transition-all"></div>
+<div class="flex-1 h-full bg-primary/40 border border-primary/20 shadow-[0_0_10px_rgba(0,220,229,0.3)] hover:brightness-125 transition-all"></div>
+<div class="flex-1 h-full bg-primary/40 border border-primary/20 shadow-[0_0_10px_rgba(0,220,229,0.3)] hover:brightness-125 transition-all"></div>
+<div class="flex-1 h-full bg-primary/40 border border-primary/20 shadow-[0_0_10px_rgba(0,220,229,0.3)] hover:brightness-125 transition-all"></div>
+<div class="flex-1 h-full bg-primary/40 border border-primary/20 shadow-[0_0_10px_rgba(0,220,229,0.3)] hover:brightness-125 transition-all"></div>
+<div class="flex-1 h-full bg-surface-variant/20 border border-outline-variant/10 hover:brightness-125 transition-all"></div>
+<div class="flex-1 h-full bg-surface-variant/20 border border-outline-variant/10 hover:brightness-125 transition-all"></div>
+<div class="flex-1 h-full bg-surface-variant/20 border border-outline-variant/10 hover:brightness-125 transition-all"></div>
+<div class="flex-1 h-full bg-surface-variant/20 border border-outline-variant/10 hover:brightness-125 transition-all"></div>
+<div class="flex-1 h-full bg-surface-variant/20 border border-outline-variant/10 hover:brightness-125 transition-all"></div>
+</div>
+</div>
+<!-- Extrusion Feed -->
+<div class="flex flex-col gap-3">
+<div class="flex justify-between items-baseline px-1">
+<span class="text-[10px] font-label-caps text-on-surface-variant tracking-widest">EXTRUSION FEED / FLOW</span>
+<span class="font-code-lg text-secondary">1.0X</span>
+</div>
+<div class="flex gap-1 h-12 items-end cursor-pointer group/feed">
+<!-- Segmented Bar Graph -->
+<div class="flex-1 h-[80%] bg-secondary/60 border border-secondary/30 shadow-[0_0_10px_rgba(253,139,0,0.3)] hover:brightness-125 transition-all"></div>
+<div class="flex-1 h-[80%] bg-secondary/60 border border-secondary/30 shadow-[0_0_10px_rgba(253,139,0,0.3)] hover:brightness-125 transition-all"></div>
+<div class="flex-1 h-[80%] bg-secondary/60 border border-secondary/30 shadow-[0_0_10px_rgba(253,139,0,0.3)] hover:brightness-125 transition-all"></div>
+<div class="flex-1 h-[80%] bg-secondary/60 border border-secondary/30 shadow-[0_0_10px_rgba(253,139,0,0.3)] hover:brightness-125 transition-all"></div>
+<div class="flex-1 h-[80%] bg-secondary/60 border border-secondary/30 shadow-[0_0_10px_rgba(253,139,0,0.3)] hover:brightness-125 transition-all"></div>
+<div class="flex-1 h-[80%] bg-secondary/60 border border-secondary/30 shadow-[0_0_10px_rgba(253,139,0,0.3)] hover:brightness-125 transition-all"></div>
+<div class="flex-1 h-[80%] bg-surface-variant/20 border border-outline-variant/10 hover:brightness-125 transition-all"></div>
+<div class="flex-1 h-[80%] bg-surface-variant/20 border border-outline-variant/10 hover:brightness-125 transition-all"></div>
+<div class="flex-1 h-[80%] bg-surface-variant/20 border border-outline-variant/10 hover:brightness-125 transition-all"></div>
+<div class="flex-1 h-[80%] bg-surface-variant/20 border border-outline-variant/10 hover:brightness-125 transition-all"></div>
+</div>
+</div>
+</div>
+<!-- Tactical Actions: (3 cols) -->
+<div class="lg:col-span-3 flex flex-col gap-4 justify-center">
+<!-- AUTO BED LEVEL: Tactical Trigger -->
+<button class="relative group overflow-hidden">
+<div class="absolute inset-0 bg-secondary/10 group-hover:bg-secondary/20 transition-colors"></div>
+<div class="relative py-4 px-4 border border-secondary/40 flex items-center gap-4">
+<div class="w-10 h-10 bg-secondary flex items-center justify-center rounded shadow-[0_0_15px_rgba(253,139,0,0.5)]">
+<span class="material-symbols-outlined text-on-secondary">grid_view</span>
+</div>
+<div class="flex flex-col items-start">
+<span class="text-[10px] font-label-caps text-secondary font-bold">ENGAGE PROTOCOL</span>
+<span class="text-xs font-bold text-on-surface tracking-wider">AUTO BED LEVEL</span>
+</div>
+</div>
+<!-- Warning Stripes Decal -->
+<div class="absolute bottom-0 right-0 w-8 h-2 opacity-20" style="background: repeating-linear-gradient(-45deg, #fd8b00, #fd8b00 4px, transparent 4px, transparent 8px);"></div>
+</button>
+<!-- UNLOCK MOTORS -->
+<button class="flex items-center gap-4 p-4 bg-surface-container-high border border-outline-variant/30 hover:border-error transition-all group">
+<span class="material-symbols-outlined text-error opacity-60 group-hover:opacity-100 transition-opacity">lock_open</span>
+<span class="text-[10px] font-label-caps text-on-surface-variant group-hover:text-error transition-colors uppercase font-bold">Unlock Motors</span>
+</button>
+<!-- FEED CONTROLS -->
+<div class="mt-4 grid grid-cols-2 gap-3">
+<button class="py-4 bg-primary text-on-primary rounded border border-primary shadow-[0_0_15px_rgba(0,245,255,0.2)] hover:shadow-[0_0_25px_rgba(0,245,255,0.4)] transition-all font-label-caps text-[10px] font-bold flex flex-col items-center gap-1">
+<span class="material-symbols-outlined">double_arrow</span>
+                    EXTRUDE
+                </button>
+<button class="py-4 border border-primary/40 text-primary hover:bg-primary/10 transition-all font-label-caps text-[10px] font-bold flex flex-col items-center gap-1">
+<span class="material-symbols-outlined rotate-180">double_arrow</span>
+                    RETRACT
+                </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- END: Main Content Area -->
+</div>
+<!-- END: Main Layout container -->
+<!-- BEGIN: Footer -->
+<footer class="h-10 border-t border-outline-variant bg-surface-container flex items-center justify-between px-4 shrink-0">
+<div class="flex items-center space-x-2">
+<span class="font-headline-md text-lg">XController</span>
+<svg class="w-4 h-4 text-primary" fill="currentColor" viewbox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"></path></svg>
+<svg class="w-4 h-4 text-secondary" fill="currentColor" viewbox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"></path></svg>
+</div>
+<div class="font-label-caps text-on-surface-variant tracking-widest">
+      PT | FR | EN | DE
+    </div>
+</footer>
+<!-- END: Footer -->
+</body></html>

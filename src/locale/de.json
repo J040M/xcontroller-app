@@ -11,7 +11,8 @@
             "filename": "Dateiname: ",
             "file_modified_date": "Geändert: ",
             "filesize": "Größe: ",
-            "no_files": "Keine Dateien"
+            "no_files": "Keine Dateien",
+            "upload": "Auf SD hochladen"
         },
         "status": {
             "state": "Status:",
@@ -63,7 +64,16 @@
             "label_name": "Name",
             "label_url": "ws://myprinter.local:9002",
             "label_firmware": "Firmware",
-            "label_dimensions": "Abmessungen"
+            "label_dimensions": "Abmessungen",
+            "label_auth_token": "Auth-Token (optional)",
+            "placeholder_auth_token": "Leer lassen, wenn der Server kein Token hat",
+            "label_transport": "Verbindungstyp",
+            "transport_websocket": "WebSocket (Netzwerk)",
+            "transport_usb": "USB (seriell)",
+            "label_serial_port": "Serieller Port",
+            "placeholder_serial_port": "Seriellen Port auswählen",
+            "label_baud_rate": "Baudrate",
+            "btn_refresh_ports": "Ports aktualisieren"
         },
         "heating_profile": {
             "header": "Heizprofil",
@@ -74,7 +84,8 @@
         },
         "error_message": {
             "header": "Fehler Alarm",
-            "connection_error": "Verbindungsfehler! Bitte überprüfen Sie die Verbindung und versuchen Sie es erneut."
+            "connection_error": "Verbindungsfehler! Bitte überprüfen Sie die Verbindung und versuchen Sie es erneut.",
+            "auth_error": "Authentifizierung fehlgeschlagen. Überprüfen Sie das Auth-Token im Druckerprofil."
         }
     }
 }
