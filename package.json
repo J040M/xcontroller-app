@@ -8,7 +8,7 @@
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
-    "tauricon": "tauricon",
+    "tauricon": "npx --yes github:tauri-apps/tauricon",
     "test": "vitest run"
   },
   "dependencies": {
@@ -28,7 +28,6 @@
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.11.1",
-    "@tauri-apps/tauricon": "github:tauri-apps/tauricon",
     "@types/three": "^0.171.0",
     "@vitejs/plugin-vue": "^5.0.4",
     "@vue/test-utils": "^2.4.6",
