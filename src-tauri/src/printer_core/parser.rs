@@ -174,66 +174,61 @@ pub fn m115(message: String) -> PrinterInfo {
     let parts: Vec<&str> = message.split("\n").collect();
     for part in parts {
         if part.contains("FIRMWARE_NAME") {
-            let fw_parts: Vec<&str> = part.split(":").collect();
-            let fw_version: Vec<&str> = fw_parts[1].split_whitespace().collect();
-            debug!("FIRMWARE VERSION: {} {}", fw_version[0], fw_version[1]);
-
-            printer_info.firmware_name = fw_version[0].to_string();
-            printer_info.firmware_version = fw_version[1].to_string();
+            // Untrusted firmware output: a non-Marlin, truncated, or otherwise
+            // malformed line may lack the colon, the name, or the version.
+            // Guard every step so a bad M115 reply leaves these fields at their
+            // defaults instead of panicking the serial worker thread.
+            let after_name = part.split(':').nth(1).unwrap_or("").trim();
+            let mut tokens = after_name.split_whitespace();
+            if let Some(name) = tokens.next() {
+                printer_info.firmware_name = name.to_string();
+            }
+            if let Some(version) = tokens.next() {
+                printer_info.firmware_version = version.to_string();
+            }
+            debug!(
+                "FIRMWARE VERSION: {} {}",
+                printer_info.firmware_name, printer_info.firmware_version
+            );
         } else if part.contains("Cap:") {
-            let cap_parts: Vec<&str> = part.split(":").collect();
-            match cap_parts[0] {
-                "SERIAL_XON_XOFF" => {
-                    println!("{}", printer_info.serial_xon_xoff);
-                    printer_info.serial_xon_xoff = cap_parts[1].parse().unwrap_or(0)
-                }
-                "EEPROM" => printer_info.eeprom = cap_parts[1].parse().unwrap_or(0),
-                "VOLUMETRIC" => printer_info.volumetric = cap_parts[1].parse().unwrap_or(0),
-                "AUTOREPORT_POS" => printer_info.autoreport_pos = cap_parts[1].parse().unwrap_or(0),
-                "AUTOREPORT_TEMP" => {
-                    printer_info.autoreport_temp = cap_parts[1].parse().unwrap_or(0)
-                }
-                "PROGRESS" => printer_info.progress = cap_parts[1].parse().unwrap_or(0),
-                "print_job" => printer_info.print_job = cap_parts[1].parse().unwrap_or(0),
-                "autolevel" => printer_info.autolevel = cap_parts[1].parse().unwrap_or(0),
-                "RUNOUT" => printer_info.runout = cap_parts[1].parse().unwrap_or(0),
-                "z_probe" => printer_info.z_probe = cap_parts[1].parse().unwrap_or(0),
-                "LEVELING_DATA" => printer_info.leveling_data = cap_parts[1].parse().unwrap_or(0),
-                "BUILD_PERCENT" => printer_info.build_percent = cap_parts[1].parse().unwrap_or(0),
-                "SOFTWARE_POWER" => printer_info.software_power = cap_parts[1].parse().unwrap_or(0),
-                "TOGGLE_LIGHTS" => printer_info.toggle_lights = cap_parts[1].parse().unwrap_or(0),
-                "CASE_LIGHT_BRIGHTNESS" => {
-                    printer_info.case_light_brightness = cap_parts[1].parse().unwrap_or(0)
-                }
-                "EMERGENCY_PARSER" => {
-                    printer_info.emergency_parser = cap_parts[1].parse().unwrap_or(0)
-                }
-                "MOST_ACTION_COMMANDS" => {
-                    printer_info.most_action_commands = cap_parts[1].parse().unwrap_or(0)
-                }
-                "PROMPT_SUPPORT" => printer_info.prompt_support = cap_parts[1].parse().unwrap_or(0),
-                "SDCARD" => printer_info.sdcard = cap_parts[1].parse().unwrap_or(0),
-                "REPEAT" => printer_info.repeat = cap_parts[1].parse().unwrap_or(0),
-                "SD_WRITE" => printer_info.sd_write = cap_parts[1].parse().unwrap_or(0),
-                "AUTO_REPORT_SD_STATUS" => {
-                    printer_info.auto_report_sd_status = cap_parts[1].parse().unwrap_or(0)
-                }
-                "LONG_FILENAME" => printer_info.long_filename = cap_parts[1].parse().unwrap_or(0),
-                "THERMAL_PROTECTION" => {
-                    printer_info.thermal_protection = cap_parts[1].parse().unwrap_or(0)
-                }
-                "MOTION_MODES" => printer_info.motion_modes = cap_parts[1].parse().unwrap_or(0),
-                "ARCS" => printer_info.arcs = cap_parts[1].parse().unwrap_or(0),
-                "BABYSTEPPING" => printer_info.babystepping = cap_parts[1].parse().unwrap_or(0),
-                "CHAMBER_TEMPERATURES" => {
-                    printer_info.chamber_temperature = cap_parts[1].parse().unwrap_or(0)
-                }
-                "COOLER_TEMPERATURE" => {
-                    printer_info.cooler_temperature = cap_parts[1].parse().unwrap_or(0)
-                }
-                "MEATPACK" => printer_info.meatpack = cap_parts[1].parse().unwrap_or(0),
+            let mut segments = part.split(':');
+            // segments: ["Cap", "<NAME>", "<VALUE>"]
+            let _ = segments.next(); // discard "Cap"
+            let name = segments.next().unwrap_or("").trim();
+            let value: u8 = segments.next().unwrap_or("").trim().parse().unwrap_or(0);
+            match name {
+                "SERIAL_XON_XOFF" => printer_info.serial_xon_xoff = value,
+                "EEPROM" => printer_info.eeprom = value,
+                "VOLUMETRIC" => printer_info.volumetric = value,
+                "AUTOREPORT_POS" => printer_info.autoreport_pos = value,
+                "AUTOREPORT_TEMP" => printer_info.autoreport_temp = value,
+                "PROGRESS" => printer_info.progress = value,
+                "PRINT_JOB" => printer_info.print_job = value,
+                "AUTOLEVEL" => printer_info.autolevel = value,
+                "RUNOUT" => printer_info.runout = value,
+                "Z_PROBE" => printer_info.z_probe = value,
+                "LEVELING_DATA" => printer_info.leveling_data = value,
+                "BUILD_PERCENT" => printer_info.build_percent = value,
+                "SOFTWARE_POWER" => printer_info.software_power = value,
+                "TOGGLE_LIGHTS" => printer_info.toggle_lights = value,
+                "CASE_LIGHT_BRIGHTNESS" => printer_info.case_light_brightness = value,
+                "EMERGENCY_PARSER" => printer_info.emergency_parser = value,
+                "MOST_ACTION_COMMANDS" => printer_info.most_action_commands = value,
+                "PROMPT_SUPPORT" => printer_info.prompt_support = value,
+                "SDCARD" => printer_info.sdcard = value,
+                "REPEAT" => printer_info.repeat = value,
+                "SD_WRITE" => printer_info.sd_write = value,
+                "AUTO_REPORT_SD_STATUS" => printer_info.auto_report_sd_status = value,
+                "LONG_FILENAME" => printer_info.long_filename = value,
+                "THERMAL_PROTECTION" => printer_info.thermal_protection = value,
+                "MOTION_MODES" => printer_info.motion_modes = value,
+                "ARCS" => printer_info.arcs = value,
+                "BABYSTEPPING" => printer_info.babystepping = value,
+                "CHAMBER_TEMPERATURES" => printer_info.chamber_temperature = value,
+                "COOLER_TEMPERATURE" => printer_info.cooler_temperature = value,
+                "MEATPACK" => printer_info.meatpack = value,
                 _ => {
-                    debug!("Failed to parse | {}", cap_parts[0])
+                    debug!("Failed to parse Cap | {}", name)
                 }
             }
         }
@@ -325,18 +320,17 @@ mod tests {
         let info = m115(sample_response);
         assert_eq!(info.firmware_name, "Marlin");
         assert_eq!(info.firmware_version, "2.0.1");
-        // print!("{:?}", info.serial_xon_xoff);
-        // assert_eq!(info.serial_xon_xoff, 1);
-        // assert_eq!(info.eeprom, 1);
-        // assert_eq!(info.volumetric, 1);
-        // assert_eq!(info.autoreport_temp, 1);
-        // assert_eq!(info.progress, 1);
-        // assert_eq!(info.print_job, 1);
-        // assert_eq!(info.autolevel, 1);
-        // assert_eq!(info.z_probe, 1);
-        // assert_eq!(info.leveling_data, 1);
-        // assert_eq!(info.build_percent, 1);
-        // assert_eq!(info.software_power, 1);
+        assert_eq!(info.serial_xon_xoff, 1);
+        assert_eq!(info.eeprom, 1);
+        assert_eq!(info.volumetric, 1);
+        assert_eq!(info.autoreport_temp, 1);
+        assert_eq!(info.progress, 1);
+        assert_eq!(info.print_job, 1);
+        assert_eq!(info.autolevel, 1);
+        assert_eq!(info.z_probe, 1);
+        assert_eq!(info.leveling_data, 1);
+        assert_eq!(info.build_percent, 1);
+        assert_eq!(info.software_power, 1);
     }
 
     #[test]
@@ -434,5 +428,76 @@ mod tests {
         let sample_response = "echo:Print time: 2h 45m ok".to_string();
         let print_time = m31(sample_response);
         assert_eq!(print_time, "2h 45m");
+    }
+
+    #[test]
+    fn test_m115_firmware_name_no_colon() {
+        // Truncated line: contains the key but no colon/value. Must not panic.
+        let info = m115("FIRMWARE_NAME\nok".to_string());
+        assert_eq!(info.firmware_name, "");
+        assert_eq!(info.firmware_version, "");
+    }
+
+    #[test]
+    fn test_m115_firmware_name_no_version() {
+        // Single-token firmware id (e.g. Repetier style). Name set, version empty, no panic.
+        let info = m115("FIRMWARE_NAME:Repetier_1.0.3\nok".to_string());
+        assert_eq!(info.firmware_name, "Repetier_1.0.3");
+        assert_eq!(info.firmware_version, "");
+    }
+
+    #[test]
+    fn test_m115_firmware_name_empty_value() {
+        // Empty value after the colon. Both fields stay default, no panic.
+        let info = m115("FIRMWARE_NAME:\nok".to_string());
+        assert_eq!(info.firmware_name, "");
+        assert_eq!(info.firmware_version, "");
+    }
+
+    #[test]
+    fn test_m115_cap_malformed() {
+        // Malformed Cap: lines must not panic and must leave capability fields at default.
+        // "Cap:" — name and value both absent.
+        // "Cap:EEPROM" — name present but value token absent.
+        let info = m115("FIRMWARE_NAME:Marlin 2.0.1\nCap:\nCap:EEPROM\nok".to_string());
+        assert_eq!(info.eeprom, 0);
+        assert_eq!(info.serial_xon_xoff, 0);
+    }
+
+    #[test]
+    fn test_m115_cap_non_numeric_value() {
+        // Non-numeric value (e.g. "abc") must fall back to 0 via parse().unwrap_or(0).
+        // A u8-overflow value (999 > 255) must also fall back to 0, not panic.
+        let info = m115(
+            "FIRMWARE_NAME:Marlin 2.0.1\nCap:EEPROM:abc\nCap:SERIAL_XON_XOFF:999\nok".to_string(),
+        );
+        assert_eq!(info.eeprom, 0);
+        assert_eq!(info.serial_xon_xoff, 0);
+    }
+
+    #[test]
+    fn test_m115_chamber_and_cooler_caps() {
+        // CHAMBER_TEMPERATURES (plural key) maps to chamber_temperature (singular field).
+        // COOLER_TEMPERATURE maps to cooler_temperature.
+        let info = m115(
+            "FIRMWARE_NAME:Marlin 2.0.1\nCap:CHAMBER_TEMPERATURES:1\nCap:COOLER_TEMPERATURE:1\nok"
+                .to_string(),
+        );
+        assert_eq!(info.chamber_temperature, 1);
+        assert_eq!(info.cooler_temperature, 1);
+    }
+
+    #[test]
+    fn test_m115_firmware_name_multi_colon() {
+        // Real Marlin emits extra key=value pairs after the name and version on
+        // the same FIRMWARE_NAME line.  The parser takes only the segment between
+        // the first and second colon, so the trailing SOURCE_CODE_URL:... must not
+        // corrupt firmware_name or firmware_version.
+        let info = m115(
+            "FIRMWARE_NAME:Marlin 2.0.1 SOURCE_CODE_URL:https://github.com/MarlinFirmware/Marlin\nok"
+                .to_string(),
+        );
+        assert_eq!(info.firmware_name, "Marlin");
+        assert_eq!(info.firmware_version, "2.0.1");
     }
 }

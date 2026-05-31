@@ -249,10 +249,7 @@ fn handle_command(
     let cmd = match g_command(message) {
         Ok(c) => c.to_string(),
         Err(e) => {
-            emit_message(
-                app,
-                error_message("MessageSenderError", &e.to_string()),
-            );
+            emit_message(app, error_message("MessageSenderError", &e.to_string()));
             return false;
         }
     };
