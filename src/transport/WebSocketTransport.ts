@@ -100,7 +100,7 @@ export default class WebSocketTransport extends EventEmitter implements ITranspo
      * file body after an `UploadBegin`/`UploadAck` exchange. Returns false
      * when the socket isn't open so the caller can abort the transfer.
      */
-    sendBinary(data: ArrayBuffer | ArrayBufferView): boolean {
+    sendBinary(data: ArrayBuffer | ArrayBufferView<ArrayBuffer>): boolean {
         if (!this.wsClient || this.wsClient.readyState !== WebSocket.OPEN) return false
         this.wsClient.send(data)
         return true
