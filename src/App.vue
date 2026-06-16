@@ -5,9 +5,11 @@ import Status from './components/status.vue';
 import Main from './components/main/main.vue';
 import Files from './components/files.vue';
 import FooterComponent from './components/footer.vue';
+import MobileApp from './mobile/MobileApp.vue';
 
 import { eventBus } from './utils/eventbus';
 import { useListener } from './utils/listeners';
+import { useIsMobile } from './composables/useMediaQuery';
 import { useI18n } from 'vue-i18n';
 
 export default defineComponent({
@@ -17,7 +19,8 @@ export default defineComponent({
     Status,
     Main,
     Files,
-    FooterComponent
+    FooterComponent,
+    MobileApp
   },
   setup() {
     const errorMessageDialog = ref(false)
@@ -57,8 +60,18 @@ export default defineComponent({
       errorMessageDialog.value = true
     })
 
+    /**
+     * Below the `lg` breakpoint the fixed-width sidebar layout is unusable, so
+     * the whole desktop tree is swapped for the touch-first mobile shell. This
+     * is a `v-if` switch (not CSS) so only one tree mounts at a time — the 3D
+     * viewers, chart pollers and transport listeners never run in duplicate.
+     * The desktop markup below is otherwise unchanged and only renders at
+     * >=1024px.
+     */
+    const isMobile = useIsMobile()
+
     const { t } = useI18n()
-    return { t, errorMessageDialog, errorMessageKey, connectorOpen }
+    return { t, errorMessageDialog, errorMessageKey, connectorOpen, isMobile }
   }
 })
 </script>
@@ -68,7 +81,7 @@ export default defineComponent({
     :visible="errorMessageDialog"
     modal
     :header="$t('error_message.header')"
-    :style="{ width: '25rem' }"
+    :style="{ width: 'min(25rem, 95vw)' }"
     :closable="false"
   >
     <p class="font-code-sm text-on-surface">{{ $t('error_message.' + errorMessageKey) }}</p>
@@ -77,7 +90,11 @@ export default defineComponent({
     </template>
   </Dialog>
 
-  <div class="flex flex-col h-screen bg-surface text-on-surface">
+  <!-- Mobile shell (below lg). Reuses the same singleton stores/transports. -->
+  <MobileApp v-if="isMobile" />
+
+  <!-- Desktop layout (>=lg). Unchanged — only gated so it doesn't render on phones. -->
+  <div v-else class="flex flex-col h-screen bg-surface text-on-surface">
     <div class="flex flex-1 min-h-0">
       <aside class="w-[300px] shrink-0 border-r border-outline-variant bg-surface-container-lowest overflow-y-auto flex flex-col">
         <section class="border-b border-outline-variant">
