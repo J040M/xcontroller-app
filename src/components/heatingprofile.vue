@@ -46,7 +46,7 @@ export default defineComponent({
         :visible="visible"
         modal
         :header="$t('heating_profile.header')"
-        :style="{ width: '28rem' }"
+        :style="{ width: 'min(28rem, 95vw)' }"
         :closable="false"
     >
         <div class="flex flex-col gap-4 pt-2">
