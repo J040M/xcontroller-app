@@ -45,6 +45,14 @@ const BACKPRESSURE_LIMIT = 256 * 1024
 const MAX_UPLOAD_BYTES = 64 * 1024 * 1024
 
 /**
+ * Fail an upload if no ack/progress/done/error arrives for this long. Without
+ * it, a connection that drops without ever surfacing a 'disconnected' event
+ * (e.g. a WebSocket reconnect that suppresses the old socket's close) would
+ * leave the promise unsettled and wedge the `inFlight` guard forever.
+ */
+const UPLOAD_ACTIVITY_TIMEOUT = 30_000
+
+/**
  * Process-wide single-flight guard. The server runs one upload at a time, so
  * starting a second client-side only guarantees an `UploadError`.
  */
@@ -146,8 +154,10 @@ function runUpload(
 ): Promise<UploadResult> {
     return new Promise<UploadResult>((resolve, reject) => {
         let settled = false
+        let watchdog: ReturnType<typeof setTimeout> | undefined
 
         const cleanup = () => {
+            if (watchdog) clearTimeout(watchdog)
             eventBus.off('upload:ack', onAck)
             eventBus.off('upload:progress', onProgress)
             eventBus.off('upload:done', onDone)
@@ -165,6 +175,14 @@ function runUpload(
             settled = true
             cleanup()
             reject(new Error(reason))
+        }
+        // Restart the inactivity watchdog on every sign of life from the server.
+        const kick = () => {
+            if (watchdog) clearTimeout(watchdog)
+            watchdog = setTimeout(
+                () => fail('Upload timed out — no response from the printer'),
+                UPLOAD_ACTIVITY_TIMEOUT,
+            )
         }
 
         // Stream the payload as chunked binary frames, yielding whenever the
@@ -186,6 +204,7 @@ function runUpload(
         }
 
         const onAck = () => {
+            kick()
             // Server is ready — start streaming. Failures inside streamPayload
             // reject through `fail`; a server-side `UploadError` is handled by
             // `onError` and flips `settled`, which streamPayload checks.
@@ -194,6 +213,7 @@ function runUpload(
             )
         }
         const onProgress = (raw: string) => {
+            kick()
             try {
                 handlers.onProgress?.(JSON.parse(raw) as UploadProgress)
             } catch {
@@ -227,6 +247,9 @@ function runUpload(
             message_type: 'UploadBegin',
             message: JSON.stringify(request),
         })
+        // Arm the watchdog now — if the server never even acks, this settles
+        // the promise instead of hanging.
+        kick()
     })
 }
 
@@ -269,8 +292,10 @@ export async function uploadFileFromPath(
     try {
         return await new Promise<UploadResult>((resolve, reject) => {
             let settled = false
+            let watchdog: ReturnType<typeof setTimeout> | undefined
 
             const cleanup = () => {
+                if (watchdog) clearTimeout(watchdog)
                 eventBus.off('upload:progress', onProgress)
                 eventBus.off('upload:done', onDone)
                 eventBus.off('upload:error', onError)
@@ -288,7 +313,18 @@ export async function uploadFileFromPath(
                 cleanup()
                 reject(new Error(reason))
             }
+            // Restart the inactivity watchdog on every sign of life from the
+            // Rust worker; if it goes silent the upload settles instead of
+            // hanging and wedging the `inFlight` guard.
+            const kick = () => {
+                if (watchdog) clearTimeout(watchdog)
+                watchdog = setTimeout(
+                    () => fail('Upload timed out — no response from the printer'),
+                    UPLOAD_ACTIVITY_TIMEOUT,
+                )
+            }
             const onProgress = (raw: string) => {
+                kick()
                 try {
                     handlers.onProgress?.(JSON.parse(raw) as UploadProgress)
                 } catch {
@@ -319,6 +355,8 @@ export async function uploadFileFromPath(
                     dummy: options.dummy,
                 })
                 .catch((e) => fail(e instanceof Error ? e.message : String(e)))
+            // Arm the watchdog so a silent Rust worker settles the promise.
+            kick()
         })
     } finally {
         inFlight = false

@@ -19,6 +19,12 @@ export default defineComponent({
             }
             try {
                 printer.printerInfo.printStatus.progress = parseInt(JSON.parse(raw))
+                // An active byte count means the printer is printing — reflect
+                // that (e.g. after reconnecting to a running print), but don't
+                // override a locally-known pause.
+                if (printer.printerInfo.printStatus.state !== 'paused') {
+                    printer.printerInfo.printStatus.state = 'printing'
+                }
             } catch {
                 /* ignore unparseable progress payload */
             }
@@ -30,8 +36,15 @@ export default defineComponent({
                 printer.printerInfo.printStatus.state = 'unknown'
                 return
             }
-            printer.printerInfo.printStatus.state = 'idle'
             printer.printerInfo.printStatus.file_name = cleaned
+            // A file is selected. Only treat that as idle when we're not already
+            // tracking an active print/pause — otherwise a status refresh
+            // (reconnect, Reload, panel remount) would wrongly show IDLE
+            // mid-print. M27 (above) drives the printing/paused state.
+            const state = printer.printerInfo.printStatus.state
+            if (state !== 'printing' && state !== 'paused') {
+                printer.printerInfo.printStatus.state = 'idle'
+            }
         })
 
         useListener(eventBus, 'printer:m31', (raw: string) => {

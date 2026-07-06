@@ -4,6 +4,16 @@
 use std::io::{Error, ErrorKind};
 
 pub fn g_command(cmd: &str) -> Result<&str, Error> {
+    // Marlin parses input line-by-line, so a single embedded newline smuggles a
+    // second (unvalidated) command past the allow-list below — e.g. "G28\nM997"
+    // would validate as "G28" yet still flash firmware. Reject any line break.
+    if cmd.contains('\n') || cmd.contains('\r') {
+        return Err(Error::new(
+            ErrorKind::InvalidInput,
+            "Command must be a single line",
+        ));
+    }
+
     let command = match cmd.split_whitespace().next() {
         Some(c) => c,
         None => return Err(Error::new(ErrorKind::InvalidInput, "Empty command")),
@@ -93,5 +103,14 @@ mod tests {
         // which can brick the printer. It must stay out of the allow-list.
         assert!(g_command("M997").is_err());
         assert!(g_command("M997 S0").is_err());
+    }
+
+    #[test]
+    fn rejects_embedded_newline_smuggling() {
+        // A blocked command must not be reachable by hiding it on a second line
+        // behind an allowed first token.
+        assert!(g_command("G28\nM997").is_err());
+        assert!(g_command("G1 X0\r\nM997 S0").is_err());
+        assert!(g_command("M105\nM997").is_err());
     }
 }

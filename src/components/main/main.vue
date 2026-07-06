@@ -18,7 +18,11 @@ export default defineComponent({
 
 <template>
     <div class="flex flex-col h-full">
-        <Tabs value="0" class="tactical-tabs flex flex-col h-full">
+        <!-- `lazy`: only mount the active panel. Without it PrimeVue renders
+             every TabPanel at once, so Control's Three.js scene, the g-code
+             viewer's second WebGL context, and the temperature poller would all
+             run permanently regardless of the selected tab. -->
+        <Tabs value="0" lazy class="tactical-tabs flex flex-col h-full">
             <TabList>
                 <Tab value="0">{{ $t('main.control') }}</Tab>
                 <Tab value="1">{{ $t('main.temperature') }}</Tab>

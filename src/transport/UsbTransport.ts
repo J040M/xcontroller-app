@@ -28,6 +28,7 @@ export default class UsbTransport extends EventEmitter implements ITransport {
     private _baudRate: number = 115200
     private _connectionStatus: boolean = false
     private _hasAttemptedConnection: boolean = false
+    private _isConnecting: boolean = false
     private _unlisteners: UnlistenFn[] = []
 
     /**
@@ -50,8 +51,15 @@ export default class UsbTransport extends EventEmitter implements ITransport {
 
     connect(): void {
         if (!this._serialPort) return
+        // Ignore duplicate/concurrent connects: a second attempt while already
+        // connected (or mid-connect) would otherwise be rejected by the Rust
+        // side and tear down the live connection's event listeners.
+        if (this._connectionStatus || this._isConnecting) return
+        this._isConnecting = true
         this._hasAttemptedConnection = true
-        void this.openConnection()
+        void this.openConnection().finally(() => {
+            this._isConnecting = false
+        })
     }
 
     disconnect(): void {
@@ -103,7 +111,12 @@ export default class UsbTransport extends EventEmitter implements ITransport {
             this._connectionStatus = true
             this.emit('connected', 'connected')
         } catch (error) {
-            await this.detachEventListeners()
+            // Only tear down listeners if this attempt didn't reach a connected
+            // state — never rip the bridge out from under a live connection when
+            // a redundant connect is rejected.
+            if (!this._connectionStatus) {
+                await this.detachEventListeners()
+            }
             this.emit('error', error)
         }
     }

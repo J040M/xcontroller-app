@@ -5,6 +5,16 @@ use std::time::{Duration, Instant};
 
 static TIMEOUT: u64 = 1;
 
+/// Once a reply has started arriving, treat it as complete after this much
+/// silence (used only as a fallback for firmware that doesn't terminate with
+/// `ok`). Normal replies return as soon as the `ok`/`error` line is seen.
+const IDLE_TIMEOUT: Duration = Duration::from_millis(100);
+
+/// Hard ceiling on how long to wait for a reply before giving up with
+/// "NO RESPONSE". Generous because long-running commands (`G28`, `M109`,
+/// `G29`) legitimately take many seconds during which the port may be silent.
+const OVERALL_TIMEOUT: Duration = Duration::from_secs(30);
+
 pub struct SerialConnection {
     port: Box<dyn SerialPort>,
 }
@@ -64,56 +74,76 @@ fn round_trip<P: Read + Write>(port: &mut P, cmd: &str) -> io::Result<String> {
 }
 
 fn read_from_port<T: Read>(port: &mut T) -> io::Result<String> {
+    read_from_port_with(port, IDLE_TIMEOUT, OVERALL_TIMEOUT)
+}
+
+/// Marlin acknowledges every command with a final `ok` line (or an `Error:`
+/// line on failure). Detecting that is what lets a multi-second command like
+/// `G28` return correctly instead of being cut off by a fixed timer — the
+/// firmware stays silent (or emits `echo:busy:` keepalives) until it's ready,
+/// then sends `ok`.
+fn response_is_complete(buffer: &str) -> bool {
+    match buffer.lines().rev().find(|line| !line.trim().is_empty()) {
+        Some(last) => {
+            let t = last.trim();
+            t == "ok"
+                || t.starts_with("ok ")
+                || t.starts_with("ok\t")
+                || t.starts_with("Error")
+                || t.starts_with("error")
+        }
+        None => false,
+    }
+}
+
+fn read_from_port_with<T: Read>(
+    port: &mut T,
+    idle_timeout: Duration,
+    overall_timeout: Duration,
+) -> io::Result<String> {
     let mut serial_buffer = [0u8; 1024];
     let mut response_buffer = String::new();
-    let timeout_duration = Duration::from_millis(100); // Adjust as needed
     let start_time = Instant::now();
     let mut last_char_time = Instant::now();
 
     loop {
-        match port.read(serial_buffer.as_mut_slice()) {
+        // `true` means this iteration produced no new data (empty read or a
+        // read timeout) — a quiet gap mid-command is normal, so we only fall
+        // back on the idle/overall deadlines below rather than bailing early.
+        let no_data = match port.read(serial_buffer.as_mut_slice()) {
             Ok(bytes_read) if bytes_read > 0 => {
                 match std::str::from_utf8(&serial_buffer[0..bytes_read]) {
                     Ok(res) => {
                         response_buffer.push_str(res);
                         last_char_time = Instant::now();
+                        // Return the instant Marlin says it's done — don't wait
+                        // out the idle gap for the common case.
+                        if response_is_complete(&response_buffer) {
+                            return Ok(response_buffer);
+                        }
                     }
                     Err(err) => {
                         debug!("Invalid UTF-8 sequence: {}", err);
                     }
                 }
+                false
             }
-            Ok(_) => {
-                // No bytes read
-                if last_char_time.elapsed() > timeout_duration {
-                    // If we have data and no new chars for timeout_duration, message is complete
-                    if !response_buffer.is_empty() {
-                        return Ok(response_buffer);
-                    }
-                }
-                if start_time.elapsed() > timeout_duration * 3 {
-                    // Global timeout - either return what we have or NO RESPONSE
-                    return if response_buffer.is_empty() {
-                        Ok("NO RESPONSE".to_string())
-                    } else {
-                        Ok(response_buffer)
-                    };
-                }
-            }
-            Err(e) if e.kind() == io::ErrorKind::TimedOut => {
-                // Handle same as Ok(0)
-                if last_char_time.elapsed() > timeout_duration && !response_buffer.is_empty() {
-                    return Ok(response_buffer);
-                }
-                if start_time.elapsed() > timeout_duration * 3 {
-                    return if response_buffer.is_empty() {
-                        Ok("NO RESPONSE".to_string())
-                    } else {
-                        Ok(response_buffer)
-                    };
-                }
-            }
+            Ok(_) => true,
+            Err(ref e) if e.kind() == io::ErrorKind::TimedOut => true,
             Err(e) => return Err(e),
+        };
+
+        if no_data {
+            if !response_buffer.is_empty() && last_char_time.elapsed() > idle_timeout {
+                return Ok(response_buffer);
+            }
+            if start_time.elapsed() > overall_timeout {
+                return if response_buffer.is_empty() {
+                    Ok("NO RESPONSE".to_string())
+                } else {
+                    Ok(response_buffer)
+                };
+            }
         }
     }
 }
@@ -160,8 +190,22 @@ mod tests {
         }
 
         let mut reader = TimeoutReader;
-        let result = read_from_port(&mut reader).unwrap();
+        // Short overall timeout so the test doesn't wait out the production
+        // ceiling; a port that only ever times out yields "NO RESPONSE".
+        let result =
+            read_from_port_with(&mut reader, IDLE_TIMEOUT, Duration::from_millis(50)).unwrap();
         assert_eq!(result, "NO RESPONSE");
+    }
+
+    #[test]
+    fn returns_as_soon_as_ok_line_arrives() {
+        // A multi-line reply terminated by `ok` returns immediately instead of
+        // waiting out any idle/overall timeout.
+        let reply = "echo:busy: processing\nX:0.00 Y:0.00 Z:0.00\nok\n";
+        let mut cursor = Cursor::new(reply.as_bytes().to_vec());
+        let result =
+            read_from_port_with(&mut cursor, IDLE_TIMEOUT, Duration::from_secs(30)).unwrap();
+        assert_eq!(result, reply);
     }
 
     #[test]

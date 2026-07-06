@@ -28,6 +28,10 @@ export default defineComponent({
         })
         useListener(eventBus, 'connection:close', () => {
             connectionStatus.value = false
+            // A close can end a connection *attempt* (e.g. a server that drops
+            // the socket on a bad auth handshake without an authfailed reply);
+            // clear the spinner so the connect button doesn't stay stuck.
+            loadingStatus.value = false
         })
         useListener(eventBus, 'connection:error', () => {
             connectionStatus.value = false

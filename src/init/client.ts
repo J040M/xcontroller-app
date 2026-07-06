@@ -162,8 +162,16 @@ export function getTransport(): ITransport {
  */
 export function setActiveTransport(transport: ITransport): void {
     if (transport === activeTransport) return
-    if (activeTransport.connectionStatus) activeTransport.disconnect()
-    detachDispatcher(activeTransport)
+    const previous = activeTransport
+    if (previous.connectionStatus) {
+        previous.disconnect()
+        // `disconnect()` is asynchronous (its 'disconnected' event fires later),
+        // but we're about to detach the dispatcher from `previous`, so that event
+        // would never reach the app and the UI would stay stuck "connected".
+        // Reflect the disconnect now.
+        onDisconnected()
+    }
+    detachDispatcher(previous)
     activeTransport = transport
     attachDispatcher(activeTransport)
 }

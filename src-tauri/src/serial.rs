@@ -19,7 +19,7 @@ use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use serde::Serialize;
-use tauri::{AppHandle, Emitter, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 
 use marlin_binary_transfer::adapters::blocking::{upload as binary_upload, UploadOptions};
 
@@ -51,7 +51,18 @@ enum SerialJob {
 /// when no port is open. The port itself lives on the worker thread.
 #[derive(Default)]
 pub struct SerialState {
-    tx: Mutex<Option<Sender<SerialJob>>>,
+    inner: Mutex<SerialInner>,
+}
+
+#[derive(Default)]
+struct SerialInner {
+    /// Sender to the live worker, or `None` when no port is open.
+    tx: Option<Sender<SerialJob>>,
+    /// Bumped on every successful connect. A worker that outlives its
+    /// connection — after a fatal I/O error, or an old worker still draining
+    /// its queue after a fast reconnect — uses this to clear the shared sender
+    /// only when it still owns the current connection, never a newer one.
+    generation: u64,
 }
 
 /// A serial port as reported to the webview's profile editor.
@@ -135,8 +146,8 @@ pub fn serial_connect(
     state: State<'_, SerialState>,
     app: AppHandle,
 ) -> Result<(), String> {
-    let mut guard = state.tx.lock().map_err(|e| e.to_string())?;
-    if guard.is_some() {
+    let mut inner = state.inner.lock().map_err(|e| e.to_string())?;
+    if inner.tx.is_some() {
         return Err("A serial port is already connected".to_string());
     }
     // Open on the calling thread so the failure (bad port, permission
@@ -144,9 +155,11 @@ pub fn serial_connect(
     let connection = SerialConnection::open(&port, baud).map_err(|e| e.to_string())?;
 
     let (tx, rx) = channel::<SerialJob>();
+    inner.generation += 1;
+    let generation = inner.generation;
+    inner.tx = Some(tx);
     let worker_app = app.clone();
-    thread::spawn(move || serial_worker(connection, rx, worker_app));
-    *guard = Some(tx);
+    thread::spawn(move || serial_worker(connection, rx, worker_app, generation));
     Ok(())
 }
 
@@ -154,8 +167,8 @@ pub fn serial_connect(
 /// thread exits, emitting `serial-disconnected` on its way out.
 #[tauri::command]
 pub fn serial_disconnect(state: State<'_, SerialState>) -> Result<(), String> {
-    let mut guard = state.tx.lock().map_err(|e| e.to_string())?;
-    *guard = None;
+    let mut inner = state.inner.lock().map_err(|e| e.to_string())?;
+    inner.tx = None;
     Ok(())
 }
 
@@ -167,8 +180,8 @@ pub fn serial_send_command(
     message: String,
     state: State<'_, SerialState>,
 ) -> Result<(), String> {
-    let guard = state.tx.lock().map_err(|e| e.to_string())?;
-    match guard.as_ref() {
+    let inner = state.inner.lock().map_err(|e| e.to_string())?;
+    match inner.tx.as_ref() {
         Some(tx) => tx
             .send(SerialJob::Command {
                 incoming_type: message_type,
@@ -190,8 +203,8 @@ pub fn usb_upload(
     dummy: Option<bool>,
     state: State<'_, SerialState>,
 ) -> Result<(), String> {
-    let guard = state.tx.lock().map_err(|e| e.to_string())?;
-    match guard.as_ref() {
+    let inner = state.inner.lock().map_err(|e| e.to_string())?;
+    match inner.tx.as_ref() {
         Some(tx) => tx
             .send(SerialJob::Upload {
                 path,
@@ -206,7 +219,12 @@ pub fn usb_upload(
 
 /// Drain jobs in FIFO order until the channel closes (explicit disconnect) or
 /// a serial I/O error makes the port unusable.
-fn serial_worker(mut connection: SerialConnection, rx: Receiver<SerialJob>, app: AppHandle) {
+fn serial_worker(
+    mut connection: SerialConnection,
+    rx: Receiver<SerialJob>,
+    app: AppHandle,
+    generation: u64,
+) {
     for job in rx.iter() {
         let fatal = match job {
             SerialJob::Command {
@@ -231,8 +249,19 @@ fn serial_worker(mut connection: SerialConnection, rx: Receiver<SerialJob>, app:
             break;
         }
     }
-    // Either the sender was dropped (disconnect) or the port died — let the
-    // webview know so it can flip back to the disconnected state.
+    // On a fatal I/O error (cable yanked, device reset) the worker exits with
+    // the shared sender still set to `Some`, which would make `serial_connect`
+    // reject every reconnect ("already connected") until the app restarts.
+    // Clear it here — but only if we still own the current connection, so an
+    // old worker draining after a fast reconnect can't wipe the new sender.
+    if let Some(state) = app.try_state::<SerialState>() {
+        if let Ok(mut inner) = state.inner.lock() {
+            if inner.generation == generation {
+                inner.tx = None;
+            }
+        }
+    }
+    // Let the webview know so it can flip back to the disconnected state.
     let _ = app.emit("serial-disconnected", ());
 }
 

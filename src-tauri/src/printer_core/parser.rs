@@ -114,7 +114,8 @@ pub fn m33(message: String) -> String {
 pub fn m105(message: String) -> Temperatures {
     let mut temperatures = Temperatures::default();
 
-    let re = Regex::new(r"T:(\d+)\.?\d*\s*/(\d+)\.?\d*\s*B:(\d+)\.?\d*\s*/(\d+)").unwrap();
+    let re =
+        Regex::new(r"T:(-?\d+)\.?\d*\s*/(-?\d+)\.?\d*\s*B:(-?\d+)\.?\d*\s*/(-?\d+)").unwrap();
 
     if let Some(captures) = re.captures(&message) {
         debug!("Captures: {:?}", captures);

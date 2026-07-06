@@ -124,34 +124,47 @@ export default class Printer implements PrinterCommands {
             console.error('Printer must be homed before moving the axis')
             return
         }
-        //sum of substract using the direction (which is '-' or '+') from the current position
-        const current_position = this.axisPositions[axis]
-        let new_position = direction === '+' ? current_position + distance : current_position - distance
 
-        // Check for printer limits to avoid crusing things (only for X, Y, Z)
-        if (axis !== 'e0' && axis !== 'e1') {
-            if (new_position < 0) new_position = 0
-            else if (new_position > this.printerInfo.dimensions[axis]) {
-                new_position = this.printerInfo.dimensions[axis]
+        const sign = direction === '+' ? 1 : -1
+
+        // Extruder axes extrude/retract by a *relative* amount. The firmware's
+        // absolute E position isn't tracked here, so computing an absolute
+        // target from it is wrong (it never updates, so repeated presses become
+        // no-ops); and gluing the axis name onto the value (`e0` + `5` → `E05`)
+        // produced corrupt g-code. Force relative extrusion so each press moves
+        // exactly `distance` mm regardless of the current E position.
+        if (axis === 'e0' || axis === 'e1') {
+            const temps = this.printerInfo.temperatures
+            const current = axis === 'e0' ? temps.e0 : temps.e1
+            const target = axis === 'e0' ? temps.e0_set : temps.e1_set
+            if (Math.abs(current - target) > 3 || current < this.hotendMinTemp) {
+                console.error('Extruder temp very different from target temp')
+                return
             }
-        }
 
-        // Check for hotend temperature before moving
-        if (axis === 'e0' && (Math.abs(this.printerInfo.temperatures.e0 - this.printerInfo.temperatures.e0_set) > 3
-            || this.printerInfo.temperatures.e0 < this.hotendMinTemp)) {
-            console.error('Extruder temp very different from target temp')
+            const commands: string[] = []
+            if (axis === 'e1') commands.push('T1') // select the second extruder
+            commands.push('M83') // relative extrusion
+            commands.push(`G1 E${sign * distance} F300`) // extrude/retract at 5 mm/s
+            if (axis === 'e1') commands.push('T0') // restore the first extruder
+
+            for (const message of commands) {
+                getTransport().sendCommand({ message_type: 'GCommand', message })
+            }
             return
         }
 
-        if (axis === 'e1' && (Math.abs(this.printerInfo.temperatures.e1 - this.printerInfo.temperatures.e1_set) > 3
-            || this.printerInfo.temperatures.e1 < this.hotendMinTemp)) {
-            console.error('Extruder temp very different from target temp')
-            return
+        // Linear axes move to an absolute coordinate, clamped to the bed volume
+        // so a jog can't drive the carriage past its limits.
+        let position = this.axisPositions[axis] + sign * distance
+        if (position < 0) position = 0
+        else if (position > this.printerInfo.dimensions[axis]) {
+            position = this.printerInfo.dimensions[axis]
         }
 
         getTransport().sendCommand({
             message_type: 'GCommand',
-            message: `G1 ${axis}${new_position}`.toUpperCase()
+            message: `G1 ${axis}${position}`,
         })
 
         // Update the axis position after moving

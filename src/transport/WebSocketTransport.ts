@@ -77,8 +77,16 @@ export default class WebSocketTransport extends EventEmitter implements ITranspo
             this.wsClient.onerror = null
             this.wsClient.onmessage = null
             this.wsClient.close()
+            // We just nulled the old socket's `onclose`, so its close won't emit
+            // 'disconnected'. Surface it ourselves so in-flight consumers (e.g. a
+            // running upload) settle instead of hanging, and reset the status.
+            if (this._connectionStatus) {
+                this._connectionStatus = false
+                this.emit('disconnected', 'disconnected')
+            }
         }
 
+        this._connectionStatus = false
         this._hasAttemptedConnection = true
         this._authPending = false
         this.wsClient = new WebSocket(this._wsURL, protocols)

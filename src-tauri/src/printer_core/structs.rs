@@ -75,18 +75,22 @@ pub struct AxePositions {
 }
 
 /// M105 - Get Extruder Temperature
+///
+/// `i16` rather than `u8`: hotends routinely exceed 255 °C (ABS/PA/PC), which
+/// would wrap a `u8` to 0 and report "cold" while the heater is at full power;
+/// a faulted thermistor also reports negative values.
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Temperatures {
-    pub bed: u8,
-    pub bed_set: u8,
-    pub e0: u8,
-    pub e0_set: u8,
-    pub e1: u8,
-    pub e1_set: u8,
-    pub e2: u8,
-    pub e2_set: u8,
-    pub e3: u8,
-    pub e3_set: u8,
+    pub bed: i16,
+    pub bed_set: i16,
+    pub e0: i16,
+    pub e0_set: i16,
+    pub e1: i16,
+    pub e1_set: i16,
+    pub e2: i16,
+    pub e2_set: i16,
+    pub e3: i16,
+    pub e3_set: i16,
 }
 
 /// Com configuration
